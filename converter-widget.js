@@ -7,9 +7,8 @@ const toInput = document.getElementById("widget-to");
 const result = document.getElementById("widget-result");
 const status = document.getElementById("widget-status");
 const embed = document.getElementById("widget-embed");
-const ratesUrl = "https://api.frankfurter.dev/v2/rates?base=USD";
-const currenciesUrl = "https://api.frankfurter.dev/v2/currencies";
-let currencyNames;
+let currencyNames = new Map();
+let widgetSource = "";
 const rateFormat = new Intl.NumberFormat(undefined,{maximumFractionDigits:6});
 let widgetRates = new Map();
 let quoteUnavailable = false;
@@ -26,28 +25,21 @@ function updateConversion() {
   }
   const dates = [...new Set([widgetRates.get(from)?.date,widgetRates.get(to)?.date].filter(Boolean))];
   status.textContent = Number.isFinite(cross)
-    ? "1 " + from + " = " + rateFormat.format(cross) + " " + to + " · Frankfurter" + (dates.length ? " · " + dates.join(" / ") : "") + (quoteUnavailable ? " · Saved rates" : "")
-    : quoteUnavailable ? "Exchange rates unavailable. Refresh to retry." : "Loading exchange rates…";
+    ? "1 " + from + " = " + rateFormat.format(cross) + " " + to + (from !== to && widgetSource ? " · " + widgetSource : "") + (dates.length ? " · " + dates.join(" / ") : "") + (quoteUnavailable ? " · Saved rates" : "")
+    : quoteUnavailable ? "Exchange rates unavailable. Refresh to retry." : widgetSource ? "Rate unavailable for this pair." : "Loading exchange rates…";
 }
 
 async function loadWidgetRates() {
   try {
-    const read = async url => {
-      const response = await fetch(url,{signal:AbortSignal.timeout(10000)});
-      if (!response.ok) throw new Error("Rate feed unavailable");
-      return response.json();
-    };
-    const [rows,directory] = await Promise.all([read(ratesUrl),currencyNames ?? read(currenciesUrl).then(entries =>
-      new Map(entries.filter(entry => entry.type === "currency").map(entry => [entry.iso_code,entry.name])))]);
-    currencyNames = directory;
-    const available = rows.filter(row => currencyNames.has(row.quote) && Number.isFinite(row.rate) && row.rate > 0);
-    if (!available.length) throw new Error("Rate feed returned no currencies");
-    widgetRates = new Map([["USD",{rate:1}],...available.map(row => [row.quote,row])]);
-    const codes = [...widgetRates.keys()].sort();
+    const {rates,names,source} = await currencyFeed.latest();
+    widgetRates = rates;
+    widgetSource = source;
+    currencyNames = source === "Frankfurter" ? names : new Map([...currencyNames,...names]);
+    const codes = [...currencyNames.keys()].sort();
     for (const input of [fromInput,toInput]) {
       const selected = input.value;
       input.replaceChildren(...codes.map(code => new Option(code + " · " + (currencyNames.get(code) ?? code),code)));
-      input.value = widgetRates.has(selected) ? selected : "USD";
+      input.value = currencyNames.has(selected) ? selected : input === toInput ? "EUR" : "USD";
     }
     quoteUnavailable = false;
   } catch {

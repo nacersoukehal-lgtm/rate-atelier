@@ -7,6 +7,8 @@ const bullion = "https://standardbullion.com";
 const currencyDefaults = {from:"USD",to:"EUR","metal-currency":"USD",send:"USD",receive:"EUR","home-from":"USD","home-to":"EUR"};
 let currencyOptions = [["EUR — Euro","EUR"],["USD — United States Dollar","USD"]];
 let currencyDirectory = null;
+let currentFxSource = '';
+let usingSavedRates = false;
 const metalCatalog = [
   {code:"XAU",id:"gold",name:"Gold"},
   {code:"XAG",id:"silver",name:"Silver"},
@@ -53,24 +55,27 @@ populateCurrencySelects();
 byId("currency-search").addEventListener("input",() => populateCurrencySelects(true));
 
 async function refreshRates() {
-  const [rows,directory] = await Promise.all([
-    json(fxApi + "?base=USD"),
-    currencyDirectory ?? json("https://api.frankfurter.dev/v2/currencies")
-  ]);
-  const active = new Map(directory.filter(entry => entry.type === "currency")
-    .map(entry => [entry.iso_code,entry.name]));
-  const available = rows.filter(row => active.has(row.quote) && isPositive(row.rate) && row.date);
-  if (!available.length) throw new Error("No exchange rates returned");
-  currencyDirectory = directory;
-  rates.clear();
-  rates.set("USD",{rate:1});
-  available.forEach(row => rates.set(row.quote,row));
-  const nextOptions = [...rates.keys()].sort().map(code => [code + " — " + active.get(code),code]);
-  if (JSON.stringify(nextOptions) !== JSON.stringify(currencyOptions)) {
-    currencyOptions = nextOptions;
+  try {
+    const result = await currencyFeed.latest();
+    currentFxSource = result.source;
+    usingSavedRates = false;
+    currencyDirectory = result.source === "Frankfurter" ? result.names : new Map([...(currencyDirectory ?? []),...result.names]);
+    rates.clear();
+    for (const [code,row] of result.rates) rates.set(code,row);
+    currencyOptions = [...currencyDirectory].sort(([a],[b]) => a.localeCompare(b)).map(([code,name]) => [code+" — "+name,code]);
     populateCurrencySelects();
     compare();
+    return result.source;
+  } catch (error) {
+    usingSavedRates = rates.size > 1;
+    throw error;
   }
+}
+
+function fxRateDetail(from,to) {
+  if (from === to) return "";
+  const dates = [...new Set([rates.get(from)?.date,rates.get(to)?.date].filter(Boolean))];
+  return [currentFxSource,...dates.map(dateOnly),usingSavedRates ? "Saved rates" : ""].filter(Boolean).join(" · ");
 }
 
 const num = (value, digits = 2) => new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(value);
@@ -100,7 +105,7 @@ function updateQuotes() {
   write("ratio", gold && silver ? num(gold.price / silver.price) + "×" : "—");
   const eur = rates.get("EUR");
   write("usd", eur ? "€" + num(eur.rate,4) : "—");
-  write("usd-time", eur ? "Frankfurter · " + dateOnly(eur.date) : "Frankfurter");
+  write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
 }
 
 function convert() {
@@ -109,8 +114,8 @@ function convert() {
   const amount = input("amount");
   const cross = from === to ? 1 : rate(to) / rate(from);
   write("converted", format(valid(amount) ? amount * cross : NaN,to));
-  const dates = [...new Set([rates.get(from)?.date,rates.get(to)?.date].filter(Boolean))];
-  write("fx-detail", isPositive(cross) ? "1 " + from + " = " + num(cross,6) + " " + to + (from !== to && dates.length ? " · " + dates.map(dateOnly).join(" / ") : "") : "Rate unavailable for this pair.");
+  const detail = fxRateDetail(from,to);
+  write("fx-detail", isPositive(cross) ? "1 " + from + " = " + num(cross,6) + " " + to + (detail ? " · " + detail : "") : "Rate unavailable for this pair.");
 }
 
 function calculateMetal() {
@@ -186,7 +191,7 @@ async function refresh() {
   calculateMetal();
   updateHomeConverter();
   updateWatchQuotes();
-  checkPriceAlerts(new Set([results[0].status === "fulfilled" ? "fx" : "","metal"]),freshMetals);
+  checkPriceAlerts(new Set([results[0].value === "Frankfurter" ? "fx" : "","metal"]),freshMetals);
   byId("refresh").disabled = false;
   refreshing = false;
 }
@@ -698,9 +703,9 @@ function updateHomeConverter() {
   const cross = exchangeRate(from,to);
   const amount = input("home-amount");
   write("home-result",format(valid(amount) ? amount * cross : NaN,to));
-  const dates = [...new Set([rates.get(from)?.date,rates.get(to)?.date].filter(Boolean))];
+  const detail = fxRateDetail(from,to);
   write("home-rate",isPositive(cross) ? "1 " + from + " = " + num(cross,6) + " " + to +
-    (from !== to && dates.length ? " · Frankfurter · " + dates.map(dateOnly).join(" / ") : "") : "Reference rate unavailable.");
+    (detail ? " · " + detail : "") : "Reference rate unavailable.");
   byId("save-pair").disabled = from === to;
 }
 
