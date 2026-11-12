@@ -18,6 +18,7 @@ let nftCollections = [];
 let nftLoading = false;
 let nftLastAttempt = 0;
 let nftActiveId;
+let pudgyCollection;
 
 function nftSol(value) {
   return Number.isFinite(value) && value > 0 ? nftNumbers.format(value) + " SOL" : "—";
@@ -54,8 +55,10 @@ function renderNftProfile(collection) {
   }
   document.getElementById("nft-profile-title").textContent = collection.name;
   document.getElementById("nft-profile-description").textContent = collection.description;
-  document.getElementById("nft-profile-time").textContent = "Magic Eden · Fetched " + nftDates.format(new Date(collection.checkedAt));
-  document.getElementById("nft-profile-metrics").replaceChildren(...nftMetrics(collection.stats).map(([label,value]) => {
+  const pudgy = collection.id === "pudgy-penguins";
+  document.getElementById("nft-profile-time").textContent = (pudgy ? "CoinGecko" : "Magic Eden") + " · Fetched " + nftDates.format(new Date(collection.checkedAt));
+  const metrics = pudgy ? pudgyMetrics(collection) : nftMetrics(collection.stats);
+  document.getElementById("nft-profile-metrics").replaceChildren(...metrics.map(([label,value]) => {
     const entry = document.createElement("div");
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
@@ -66,8 +69,51 @@ function renderNftProfile(collection) {
   }));
 }
 
+function pudgyMetrics(collection) {
+  const eth = value => Number.isFinite(value) ? nftNumbers.format(value) + " ETH" : "—";
+  const count = value => Number.isFinite(value) ? nftNumbers.format(value) : "—";
+  return [["Floor price",eth(collection.floor)],["24h volume",eth(collection.volume)],
+    ["24h sales",count(collection.sales)],["Unique owners",count(collection.owners)]];
+}
+
+function renderPudgyCollection(query) {
+  const card = document.getElementById("pudgy-feature");
+  card.hidden = !pudgyCollection || !"pudgy penguins pengu ethereum".includes(query);
+  if (!pudgyCollection) return;
+  const [floor,volume] = pudgyMetrics(pudgyCollection);
+  document.getElementById("pudgy-art").src = pudgyCollection.image;
+  document.getElementById("pudgy-floor").textContent = floor[1] + " floor · " + volume[1] + " 24h volume";
+  document.getElementById("pudgy-time").textContent = "CoinGecko · Fetched " + nftDates.format(new Date(pudgyCollection.checkedAt));
+}
+
+async function refreshPudgyCollection() {
+  try {
+    if (!pudgyCollection) {
+      const snapshot = await fetch("./pudgy-penguins.json",{signal:AbortSignal.timeout(6000)});
+      if (snapshot.ok) pudgyCollection = await snapshot.json();
+      renderPudgyCollection(nftSearch.value.trim().toLowerCase());
+    }
+    if (!pudgyCollection) return;
+    const response = await fetch("https://api.coingecko.com/api/v3/nfts/pudgy-penguins",{signal:AbortSignal.timeout(6000)});
+    if (!response.ok) return;
+    const quote = await response.json();
+    if (quote.id !== pudgyCollection.id || quote.asset_platform_id !== "ethereum" || !Number.isFinite(quote.floor_price?.native_currency)) return;
+    pudgyCollection = {...pudgyCollection,floor:quote.floor_price.native_currency,volume:quote.volume_24h?.native_currency,
+      sales:quote.one_day_sales,owners:quote.number_of_unique_addresses,checkedAt:new Date().toISOString()};
+    renderPudgyCollection(nftSearch.value.trim().toLowerCase());
+    if (nftDialog.open && nftActiveId === pudgyCollection.id) renderNftProfile(pudgyCollection);
+  } catch { /* Keep the last fetched collection data. */ }
+}
+document.getElementById("pudgy-open").addEventListener("click",() => {
+  if (!pudgyCollection) return;
+  nftActiveId = pudgyCollection.id;
+  renderNftProfile(pudgyCollection);
+  nftDialog.showModal();
+});
+
 function renderNftCollections() {
   const query = nftSearch.value.trim().toLowerCase();
+  renderPudgyCollection(query);
   const order = nftSort.value;
   const collectionList = nftCollections.filter(collection => (collection.name + " " + collection.id).toLowerCase().includes(query));
   collectionList.sort((a,b) => {
@@ -116,6 +162,7 @@ async function refreshNfts(force = false) {
   const cooldown = force ? 30000 : 600000;
   if (nftLoading || nftSection.hidden || Date.now()-nftLastAttempt < cooldown) return;
   nftLoading = true;
+  refreshPudgyCollection();
   nftLastAttempt = Date.now();
   nftRefresh.disabled = true;
   nftStatus.textContent = "Checking Magic Eden for updated collection data…";

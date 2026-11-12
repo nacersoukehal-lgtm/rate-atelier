@@ -1,0 +1,11 @@
+{
+  "id": "pudgy-penguins",
+  "name": "Pudgy Penguins",
+  "image": "https://coin-images.coingecko.com/nft_contracts/images/38/small_2x/pudgy.jpg?1730778323",
+  "description": "The original Pudgy Penguins collection of 8,888 Ethereum NFTs. PENGU is the separate Solana token.",
+  "floor": 2.35,
+  "volume": 18.67,
+  "sales": 8,
+  "owners": 5005,
+  "checkedAt": "2026-11-12T16:25:57.226Z"
+}
