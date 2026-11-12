@@ -195,8 +195,6 @@ async function refresh() {
   if (refreshing) return;
   refreshing = true;
   byId("refresh").disabled = true;
-  const status = byId("status");
-  status.textContent = "Checking feeds…";
   const results = await Promise.allSettled([
     refreshRates(),
     json(bullion + "/spot-prices.json").then(data => {
@@ -220,9 +218,6 @@ async function refresh() {
   if (dollarIndex) dollarIndex.stale = results[3].status === "rejected";
   saveQuotes("metals",[...metals]);
   if (dollarIndex) saveQuotes("dollar",dollarIndex);
-  const degraded = results[0].status === "rejected" || results[3].status === "rejected" || freshMetals.size !== metalCatalog.length;
-  status.dataset.error = degraded;
-  status.textContent = degraded ? "Some quotes could not refresh" : "Auto-refresh every 60 sec";
   updateQuotes();
   updateMarketSummary();
   document.dispatchEvent(new Event("market-quotes-updated"));
@@ -1537,9 +1532,29 @@ const stockQuotes = new Map(readQuotes("stocks",[]).flatMap(([code,quote]) => {
   return asset ? [[code,{...quote,asset,points:[],stale:true}]] : [];
 }));
 function rememberStock(code,data) {
+  const current = stockQuotes.get(code);
+  if (current && Date.parse(current.date) > Date.parse(data.date)) {
+    current.stale = true;
+    return;
+  }
   stockQuotes.delete(code);
   stockQuotes.set(code,data);
   saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) => [key,quote]));
+}
+let stockSnapshotRequest;
+function loadStockSnapshot() {
+  stockSnapshotRequest ??= json("./stock-quote-snapshot.json").then(snapshot => {
+    for (const [code,quote] of Object.entries(snapshot.quotes)) {
+      const asset = stockAssets.get(code);
+      const existing = stockQuotes.get(code);
+      if (!asset || !isPositive(quote.price) || !Number.isFinite(Date.parse(quote.date))) continue;
+      if (existing && Date.parse(existing.date) >= Date.parse(quote.date)) continue;
+      stockQuotes.set(code,{...quote,asset,points:[],stale:true});
+    }
+    if (!byId("stocks").hidden) renderStocks();
+    updateWatchQuotes();
+    if (activeStock && stockDialog.open) renderStockProfile(activeStock);
+  }).catch(() => { stockSnapshotRequest = undefined; });
 }
 const stockCache = new Map();
 const stockDialog = byId("stock-profile");
@@ -1632,6 +1647,7 @@ async function refreshStocks() {
     return;
   }
   stockLoading = true;
+  loadStockSnapshot();
   if (visible) renderStocks();
   for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
@@ -1707,10 +1723,10 @@ function renderStocks() {
   }));
   const status = byId("stock-status");
   const missing = page.filter(asset => !stockQuotes.has(asset.code));
-  status.hidden = !!page.length && !missing.length;
   status.textContent = !page.length ? "No assets match your filters."
-    : stockLoading || missing.some(asset => !attemptedStockQuotes.has(asset.code)) ? "Loading market quotes…"
-    : "Some quotes are unavailable. Try Refresh.";
+    : missing.length && (stockLoading || missing.some(asset => !attemptedStockQuotes.has(asset.code))) ? "Loading market quotes…"
+    : "";
+  status.hidden = !status.textContent;
   document.dispatchEvent(new Event("stock-ranking-rendered"));
   byId("stock-prev").disabled = stockPage === 0;
   byId("stock-next").disabled = start+stockPageSize >= visible.length;
