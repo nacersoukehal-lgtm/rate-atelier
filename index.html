@@ -15,7 +15,7 @@
 <meta name="description" content="Convert currencies, compare money transfer fees, and follow gold, silver, stocks, and crypto. Explore historical charts and estimate gold or silver melt value.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=stock-quotes"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=stock-history" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
+<link rel="stylesheet" href="style.css?v=stock-quotes"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=stock-freshness" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
@@ -80,7 +80,7 @@
 <dialog id="stock-profile" class="coin-profile" aria-labelledby="stock-title">
 <div class="coin-profile-head"><div><p class="eyebrow" id="stock-symbol"></p><h2 id="stock-title"></h2></div><form method="dialog"><button type="submit" aria-label="Close stock profile" autofocus>×</button></form></div>
 <div class="coin-price"><strong id="stock-price">—</strong><span id="stock-change"></span><small id="stock-time"></small></div>
-<section><div class="stock-chart-head"><h3>Price history</h3><label><span class="sr">Price history range</span><select id="stock-range"><option value="1mo">1 month</option><option value="1y">1 year</option></select></label></div><div id="stock-profile-chart" class="native-stock-chart" role="status"></div></section>
+<section><div class="stock-chart-head"><h3>Price history</h3><label><span class="sr">Price history range</span><select id="stock-range" aria-describedby="stock-range-status"><option value="1mo">1 month</option><option value="1y">1 year</option></select><small id="stock-range-status" role="status"></small></label></div><div id="stock-profile-chart" class="native-stock-chart" role="status"></div></section>
 <section><h3>Trading details</h3><dl class="coin-metrics" id="stock-metrics"></dl></section>
 <section><h3>About this asset</h3><p id="stock-about"></p></section>
 <button id="stock-pin" class="secondary-action" type="button">☆ Save to watchlist</button><small id="stock-pin-status" role="status"></small>

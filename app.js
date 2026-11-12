@@ -121,8 +121,8 @@ const valid = value => Number.isFinite(value) && value >= 0;
 const rate = currency => rates.get(currency)?.rate;
 const format = (value, currency) => Number.isFinite(value) ? money(value,currency) : "—";
 
-async function json(url) {
-  const response = await fetch(url, {signal:AbortSignal.timeout(12000)});
+async function json(url,cache = "default") {
+  const response = await fetch(url, {cache,signal:AbortSignal.timeout(12000)});
   if (!response.ok) throw new Error("Data feed returned HTTP " + response.status);
   return response.json();
 }
@@ -1571,16 +1571,17 @@ const stockPageSize = 12;
 let stockPage = 0;
 let stockLoading = false;
 let stockRefreshPending = false;
+let stockRefreshForced = false;
 let stockRefreshTimer;
 const attemptedStockQuotes = new Set();
 let activeStock;
 let stockChartRequest = 0;
 
-async function yahooChart(symbol,range,interval = "1d") {
+async function yahooChart(symbol,range,interval = "1d",cache = "default") {
   const path = "/v8/finance/chart/" + encodeURIComponent(symbol) + "?" + new URLSearchParams({range,interval});
   for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
     try {
-      const data = await json("https://proxy.cors.dev/https://" + host + path);
+      const data = await json("https://proxy.cors.dev/https://" + host + path,cache);
       const series = data.chart?.result?.[0];
       if (series?.meta) return series;
     } catch { /* Retry through the alternate Yahoo Finance host. */ }
@@ -1604,14 +1605,14 @@ async function copperHistory(range) {
     .filter(point => isPositive(point.price) && Date.parse(point.date) >= cutoff);
 }
 
-async function fetchStock(code,range = "1mo") {
+async function fetchStock(code,range = "1mo",force = false) {
   const asset = stockAssets.get(code);
   if (!asset) throw new Error("Unknown asset");
   const key = code + ":" + range;
   const cached = stockCache.get(key);
-  if (cached && Date.now() - cached.time < 300000) return cached.request;
+  if (cached && !force && Date.now() - cached.time < 120000) return cached.request;
   const request = (async () => {
-    const series = await yahooChart(asset.symbol,range);
+    const series = await yahooChart(asset.symbol,range,"1d","no-cache");
     const meta = series?.meta;
     const candle = series?.indicators?.quote?.[0];
     if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime) || !candle) throw new Error("Quote unavailable");
@@ -1624,7 +1625,7 @@ async function fetchStock(code,range = "1mo") {
     const sameSession = last && Number.isFinite(+quoteTime) && day.format(new Date(last.date)) === day.format(quoteTime);
     const previous = rows.at(sameSession ? -2 : -1)?.price;
     return {
-      asset,price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
+      asset,checkedAt:Date.now(),price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
       open:sameSession ? last.open : undefined,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,previous,
       change:isPositive(previous) ? meta.regularMarketPrice-previous : undefined,
       percent:isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined,
@@ -1633,7 +1634,7 @@ async function fetchStock(code,range = "1mo") {
   })();
   stockCache.set(key,{time:Date.now(),request});
   try { return await request; }
-  catch (error) { stockCache.delete(key); throw error; }
+  catch (error) { if (stockCache.get(key)?.request === request) stockCache.delete(key); throw error; }
 }
 
 function stockValue(data,value) {
@@ -1646,10 +1647,11 @@ function stockHighLow(data,value) {
   return data && isPositive(value) ? stockValue(data,value) : "Unavailable";
 }
 
-async function refreshStocks() {
+async function refreshStocks(force = false) {
   clearTimeout(stockRefreshTimer);
   if (stockLoading) {
     stockRefreshPending = true;
+    stockRefreshForced ||= force;
     return;
   }
   const visible = !byId("stocks").hidden;
@@ -1664,7 +1666,7 @@ async function refreshStocks() {
   if (visible) renderStocks();
   for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
-      try { rememberStock(code,await fetchStock(code)); }
+      try { rememberStock(code,await fetchStock(code,"1mo",force)); }
       catch {
         const previous = stockQuotes.get(code);
         if (previous) previous.stale = true;
@@ -1677,8 +1679,9 @@ async function refreshStocks() {
   updateWatchQuotes();
   if (activeStock && stockDialog.open) renderStockProfile(activeStock);
   if (stockRefreshPending) {
-    stockRefreshPending = false;
-    refreshStocks();
+    const forcePending = stockRefreshForced;
+    stockRefreshPending = stockRefreshForced = false;
+    refreshStocks(forcePending);
   }
 }
 
@@ -1789,35 +1792,47 @@ function drawStockHistory(host,asset,points,stale = false) {
   host.replaceChildren(svg,caption);
 }
 
-async function renderStockHistory() {
+async function renderStockHistory(requestedRange, notice = "") {
   const asset = activeStock;
   if (!asset) return;
   const request = ++stockChartRequest;
-  const range = byId("stock-range").value;
+  const control = byId("stock-range");
   const host = byId("stock-profile-chart");
   const active = () => request === stockChartRequest && stockDialog.open;
-  const showSaved = () => {
+  const showSavedMonth = () => {
     const points = recentStockPoints(stockQuotes.get(asset.code)?.points);
     if (points.length < 2) return false;
     drawStockHistory(host,asset,points,true);
-    if (range === "1y") host.querySelector("small").append(" · 1-year history unavailable");
     return true;
   };
-  if (!showSaved()) host.textContent = "Loading price history…";
+
+  control.value = "1mo";
+  write("stock-range-status",requestedRange === "1y" ? "Checking 1-year history…" : notice);
+  if (!showSavedMonth()) host.textContent = "Loading price history…";
   try {
-    const data = await fetchStock(asset.code,range);
+    const data = await fetchStock(asset.code,requestedRange);
     if (!active()) return;
     rememberStock(asset.code,data);
     renderStockProfile(asset);
     if (data.points.length < 2) throw new Error("Insufficient history");
+    const span = Date.parse(data.points.at(-1).date) - Date.parse(data.points[0].date);
+    if (requestedRange === "1y" && span < 330 * 86400000) throw new Error("Incomplete 1-year history");
     const older = Date.parse(data.date) < Date.parse(stockQuotes.get(asset.code)?.date);
-    if (!(older && range === "1mo" && showSaved())) drawStockHistory(host,asset,data.points,older);
+    control.value = requestedRange;
+    write("stock-range-status",notice);
+    if (!(older && requestedRange === "1mo" && showSavedMonth())) drawStockHistory(host,asset,data.points,older);
   } catch {
+    if (!active()) return;
+    if (requestedRange === "1y") {
+      renderStockHistory("1mo","1 year unavailable");
+      return;
+    }
     await loadStockSnapshot();
     if (!active()) return;
-    if (range === "1mo" && stockQuotes.has(asset.code)) stockQuotes.get(asset.code).stale = true;
+    const quote = stockQuotes.get(asset.code);
+    if (quote && Date.now() - (quote.checkedAt ?? 0) > 120000) quote.stale = true;
     renderStockProfile(asset);
-    if (!showSaved()) host.textContent = "Price history is unavailable.";
+    if (!showSavedMonth()) host.textContent = "Price history is unavailable.";
   }
 }
 
@@ -1831,7 +1846,7 @@ function openStockProfile(asset) {
   renderStockProfile(asset);
   stockDialog.showModal();
   stockDialog.scrollTop = 0;
-  renderStockHistory();
+  renderStockHistory("1mo");
 }
 
 for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) byId(id).addEventListener("input",() => {
@@ -1842,7 +1857,7 @@ for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) 
 });
 byId("stock-prev").addEventListener("click",() => {stockPage--;refreshStocks();});
 byId("stock-next").addEventListener("click",() => {stockPage++;refreshStocks();});
-byId("stock-range").addEventListener("input",renderStockHistory);
+byId("stock-range").addEventListener("change",event => renderStockHistory(event.target.value));
 byId("stock-pin").addEventListener("click",() => {
   const asset = activeStock;
   if (!asset) return;
@@ -1851,11 +1866,13 @@ byId("stock-pin").addEventListener("click",() => {
 });
 stockDialog.addEventListener("close",() => {activeStock=undefined; stockChartRequest++;});
 byId("refresh").addEventListener("click",() => {
-  if (!byId("stocks").hidden || !byId("markets").hidden) refreshStocks();
+  if (!byId("stocks").hidden || !byId("markets").hidden) refreshStocks(true);
 });
-setInterval(() => {
+function refreshVisibleStocks() {
   if (!document.hidden && (!byId("stocks").hidden || !byId("markets").hidden)) refreshStocks();
-},300000);
+}
+setInterval(refreshVisibleStocks,120000);
+document.addEventListener("visibilitychange",refreshVisibleStocks);
 
 populateWatchPicker();
 renderWatchlist();
