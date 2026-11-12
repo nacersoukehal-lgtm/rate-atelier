@@ -1217,14 +1217,29 @@ profileDialog.addEventListener("close",() => {
 });
 
 const stockCatalog = [
+  ["NASDAQ:COMP","^IXIC","Nasdaq Composite","Indices","Nasdaq","Tracks a broad range of companies listed on Nasdaq."],
+  ["NYSE:NYA","^NYA","NYSE Composite","Indices","NYSE","Tracks common stocks listed on the New York Stock Exchange."],
+  ["KRX:KOSPI","^KS11","KOSPI","Indices","Korea Exchange","Broad benchmark for South Korean shares."],
+  ["TWSE:TAIEX","^TWII","Taiwan Weighted Index","Indices","Taiwan","Broad benchmark for the Taiwan Stock Exchange."],
+  ["NASDAQ:AVGO","AVGO","Broadcom","U.S.","Nasdaq","Designs semiconductors and develops infrastructure software."],
+  ["NASDAQ:COST","COST","Costco","U.S.","Nasdaq","Operates membership warehouses and online stores."],
+  ["NYSE:GS","GS","Goldman Sachs","U.S.","NYSE","Provides investment banking, trading, and asset management services."],
+  ["NYSE:DIS","DIS","Walt Disney","U.S.","NYSE","Operates entertainment, sports media, and theme park businesses."],
+  ["LSE:BARC","BARC.L","Barclays","UK","London","Provides retail, corporate, and investment banking services."],
+  ["LSE:VOD","VOD.L","Vodafone","UK","London","Provides mobile and fixed telecommunications services."],
+  ["TSE:6758","6758.T","Sony Group","Asia","Tokyo","Operates gaming, music, film, electronics, and image sensor businesses."],
+  ["HKEX:9988","9988.HK","Alibaba Group","Asia","Hong Kong","Operates e-commerce platforms and cloud services."],
+  ["KRX:000660","000660.KS","SK Hynix","Asia","Korea Exchange","Produces memory semiconductors."],
+  ["TWSE:2330","2330.TW","TSMC","Asia","Taiwan","Manufactures semiconductors for other chip designers."],
+  ["SGX:D05","D05.SI","DBS Group","Asia","Singapore","Provides retail and commercial banking services."],
   ["FOREXCOM:SPXUSD","^GSPC","S&P 500","Indices","United States","Tracks large U.S. companies weighted by their publicly traded market capitalization."],
   ["FOREXCOM:DJI","^DJI","Dow Jones Industrial Average","Indices","United States","A price-weighted index of 30 large U.S. companies."],
-  ["FOREXCOM:NSXUSD","^NDX","Nasdaq 100","Indices","United States","Tracks 100 of the largest non-financial companies listed on Nasdaq."],
-  ["FOREXCOM:UKXGBP","^FTSE","FTSE 100","Indices","United Kingdom","Tracks 100 large companies listed on the London Stock Exchange."],
-  ["INDEX:NKY","^N225","Nikkei 225","Indices","Japan","A price-weighted benchmark of 225 Japanese stocks."],
+  ["FOREXCOM:NSXUSD","^NDX","Nasdaq 100","Indices","Nasdaq","Tracks 100 of the largest non-financial companies listed on Nasdaq."],
+  ["FOREXCOM:UKXGBP","^FTSE","FTSE 100","Indices","London","Tracks 100 large companies listed on the London Stock Exchange."],
+  ["INDEX:NKY","^N225","Nikkei 225","Indices","Tokyo","A price-weighted benchmark of 225 Japanese stocks."],
   ["INDEX:HSI","^HSI","Hang Seng","Indices","Hong Kong","A benchmark for large and actively traded companies listed in Hong Kong."],
-  ["SSE:000001","000001.SS","Shanghai Composite","Indices","China","A broad index covering shares listed on the Shanghai Stock Exchange."],
-  ["BSE:SENSEX","^BSESN","BSE Sensex","Indices","India","Tracks 30 major companies listed on India’s BSE."],
+  ["SSE:000001","000001.SS","Shanghai Composite","Indices","Shanghai","A broad index covering shares listed on the Shanghai Stock Exchange."],
+  ["BSE:SENSEX","^BSESN","BSE Sensex","Indices","BSE","Tracks 30 major companies listed on India’s BSE."],
   ["NYSE:JPM","JPM","JPMorgan Chase","U.S.","NYSE","A U.S. banking group with consumer, commercial, investment banking, and asset management businesses."],
   ["NYSE:KO","KO","Coca-Cola","U.S.","NYSE","A global beverage company with a portfolio of sparkling drinks, water, juices, and other beverages."],
   ["NYSE:XOM","XOM","Exxon Mobil","U.S.","NYSE","An integrated energy company involved in oil and gas production, refining, and chemicals."],
@@ -1266,6 +1281,8 @@ const stockCatalog = [
   ["AMEX:SLV","SLV","iShares Silver Trust","U.S.","NYSE Arca","An exchange-traded trust designed to reflect the price of silver bullion.","ETF"]
 ].map(([code,symbol,name,region,exchange,about,type = region === "Indices" ? "Index" : "Stock"]) =>
   ({code,symbol,name,region,exchange,about,type}));
+const stockExchanges = [...new Set(stockCatalog.filter(asset => asset.type !== "Index").map(asset => asset.exchange))].sort();
+for (const exchange of stockExchanges) byId("stock-exchange").add(new Option(exchange,exchange));
 const stockAssets = new Map(stockCatalog.map(asset => [asset.code,asset]));
 const watchStocks = new Map(stockCatalog.map(asset => [asset.code,asset.name + " · " + asset.exchange]));
 const stockQuotes = new Map();
@@ -1361,7 +1378,9 @@ async function refreshStocks(full = !byId("stocks").hidden) {
 function matchesStockFilters(asset) {
   const region = byId("stock-region").value;
   const type = byId("stock-type").value;
-  return (!region || asset.region === region) && (!type || asset.type === type);
+  const exchange = byId("stock-exchange").value;
+  return (!region || asset.region === region) && (!type || asset.type === type) &&
+    (!exchange || asset.exchange === exchange);
 }
 
 function renderStocks() {
@@ -1472,7 +1491,7 @@ function openStockProfile(asset) {
   renderStockHistory();
 }
 
-for (const id of ["stock-search","stock-region","stock-type"]) byId(id).addEventListener("input",() => {stockPage=0;renderStocks();});
+for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) byId(id).addEventListener("input",() => {stockPage=0;renderStocks();});
 byId("stock-prev").addEventListener("click",() => {stockPage--;renderStocks();});
 byId("stock-next").addEventListener("click",() => {stockPage++;renderStocks();});
 byId("stock-range").addEventListener("input",renderStockHistory);

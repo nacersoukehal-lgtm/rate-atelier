@@ -299,7 +299,7 @@ function renderStockMovers() {
       move:data.percent,period:"past month",open:() => openStockProfile(data.asset),
       history:() => data.points
     }));
-  renderMovers("stock",assets,"Session price change · "+([type,region].filter(Boolean).join(" · ") || "All listed assets"));
+  renderMovers("stock",assets,"Session price change · "+([type,byId("stock-exchange").value,region].filter(Boolean).join(" · ") || "All listed assets"));
 }
 
 document.addEventListener("crypto-ranking-rendered",renderCryptoMovers);

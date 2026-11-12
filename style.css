@@ -218,7 +218,7 @@ footer { padding: 18px 0; margin-top: 32px; }
   .calendar-filters label:first-child { grid-column: 1 / -1; }
 }
 
-.stock-filters { grid-template-columns: minmax(170px,1.4fr) minmax(130px,1fr); max-width: 650px; }
+.stock-filters { grid-template-columns: repeat(auto-fit,minmax(min(100%,170px),1fr)); max-width: 960px; }
 .stock-table td:first-child { min-width: 155px; }
 .stock-table td:first-child small { display: block; margin-left: 0; }
 .stock-chart-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
