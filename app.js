@@ -344,6 +344,11 @@ setInterval(() => { if (!document.hidden) refresh(); },60000);
 document.addEventListener("visibilitychange",() => { if (!document.hidden) refresh(); });
 
 let cryptoAssets = [];
+let microAssets = [];
+let memeAssets = [];
+let memeLoading = false;
+let memeChecked = 0;
+const cryptoStatus = {major:"",micro:"",meme:""};
 let cryptoQuotes = new Map();
 let cryptoPage = 0;
 let loadingCrypto = false;
@@ -352,9 +357,25 @@ const pageSize = 10;
 const compactUSD = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:2});
 const cryptoPrice = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:10});
 
+function cryptoRanking() {
+  const kind = byId("crypto-ranking").value;
+  return kind === "meme" ? memeAssets : kind === "micro" ? microAssets : cryptoAssets;
+}
+
 function renderCrypto() {
+  const kind = byId("crypto-ranking").value || "major";
+  const ranked = cryptoRanking();
+  const source = byId("crypto-source");
+  source.textContent = kind === "meme" ? "CoinGecko" : "CoinPaprika";
+  source.href = kind === "meme" ? "https://www.coingecko.com/en/categories/meme-token" : "https://coinpaprika.com/";
+  write("crypto-time",cryptoStatus[kind]);
+  write("crypto-method",{
+    major:"Top 50 cryptocurrencies by market cap. Select an asset for its profile.",
+    micro:"Ranked by market cap among coins with $1M to under $10M in market cap and at least $100K in reported 24h volume.",
+    meme:"CoinGecko meme category ranked by market cap. The list reflects market size and is for research."
+  }[kind]);
   const query = byId("crypto-search").value.trim().toLowerCase();
-  const matches = cryptoAssets.filter(asset => (asset.name + " " + asset.symbol).toLowerCase().includes(query));
+  const matches = ranked.filter(asset => (asset.name + " " + asset.symbol).toLowerCase().includes(query));
   cryptoPage = Math.min(cryptoPage,Math.max(0,Math.ceil(matches.length / pageSize)-1));
   const start = cryptoPage * pageSize;
   const rows = matches.slice(start,start+pageSize).map(asset => {
@@ -362,7 +383,7 @@ function renderCrypto() {
     const change = quote.percent_change_24h;
     const row = document.createElement("tr");
     const cells = [
-      String(cryptoAssets.indexOf(asset)+1),
+      String(ranked.indexOf(asset)+1),
       "",
       cryptoPrice.format(quote.price),
       Number.isFinite(change) ? (change > 0 ? "+" : "") + num(change) + "%" : "—",
@@ -389,10 +410,9 @@ function renderCrypto() {
   byId("crypto-next").disabled = start+pageSize >= matches.length;
   write("crypto-page",matches.length ? (start+1) + "–" + Math.min(start+pageSize,matches.length) + " of " + matches.length : "—");
   const state = byId("crypto-state");
-  if (cryptoAssets.length) {
-    state.hidden = !!matches.length;
-    state.textContent = "No matching cryptocurrency.";
-  }
+  state.hidden = !!matches.length;
+  state.textContent = ranked.length ? "No matching cryptocurrency."
+    : cryptoStatus[kind] ? "This ranking is temporarily unavailable. Use Refresh to retry." : "Loading cryptocurrency rankings…";
 }
 
 async function refreshCrypto(force = false) {
@@ -405,21 +425,24 @@ async function refreshCrypto(force = false) {
       .sort((a,b) => b.quotes.USD.market_cap - a.quotes.USD.market_cap).slice(0,50);
     if (ranked.length < 50) throw new Error("Incomplete crypto rankings");
     cryptoAssets = ranked;
+    microAssets = assets.filter(asset => {
+      const quote = asset.quotes?.USD;
+      return isPositive(quote?.price) && quote.market_cap >= 1000000 &&
+        quote.market_cap < 10000000 && quote.volume_24h >= 100000;
+    }).sort((a,b) => b.quotes.USD.market_cap-a.quotes.USD.market_cap).slice(0,50);
     cryptoQuotes = new Map(assets.map(asset => [asset.id,asset]));
     populateWatchPicker();
     updateWatchQuotes();
     checkPriceAlerts(new Set(["crypto"]));
     const newest = Math.max(...ranked.map(asset => Date.parse(asset.last_updated)).filter(Number.isFinite));
-    write("crypto-time",(Number.isFinite(newest) ? " · Latest quote " + timestamp(newest) : "") + " · Refreshes every 5 min");
+    cryptoStatus.major = (Number.isFinite(newest) ? " · Latest quote " + timestamp(newest) : "") + " · Refreshes every 5 min";
+    const microTime = Math.max(...microAssets.map(asset => Date.parse(asset.last_updated)).filter(Number.isFinite));
+    cryptoStatus.micro = (Number.isFinite(microTime) ? " · Latest quote " + timestamp(microTime) : "") + " · Refreshes every 5 min";
     renderCrypto();
     refreshOpenCoinQuote();
   } catch {
-    if (cryptoAssets.length) {
-      write("crypto-time"," · Refresh failed. Showing previous quotes.");
-    } else {
-      byId("crypto-state").hidden = false;
-      write("crypto-state","Crypto prices are temporarily unavailable.");
-    }
+    cryptoStatus.major = cryptoStatus.micro = " · Refresh failed. Last available quotes shown.";
+    renderCrypto();
   } finally {
     loadingCrypto = false;
   }
@@ -1041,12 +1064,13 @@ async function coinProject(id) {
 
 function refreshOpenCoinQuote() {
   if (!openCoin || !profileDialog.open) return;
-  openCoin = cryptoQuotes.get(openCoin.id) ?? openCoin;
+  openCoin = openCoin.gecko ? memeAssets.find(asset => asset.id === openCoin.id) ?? openCoin : cryptoQuotes.get(openCoin.id) ?? openCoin;
   const quote = openCoin.quotes.USD;
   write("coin-price",cryptoPrice.format(quote.price));
   write("coin-change",percent(quote.percent_change_24h) + " · 24h");
   byId("coin-change").className = quote.percent_change_24h < 0 ? "negative" : "positive";
-  write("coin-quote-time",quoteDate(openCoin.last_updated) ? "CoinPaprika · " + timestamp(openCoin.last_updated) : "CoinPaprika");
+  const source = openCoin.gecko ? "CoinGecko" : "CoinPaprika";
+  write("coin-quote-time",source + (quoteDate(openCoin.last_updated) ? " · " + timestamp(openCoin.last_updated) : ""));
   renderCoinMetrics();
 }
 
@@ -1135,6 +1159,15 @@ async function loadCoinProfile(asset) {
   const request = ++profileRequest;
   byId("coin-profile-retry").hidden = true;
   write("coin-profile-status","Loading project and price records…");
+  if (asset.gecko) {
+    const description = await supplementalDescription(asset.gecko.id).catch(() => "");
+    if (request !== profileRequest || !profileDialog.open) return;
+    openCoinDescription = description;
+    renderCoinAbout();
+    if (!description) write("coin-description","A project description is unavailable.");
+    write("coin-profile-status","");
+    return;
+  }
   const [project,records] = await Promise.allSettled([coinProject(asset.id),coinRecords()]);
   if (request !== profileRequest || !profileDialog.open) return;
   if (project.status === "fulfilled") openCoinProject = project.value;
@@ -1158,11 +1191,13 @@ async function loadCoinProfile(asset) {
 
 function openCoinProfile(asset) {
   openCoin = asset;
-  openCoinRecords = undefined;
+  openCoinRecords = asset.gecko;
   openCoinProject = undefined;
   openCoinDescription = undefined;
   write("coin-title",asset.name);
-  write("coin-symbol",asset.symbol + " · #" + (cryptoAssets.indexOf(asset)+1) + " by market cap");
+  write("coin-symbol",asset.symbol + " · #" + (cryptoRanking().indexOf(asset)+1) + " in this ranking");
+  write("coin-credit",asset.gecko ? "Quotes, project data, and price records by CoinGecko." :
+    "Market quotes and project data by CoinPaprika. Price records and supplemental metrics by CoinGecko where available.");
   profileDialog.showModal();
   profileDialog.scrollTop = 0;
   refreshOpenCoinQuote();
@@ -1463,3 +1498,41 @@ function applyLandingPair() {
   byId("home-from").value = pair === "EURUSD" ? "EUR" : "USD";
   byId("home-to").value = pair === "EURUSD" ? "USD" : pair;
 }
+
+
+async function refreshMemes(force = false) {
+  if (byId("crypto-ranking").value !== "meme" || byId("crypto").hidden || memeLoading ||
+      (!force && Date.now()-memeChecked < 300000)) return;
+  memeLoading = true;
+  try {
+    const rows = await json(coinGeckoApi + "/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=50&price_change_percentage=7d,30d");
+    memeAssets = rows.filter(row => isPositive(row.current_price) && isPositive(row.market_cap))
+      .sort((a,b) => b.market_cap-a.market_cap).map(row => ({
+        id:"gecko:"+row.id,name:row.name,symbol:row.symbol.toUpperCase(),last_updated:row.last_updated,gecko:row,
+        quotes:{USD:{price:row.current_price,market_cap:row.market_cap,volume_24h:row.total_volume,
+          percent_change_24h:row.price_change_percentage_24h,percent_change_7d:row.price_change_percentage_7d_in_currency,
+          percent_change_30d:row.price_change_percentage_30d_in_currency}}
+      }));
+    const newest = Math.max(...memeAssets.map(asset => Date.parse(asset.last_updated)).filter(Number.isFinite));
+    cryptoStatus.meme = Number.isFinite(newest) ? " · Latest quote " + timestamp(newest) + " · Refreshes every 5 min"
+      : " · No eligible quotes returned.";
+    if (openCoin?.gecko && profileDialog.open) refreshOpenCoinQuote();
+  } catch {
+    cryptoStatus.meme = " · Refresh failed. Last available quotes shown.";
+  } finally {
+    memeChecked = Date.now();
+    memeLoading = false;
+    renderCrypto();
+  }
+}
+
+byId("crypto-ranking").addEventListener("change",() => {
+  cryptoPage = 0;
+  renderCrypto();
+  refreshMemes();
+});
+new MutationObserver(() => refreshMemes()).observe(byId("crypto"),{attributes:true,attributeFilter:["hidden"]});
+byId("refresh").addEventListener("click",() => refreshMemes(true));
+setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
+renderCrypto();
+refreshMemes();

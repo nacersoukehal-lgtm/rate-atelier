@@ -65,11 +65,11 @@
 <button id="stock-pin" class="secondary-action" type="button">☆ Save to watchlist</button><small id="stock-pin-status" role="status"></small>
 </dialog>
 <section id="crypto" class="tools tab-panel">
-<div class="crypto-head"><div><h2>Crypto markets</h2><p>Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div>
+<div class="crypto-head"><div><h2>Crypto markets</h2><p id="crypto-method">Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><div class="crypto-filters"><label>Ranking<select id="crypto-ranking"><option value="major">Top 50 overall</option><option value="micro">Top 50 micro-caps</option><option value="meme">Top 50 meme coins</option></select></label><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div></div>
 <div class="crypto-panel">
 <div class="table-scroll" tabindex="0" role="region" aria-label="Cryptocurrency rankings"><table><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price (USD)</th><th scope="col">24h change</th><th scope="col">Market cap</th><th scope="col">24h volume</th></tr></thead><tbody id="crypto-rows"></tbody></table></div>
 <p id="crypto-state" class="crypto-state" role="status">Loading crypto markets…</p>
-<div class="table-foot"><small><a href="https://coinpaprika.com/">CoinPaprika</a><span id="crypto-time"></span></small><div class="pager"><button id="crypto-prev" disabled aria-label="Previous crypto page">‹</button><span id="crypto-page">—</span><button id="crypto-next" disabled aria-label="Next crypto page">›</button></div></div>
+<div class="table-foot"><small><a id="crypto-source" href="https://coinpaprika.com/">CoinPaprika</a><span id="crypto-time"></span></small><div class="pager"><button id="crypto-prev" disabled aria-label="Previous crypto page">‹</button><span id="crypto-page">—</span><button id="crypto-next" disabled aria-label="Next crypto page">›</button></div></div>
 </div></section>
 <section id="calendar" class="tools tab-panel">
 <h2>Economic calendar</h2>
