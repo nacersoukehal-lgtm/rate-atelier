@@ -1529,7 +1529,7 @@ const stockAssets = new Map(stockCatalog.map(asset => [asset.code,asset]));
 const watchStocks = new Map(stockCatalog.map(asset => [asset.code,asset.name + " · " + asset.exchange]));
 const stockQuotes = new Map(readQuotes("stocks",[]).flatMap(([code,quote]) => {
   const asset = stockAssets.get(code);
-  return asset ? [[code,{...quote,asset,points:[],stale:true}]] : [];
+  return asset ? [[code,{...quote,asset,points:quote.points ?? [],stale:true}]] : [];
 }));
 function rememberStock(code,data) {
   const current = stockQuotes.get(code);
@@ -1539,17 +1539,26 @@ function rememberStock(code,data) {
   }
   stockQuotes.delete(code);
   stockQuotes.set(code,data);
-  saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) => [key,quote]));
+  saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) =>
+    [key,{...quote,points:recentStockPoints(points)}]));
+}
+function recentStockPoints(points) {
+  if (!points?.length) return [];
+  const cutoff = Date.parse(points.at(-1).date) - 30 * 86400000;
+  return points.filter(point => Date.parse(point.date) >= cutoff);
 }
 let stockSnapshotRequest;
 function loadStockSnapshot() {
-  stockSnapshotRequest ??= json("./stock-quote-snapshot.json").then(snapshot => {
+  stockSnapshotRequest ??= json("./stock-quote-snapshot.json?v=history").then(snapshot => {
     for (const [code,quote] of Object.entries(snapshot.quotes)) {
       const asset = stockAssets.get(code);
       const existing = stockQuotes.get(code);
       if (!asset || !isPositive(quote.price) || !Number.isFinite(Date.parse(quote.date))) continue;
-      if (existing && Date.parse(existing.date) >= Date.parse(quote.date)) continue;
-      stockQuotes.set(code,{...quote,asset,points:[],stale:true});
+      if (existing && Date.parse(existing.date) >= Date.parse(quote.date)) {
+        if (existing.points.length < 2) existing.points = quote.points ?? [];
+        continue;
+      }
+      stockQuotes.set(code,{...quote,asset,points:quote.points ?? [],stale:true});
     }
     if (!byId("stocks").hidden) renderStocks();
     updateWatchQuotes();
@@ -1633,6 +1642,10 @@ function stockValue(data,value) {
   return data.asset.region === "Indices" ? amount : amount + (data.currency ? " " + data.currency : "");
 }
 
+function stockHighLow(data,value) {
+  return data && isPositive(value) ? stockValue(data,value) : "Unavailable";
+}
+
 async function refreshStocks() {
   clearTimeout(stockRefreshTimer);
   if (stockLoading) {
@@ -1708,7 +1721,8 @@ function renderStocks() {
     lead.append(button,info);
     const values = data ? [stockValue(data,data.price),
       Number.isFinite(data.change) ? (data.change > 0 ? "+" : "") + num(data.change) : "—",percent(data.percent),
-      stockValue(data,data.open),stockValue(data,data.high),stockValue(data,data.low),stockValue(data,data.previous)] : [attemptedStockQuotes.has(asset.code) ? unavailable : "Loading quote…",...Array(6).fill("—")];
+      stockValue(data,data.open),stockHighLow(data,data.high),stockHighLow(data,data.low),stockValue(data,data.previous)]
+      : [attemptedStockQuotes.has(asset.code) ? unavailable : "Loading quote…","—","—","—","Unavailable","Unavailable","—"];
     values.forEach((value,index) => {
       const cell = row.insertCell();
       cell.textContent = value;
@@ -1748,10 +1762,31 @@ function renderStockProfile(asset) {
     const term = document.createElement("dt");
     const detail = document.createElement("dd");
     term.textContent = label;
-    detail.textContent = data ? (label === "Session volume" ? positiveFormat(value,supplyFormat.format) : stockValue(data,value)) : "—";
+    detail.textContent = /high|low/.test(label) ? stockHighLow(data,value)
+      : data ? (label === "Session volume" ? positiveFormat(value,supplyFormat.format) : stockValue(data,value)) : "—";
     block.append(term,detail);
     return block;
   }));
+}
+
+function drawStockHistory(host,asset,points,stale = false) {
+  const values = points.map(point => point.price);
+  const min = Math.min(...values);
+  const spread = Math.max(...values)-min;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 500 136");
+  svg.setAttribute("role","img");
+  svg.setAttribute("aria-label",asset.name + " daily close history");
+  const line = document.createElementNS(svg.namespaceURI,"polyline");
+  line.setAttribute("points",values.map((value,index) =>
+    (5+490*index/(values.length-1)) + "," + (spread ? 130-124*(value-min)/spread : 68)).join(" "));
+  line.setAttribute("fill","none");
+  line.setAttribute("stroke","#185741");
+  line.setAttribute("stroke-width","2");
+  svg.append(line);
+  const caption = document.createElement("small");
+  caption.textContent = dateOnly(points[0].date) + " – " + dateOnly(points.at(-1).date) + " · Daily prices" + (stale ? " · Stale · saved history" : "");
+  host.replaceChildren(svg,caption);
 }
 
 async function renderStockHistory() {
@@ -1760,36 +1795,29 @@ async function renderStockHistory() {
   const request = ++stockChartRequest;
   const range = byId("stock-range").value;
   const host = byId("stock-profile-chart");
-  host.textContent = "Loading price history…";
+  const active = () => request === stockChartRequest && stockDialog.open;
+  const showSaved = () => {
+    const points = recentStockPoints(stockQuotes.get(asset.code)?.points);
+    if (points.length < 2) return false;
+    drawStockHistory(host,asset,points,true);
+    if (range === "1y") host.querySelector("small").append(" · 1-year history unavailable");
+    return true;
+  };
+  if (!showSaved()) host.textContent = "Loading price history…";
   try {
     const data = await fetchStock(asset.code,range);
-    if (request !== stockChartRequest || !stockDialog.open) return;
+    if (!active()) return;
     rememberStock(asset.code,data);
     renderStockProfile(asset);
     if (data.points.length < 2) throw new Error("Insufficient history");
-    const values = data.points.map(point => point.price);
-    const min = Math.min(...values);
-    const spread = Math.max(...values)-min;
-    const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-    svg.setAttribute("viewBox","0 0 500 136");
-    svg.setAttribute("role","img");
-    svg.setAttribute("aria-label",asset.name + " daily close history");
-    const line = document.createElementNS(svg.namespaceURI,"polyline");
-    line.setAttribute("points",values.map((value,index) =>
-      (5+490*index/(values.length-1)) + "," + (spread ? 130-124*(value-min)/spread : 68)).join(" "));
-    line.setAttribute("fill","none");
-    line.setAttribute("stroke","#185741");
-    line.setAttribute("stroke-width","2");
-    svg.append(line);
-    const caption = document.createElement("small");
-    caption.textContent = dateOnly(data.points[0].date) + " – " + dateOnly(data.points.at(-1).date) + " · Daily closes";
-    host.replaceChildren(svg,caption);
+    const older = Date.parse(data.date) < Date.parse(stockQuotes.get(asset.code)?.date);
+    if (!(older && range === "1mo" && showSaved())) drawStockHistory(host,asset,data.points,older);
   } catch {
-    if (request === stockChartRequest && stockDialog.open) {
-      if (range === "1mo" && stockQuotes.has(asset.code)) stockQuotes.get(asset.code).stale = true;
-      renderStockProfile(asset);
-      host.textContent = "Price history is temporarily unavailable.";
-    }
+    await loadStockSnapshot();
+    if (!active()) return;
+    if (range === "1mo" && stockQuotes.has(asset.code)) stockQuotes.get(asset.code).stale = true;
+    renderStockProfile(asset);
+    if (!showSaved()) host.textContent = "Price history is unavailable.";
   }
 }
 
