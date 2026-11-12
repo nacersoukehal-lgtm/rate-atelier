@@ -87,10 +87,9 @@ const assetHistory = document.querySelector("[data-asset-history]");
 if (assetHistory) {
   const asset = assetHistory.dataset.assetHistory;
   const usdFormat = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
-  const eurFormat = new Intl.NumberFormat(undefined,{style:"currency",currency:"EUR",maximumFractionDigits:4});
   mountFinanceHistory(assetHistory,async () => ({
-    points:await (asset === "BTC" ? financeHistory.bitcoin() : asset === "EUR" ? financeHistory.fx("USD","EUR") : financeHistory.metal(asset)),
-    format:asset === "EUR" ? eurFormat.format : usdFormat.format,
-    label:asset === "EUR" ? "EUR per US dollar" : asset === "BTC" ? "Bitcoin price in USD" : "USD per troy ounce"
+    points:await (asset === "BTC" ? financeHistory.bitcoin() : ["EUR","DZD"].includes(asset) ? financeHistory.fx("USD",asset) : financeHistory.metal(asset)),
+    format:["EUR","DZD"].includes(asset) ? new Intl.NumberFormat(undefined,{style:"currency",currency:asset,maximumFractionDigits:4}).format : usdFormat.format,
+    label:["EUR","DZD"].includes(asset) ? asset + " per US dollar" : asset === "BTC" ? "Bitcoin price in USD" : "USD per troy ounce"
   }))();
 }

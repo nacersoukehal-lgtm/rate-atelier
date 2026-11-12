@@ -1741,7 +1741,7 @@ let landingPairApplied = false;
 function applyLandingPair() {
   const params = new URLSearchParams(location.search);
   const pair = params.get("pair");
-  if (landingPairApplied || !["EUR","AUD","EURUSD"].includes(pair) || !rates.has(pair === "EURUSD" ? "EUR" : pair)) return;
+  if (landingPairApplied || !["EUR","AUD","DZD","EURUSD"].includes(pair) || !rates.has(pair === "EURUSD" ? "EUR" : pair)) return;
   landingPairApplied = true;
   byId("home-from").value = pair === "EURUSD" ? "EUR" : "USD";
   byId("home-to").value = pair === "EURUSD" ? "USD" : pair;

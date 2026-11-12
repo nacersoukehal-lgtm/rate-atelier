@@ -7,7 +7,7 @@ const usd = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
 
 async function updateLandingQuote() {
   try {
-    const isCurrency = ["EUR","AUD","EURUSD"].includes(asset);
+    const isCurrency = ["EUR","AUD","DZD","EURUSD"].includes(asset);
     const baseCurrency = asset === "EURUSD" ? "EUR" : "USD";
     const quoteCurrency = asset === "EURUSD" ? "USD" : asset;
     const endpoint = asset === "BTC" ? "https://api.coinpaprika.com/v1/tickers/btc-bitcoin" : isCurrency ? "https://api.frankfurter.dev/v2/rate/" + baseCurrency + "/" + quoteCurrency
