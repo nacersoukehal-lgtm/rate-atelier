@@ -7,7 +7,7 @@
 <meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=nft-artwork"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=ecb-fallback" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=artwork" defer></script>
+<link rel="stylesheet" href="style.css?v=nft-artwork"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=ecb-fallback" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=top-100" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
@@ -90,15 +90,16 @@
 </div></section>
 <section id="nfts" class="tools tab-panel" hidden>
 <h2>NFT collections</h2>
-<p class="stocks-intro">Track floor prices, listings, and sales activity for selected Solana collections on Magic Eden.</p>
+<p class="stocks-intro">Browse up to 100 Solana NFT collections ranked by seven-day trading volume on Magic Eden.</p>
 <div class="calendar-filters stock-filters">
 <label>Find a collection<input id="nft-search" type="search" placeholder="Collection name"></label>
 <label>Sort by<select id="nft-sort"><option value="volume7d">7-day volume</option><option value="floorPrice">Floor price</option><option value="listedCount">Listed items</option><option value="name">Collection name</option></select></label>
 <button id="nft-refresh" class="secondary-action" type="button">Refresh NFT data</button>
 </div>
 <div class="nft-table" role="region" aria-label="NFT collection quotes" tabindex="0"><table>
-<thead><tr><th scope="col">Collection</th><th scope="col">Floor price</th><th scope="col">Listed items</th><th scope="col">24h average sale</th><th scope="col">7-day volume</th><th scope="col">Fetched</th></tr></thead>
+<thead><tr><th scope="col">Collection</th><th scope="col">Floor price</th><th scope="col">Listed items</th><th scope="col">7-day transactions</th><th scope="col">7-day volume</th><th scope="col">Fetched</th></tr></thead>
 <tbody id="nft-rows"></tbody></table></div>
+<div class="table-foot"><div class="pager"><button id="nft-prev" aria-label="Previous NFT collections" disabled>‹</button><span id="nft-page" aria-live="polite">—</span><button id="nft-next" aria-label="Next NFT collections" disabled>›</button></div></div>
 <p id="nft-empty" class="crypto-state" hidden>No collections match your search.</p>
 <p id="nft-status" class="crypto-state" role="status">Loading NFT collections…</p>
 <small>Floor price is the lowest listed asking price. A dash indicates unavailable data.</small>

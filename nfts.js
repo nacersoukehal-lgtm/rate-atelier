@@ -7,7 +7,11 @@ const nftSearch = document.getElementById("nft-search");
 const nftSort = document.getElementById("nft-sort");
 const nftRefresh = document.getElementById("nft-refresh");
 const nftDialog = document.getElementById("nft-profile");
-const nftEndpoint = "https://proxy.cors.dev/https://api-mainnet.magiceden.dev/v2/collections/";
+const nftEndpoint = "https://proxy.cors.dev/https://api-mainnet.magiceden.dev/collection_stats/search/solana?window=7d&limit=100&offset=0&sort=volume&direction=desc";
+const nftPageSize = 20;
+let nftPage = 0;
+const nftPrev = document.getElementById("nft-prev");
+const nftNext = document.getElementById("nft-next");
 const nftNumbers = new Intl.NumberFormat(undefined,{maximumFractionDigits:4});
 const nftDates = new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"});
 let nftCollections = [];
@@ -16,21 +20,22 @@ let nftLastAttempt = 0;
 let nftActiveId;
 
 function nftSol(value) {
-  return Number.isFinite(value) && value > 0 ? nftNumbers.format(value/1e9) + " SOL" : "—";
+  return Number.isFinite(value) && value > 0 ? nftNumbers.format(value) + " SOL" : "—";
 }
 
 function nftMetrics(stats) {
   return [
     ["Floor price",nftSol(stats.floorPrice)],
     ["Listed items",Number.isFinite(stats.listedCount) ? nftNumbers.format(stats.listedCount) : "—"],
-    ["24h average sale",nftSol(stats.avgPrice24hr)],
+    ["7-day transactions",Number.isFinite(stats.transactions7d) ? nftNumbers.format(stats.transactions7d) : "—"],
     ["7-day volume",nftSol(stats.volume7d)]
   ];
 }
 
 function nftArtwork(collection, size) {
   const image = document.createElement("img");
-  image.src = collection.image;
+  if (collection.image?.startsWith("https://")) image.src = collection.image;
+  image.addEventListener("error",() => image.removeAttribute("src"),{once:true});
   image.alt = size > 52 ? collection.imageLabel || collection.name + " collection artwork" : "";
   image.width = size;
   image.height = size;
@@ -42,9 +47,10 @@ function nftArtwork(collection, size) {
 
 function renderNftProfile(collection) {
   const artwork = document.getElementById("nft-profile-artwork");
-  if (artwork.dataset.collection !== collection.id) {
+  if (artwork.dataset.collection !== collection.id || artwork.dataset.image !== collection.image) {
     artwork.replaceChildren(nftArtwork(collection,180));
     artwork.dataset.collection = collection.id;
+    artwork.dataset.image = collection.image ?? "";
   }
   document.getElementById("nft-profile-title").textContent = collection.name;
   document.getElementById("nft-profile-description").textContent = collection.description;
@@ -63,12 +69,18 @@ function renderNftProfile(collection) {
 function renderNftCollections() {
   const query = nftSearch.value.trim().toLowerCase();
   const order = nftSort.value;
-  const collectionList = nftCollections.filter(collection => collection.name.toLowerCase().includes(query));
+  const collectionList = nftCollections.filter(collection => (collection.name + " " + collection.id).toLowerCase().includes(query));
   collectionList.sort((a,b) => {
     if (order === "name") return a.name.localeCompare(b.name);
     return (b.stats[order] ?? -1) - (a.stats[order] ?? -1);
   });
-  nftRows.replaceChildren(...collectionList.map(collection => {
+  nftPage = Math.min(nftPage,Math.max(0,Math.ceil(collectionList.length/nftPageSize)-1));
+  const offset = nftPage*nftPageSize;
+  const end = Math.min(offset+nftPageSize,collectionList.length);
+  nftPrev.disabled = offset === 0;
+  nftNext.disabled = end >= collectionList.length;
+  document.getElementById("nft-page").textContent = end ? (offset+1) + "–" + end + " of " + collectionList.length : "0 collections";
+  nftRows.replaceChildren(...collectionList.slice(offset,end).map(collection => {
     const row = document.createElement("tr");
     const lead = row.insertCell();
     const open = document.createElement("button");
@@ -109,37 +121,49 @@ async function refreshNfts(force = false) {
   nftStatus.textContent = "Checking Magic Eden for updated collection data…";
   try {
     if (!nftCollections.length) {
-      const snapshot = await fetch("./nft-collections.json?v=artwork",{signal:AbortSignal.timeout(8000)});
+      const snapshot = await fetch("./nft-collections.json?v=top-100",{signal:AbortSignal.timeout(8000)});
       if (!snapshot.ok) throw new Error("Snapshot unavailable");
       nftCollections = await snapshot.json();
       renderNftCollections();
     }
-    let updated = 0;
-    for (let start = 0; start < nftCollections.length; start += 4) {
-      await Promise.allSettled(nftCollections.slice(start,start+4).map(async collection => {
-        const response = await fetch(nftEndpoint + encodeURIComponent(collection.id) + "/stats",{signal:AbortSignal.timeout(8000)});
-        if (!response.ok) throw new Error("Quote unavailable");
-        const stats = await response.json();
-        if (stats.symbol !== collection.id || !Number.isFinite(stats.listedCount)) throw new Error("Invalid quote");
-        collection.stats = stats;
-        collection.checkedAt = new Date().toISOString();
-        updated++;
-      }));
+    const response = await fetch(nftEndpoint,{signal:AbortSignal.timeout(8000)});
+    if (!response.ok) throw new Error("Ranking unavailable");
+    const rows = await response.json();
+    const checkedAt = new Date().toISOString();
+    const existing = new Map(nftCollections.map(collection => [collection.id,collection]));
+    const ranked = new Map();
+    for (const row of rows) {
+      const id = row.collectionSymbol;
+      if (typeof id !== "string" || typeof row.name !== "string" || row.currency !== "SOL" || !Number.isFinite(row.vol)) continue;
+      ranked.set(id,{
+        id,name:row.name,image:row.image || existing.get(id)?.image,
+        description:existing.get(id)?.description ?? "",
+        stats:{
+          floorPrice:row.fpListingCurrency === "SOL" ? row.fp : undefined,
+          listedCount:row.listedCount,transactions7d:row.txns,volume7d:row.vol
+        },
+        checkedAt
+      });
     }
+    if (ranked.size < 90) throw new Error("Incomplete ranking");
+    nftCollections = [...ranked.values()].slice(0,100);
     renderNftCollections();
-    nftStatus.textContent = updated === nftCollections.length ? "Collection data fetched from Magic Eden. Checks run every 10 minutes while this tab is open."
-      : updated ? "Some quotes couldn’t refresh. Their last fetched values are shown."
-      : "The feed couldn’t refresh. Showing saved quotes with their fetch times.";
+    nftStatus.textContent = "Ranking fetched from Magic Eden. Checks run every 10 minutes while this tab is open.";
   } catch {
-    nftStatus.textContent = "NFT collection data is temporarily unavailable. Try refreshing in a moment.";
+    nftStatus.textContent = nftCollections.length ? "The ranking couldn’t refresh. Showing the last fetched data."
+      : "NFT collection data is temporarily unavailable. Try refreshing in a moment.";
   } finally {
     nftLoading = false;
     nftRefresh.disabled = false;
   }
 }
 
-nftSearch.addEventListener("input",renderNftCollections);
-nftSort.addEventListener("input",renderNftCollections);
+for (const filter of [nftSearch,nftSort]) filter.addEventListener("input",() => {
+  nftPage = 0;
+  renderNftCollections();
+});
+nftPrev.addEventListener("click",() => { nftPage--; renderNftCollections(); });
+nftNext.addEventListener("click",() => { nftPage++; renderNftCollections(); });
 nftRefresh.addEventListener("click",() => {
   if (Date.now()-nftLastAttempt < 30000) {
     nftStatus.textContent = "Please wait 30 seconds between refreshes.";

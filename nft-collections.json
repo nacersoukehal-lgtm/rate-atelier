@@ -1,113 +1,1302 @@
 [
   {
-    "id": "mad_lads",
-    "name": "Mad Lads",
-    "description": "Illustrated characters with an associated xNFT ecosystem.",
+    "id": "otc_desks",
+    "name": "OTC Desks",
+    "image": "https://arweave.net/KqSX2lWfTeqh6DJa96c1JSZi8HVVwOWXt87OeFIX4FU/0.png",
+    "description": "",
     "stats": {
-      "symbol": "mad_lads",
-      "floorPrice": 7144700000,
-      "listedCount": 191,
-      "avgPrice24hr": 6882309999.999999,
-      "volume7d": 260886939999.99997
+      "floorPrice": 3.948,
+      "listedCount": 32,
+      "transactions7d": 183,
+      "volume7d": 987.97062425
     },
-    "checkedAt": "2026-11-12T16:07:22.702Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fmad_lads_pfp_1682211343777.png@png"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   },
   {
-    "id": "claynosaurz",
-    "name": "Claynosaurz",
-    "description": "A collection of animated dinosaur characters.",
+    "id": "tomorrowland_winter",
+    "name": "Tomorrowland: A Letter from the Universe",
+    "image": "https://bafybeidtuyyi2clhwnbdargiop2dveibfsh3vl7vs5imuzj6yk7ax55f3u.ipfs.nftstorage.link/",
+    "description": "",
     "stats": {
-      "symbol": "claynosaurz",
-      "floorPrice": 5757900000,
-      "listedCount": 216,
-      "avgPrice24hr": 5887988888.888888,
-      "volume7d": 208414831740
+      "floorPrice": 54,
+      "listedCount": 19,
+      "transactions7d": 14,
+      "volume7d": 733.8486
     },
-    "checkedAt": "2026-11-12T16:07:22.706Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fclaynosaurz_pfp_1679930706147.jpeg@png"
-  },
-  {
-    "id": "solana_monkey_business",
-    "name": "Solana Monkey Business",
-    "description": "Pixel-art monkeys from the Solana Monkey Business collection.",
-    "stats": {
-      "symbol": "solana_monkey_business",
-      "floorPrice": 12998000000,
-      "listedCount": 218,
-      "avgPrice24hr": 12459666666.666666,
-      "volume7d": 251330400000
-    },
-    "checkedAt": "2026-11-12T16:07:22.712Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fi.imgur.com%2FbMH6qNc.png@png"
-  },
-  {
-    "id": "degods",
-    "name": "DeGods",
-    "description": "The Solana listings for the DeGods profile-picture collection.",
-    "stats": {
-      "symbol": "degods",
-      "floorPrice": 3050400000,
-      "listedCount": 481,
-      "avgPrice24hr": 3030500000,
-      "volume7d": 122018005000
-    },
-    "checkedAt": "2026-11-12T16:07:22.712Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fdegods_pfp_1759544355415.png@png"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   },
   {
     "id": "okay_bears",
     "name": "Okay Bears",
+    "image": "https://bronze-legislative-cat-759.mypinata.cloud/ipfs/bafkreidj6ilduqfofjyicu5ht4ljfi4yeuaj6wrr7fomvocpbrsqkeymha",
     "description": "A profile-picture collection of illustrated bears.",
     "stats": {
-      "symbol": "okay_bears",
-      "floorPrice": 2990000000,
+      "floorPrice": 2.99,
       "listedCount": 565,
-      "avgPrice24hr": 3418333333.555556,
-      "volume7d": 344668529352
+      "transactions7d": 113,
+      "volume7d": 344.668529352
     },
-    "checkedAt": "2026-11-12T16:07:22.706Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fbronze-legislative-cat-759.mypinata.cloud%2Fipfs%2Fbafkreidj6ilduqfofjyicu5ht4ljfi4yeuaj6wrr7fomvocpbrsqkeymha@png"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "mad_lads",
+    "name": "Mad Lads",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/mad_lads_pfp_1682211343777.png",
+    "description": "Illustrated characters with an associated xNFT ecosystem.",
+    "stats": {
+      "floorPrice": 7.1001,
+      "listedCount": 191,
+      "transactions7d": 33,
+      "volume7d": 260.88694
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "solana_monkey_business",
+    "name": "SMB Gen2",
+    "image": "https://i.imgur.com/bMH6qNc.png",
+    "description": "Pixel-art monkeys from the Solana Monkey Business collection.",
+    "stats": {
+      "floorPrice": 12.899,
+      "listedCount": 218,
+      "transactions7d": 20,
+      "volume7d": 251.3304
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   },
   {
     "id": "famous_fox_federation",
     "name": "Famous Fox Federation",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/famous_fox_federation_pfp_1679672949828.gif",
     "description": "A collection of pixel-art fox characters.",
     "stats": {
-      "symbol": "famous_fox_federation",
-      "floorPrice": 3174100000,
+      "floorPrice": 3.1731,
       "listedCount": 172,
-      "avgPrice24hr": 3031602222.2222223,
-      "volume7d": 243468740000
+      "transactions7d": 82,
+      "volume7d": 249.53284
     },
-    "checkedAt": "2026-11-12T16:07:22.711Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Ffamous_fox_federation_pfp_1679672949828.gif@png"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "the_reflection_of_love",
+    "name": "Tomorrowland: The Reflection of Love",
+    "image": "https://bafybeif7j2ej56hvscv7jy2fvz4ywri7ocnt7oazitxkgmmi4ijzhajbge.ipfs.dweb.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 20,
+      "listedCount": 33,
+      "transactions7d": 11,
+      "volume7d": 218.5311
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "retardio_cousins_classic",
+    "name": "Retardio Cousins Classic™",
+    "image": "https://na-assets.pinit.io/7FcSJSk5kKp7rVKQmpz7Y5FcYjTXp9q1UxqrPadvXij5/ca1bef82-cf7e-4da2-920c-e2d055b901d5/4ca6690b-de62-4732-a8c7-49d2a2277c76-1063.jpg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.719,
+      "listedCount": 396,
+      "transactions7d": 272,
+      "volume7d": 208.733485222
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "claynosaurz",
+    "name": "Claynosaurz",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/claynosaurz_pfp_1679930706147.jpeg",
+    "description": "A collection of animated dinosaur characters.",
+    "stats": {
+      "floorPrice": 5.745,
+      "listedCount": 216,
+      "transactions7d": 36,
+      "volume7d": 208.41483174
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "collectorcardclub",
+    "name": "Collector Crypt RWA Tokenized Trading Card Club Membership Pass",
+    "image": "https://media.cdn.magiceden.dev/launchpad/upload/1f1aa42a-e94b-4053-99b3-8962a4fe3fca",
+    "description": "",
+    "stats": {
+      "floorPrice": 15.949,
+      "listedCount": 18,
+      "transactions7d": 11,
+      "volume7d": 173.758
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "ant_miner_sealed",
+    "name": "ANT MINER — SEALED",
+    "image": "https://nft.theantminer.xyz/ant-miner/placeholder/sealed-210.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.85,
+      "listedCount": 19,
+      "transactions7d": 23,
+      "volume7d": 132.218800001
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "degods",
+    "name": "DeGods",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/degods_pfp_1759544355415.png",
+    "description": "The Solana listings for the DeGods profile-picture collection.",
+    "stats": {
+      "floorPrice": 3.0504,
+      "listedCount": 481,
+      "transactions7d": 37,
+      "volume7d": 122.018005
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "migory",
+    "name": "MIGORY",
+    "image": "https://white-legislative-eagle-698.mypinata.cloud/ipfs/bafybeigpko2w57lt7aadldk4ddxipjwp57dpy6s7lyq35b7z255dpljgj4/collection-logo.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.1793,
+      "listedCount": 33,
+      "transactions7d": 73,
+      "volume7d": 105.815079137
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   },
   {
     "id": "smb_gen3",
     "name": "SMB Gen3",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/smb_gen3_pfp_1688353503184.png",
     "description": "The third generation of the Solana Monkey Business collection.",
     "stats": {
-      "symbol": "smb_gen3",
-      "floorPrice": 3733263000,
+      "floorPrice": 3.733263,
       "listedCount": 265,
-      "avgPrice24hr": 4201856343.3333335,
-      "volume7d": 96711104530
+      "transactions7d": 27,
+      "volume7d": 96.71110453
     },
-    "checkedAt": "2026-11-12T16:07:22.705Z",
-    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fsmb_gen3_pfp_1688353503184.png@png"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   },
   {
-    "id": "tensorians",
-    "name": "Tensorians",
-    "description": "A collection associated with the Tensor NFT marketplace.",
+    "id": "transdimensional_fox_federation",
+    "name": "Transdimensional Fox Federation",
+    "image": "https://bafkreiatsxp4ygj4muopasqisvjpvuhuvdk734zldbhvkx74hfnhik6mja.ipfs.nftstorage.link",
+    "description": "",
     "stats": {
-      "symbol": "tensorians",
-      "floorPrice": 500000000,
-      "listedCount": 172
+      "floorPrice": 1.0468,
+      "listedCount": 268,
+      "transactions7d": 82,
+      "volume7d": 90.984966
     },
-    "checkedAt": "2026-11-12T16:07:23.104Z",
-    "image": "https://prod-tensor-creators-s3.s3.us-east-1.amazonaws.com/drop-metadata/24f27171-430f-42ca-b442-6a75a8daadad/images/2789.png",
-    "imageLabel": "Tensorian #3163"
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "lunarverse_lunar_apes",
+    "name": "Lunarverse Lunar Apes",
+    "image": "https://assets.lunarverse.app/images/collection.webp",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.218,
+      "listedCount": 167,
+      "transactions7d": 172,
+      "volume7d": 67.476096978
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "morbie",
+    "name": "Morbies",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/morbie_pfp_1718459274523.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.393167546,
+      "listedCount": 137,
+      "transactions7d": 126,
+      "volume7d": 53.118567128
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "y00ts",
+    "name": "y00ts ",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/y00ts_pfp_1759543904783.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.83,
+      "listedCount": 438,
+      "transactions7d": 55,
+      "volume7d": 48.701348331
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "the_bullpen",
+    "name": "The Bullpen",
+    "image": "https://gateway.irys.xyz/GQdp8ED5f2VwrXEeJvF3ju5BEUv9MF4waFfbUzpcGckv",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.218841958,
+      "listedCount": 304,
+      "transactions7d": 140,
+      "volume7d": 41.369268898
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "oshi_nft",
+    "name": "OSHI NFT",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/oshi_nft_pfp_1793808677793.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.2364,
+      "listedCount": 43,
+      "transactions7d": 142,
+      "volume7d": 38.649965508
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "collector_crypt",
+    "name": "Collector Crypt",
+    "image": "https://media.cdn.magiceden.dev/launchpad//83efb5ce-e89f-40c5-91e6-2914e244f5d4",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.081904725,
+      "listedCount": 4602,
+      "transactions7d": 72,
+      "volume7d": 36.796129309
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "gainz_",
+    "name": "GAINZ",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/gainz__pfp_1738516798434.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.7419,
+      "listedCount": 24,
+      "transactions7d": 20,
+      "volume7d": 36.114235164
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "saga",
+    "name": "Claynosaurz: The Call of Saga",
+    "image": "https://bafkreifirgaxlprdb7xtumjeewnllapjuodgxyofwulspxwjqrb6q2rqhi.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 4.498,
+      "listedCount": 45,
+      "transactions7d": 7,
+      "volume7d": 35.3865
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "rafflors",
+    "name": "Rafflors",
+    "image": "https://media.cdn.magiceden.dev/launchpad//0bb223aa-ae5b-4ed6-8825-e74f41fe0d62",
+    "description": "",
+    "stats": {
+      "floorPrice": 2.289,
+      "listedCount": 9,
+      "transactions7d": 15,
+      "volume7d": 33.9766
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "galactic_geckos",
+    "name": "GGSG: Galactic Geckos",
+    "image": "https://i.imgur.com/PfaeoXm.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 3.9714,
+      "listedCount": 287,
+      "transactions7d": 7,
+      "volume7d": 32.177586
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "super-hfc",
+    "name": "Super HFC Collection",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/super-hfc_pfp_1793015418574.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 12.5,
+      "listedCount": 24,
+      "transactions7d": 1,
+      "volume7d": 28.71
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "alpha_gardener",
+    "name": "Alpha Gardeners",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/alpha_gardener_pfp_1690709093900.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 6.299,
+      "listedCount": 25,
+      "transactions7d": 5,
+      "volume7d": 27.8525
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "migory_eggs",
+    "name": "MIGORY EGGS",
+    "image": "https://play.migory.com/eggs/nft/collection.jpg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.252,
+      "listedCount": 20,
+      "transactions7d": 54,
+      "volume7d": 23.4623
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "tomorrowland_love_unity",
+    "name": "Tomorrowland: The Symbol of Love and Unity",
+    "image": "https://bafybeidzsht5g3rtb2crlgildg3hrbt5mtuiw6eiakxj5ckhftvrqyjvbm.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 2.199,
+      "listedCount": 124,
+      "transactions7d": 10,
+      "volume7d": 22.471930001
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "gambulls_nft_collection",
+    "name": "Gambulls NFT Collection",
+    "image": "https://node1.irys.xyz/S4IKMRiJj53AhbE7TqIqX48hu8ARmP2ID1RuebPwEyk",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.385971,
+      "listedCount": 32,
+      "transactions7d": 49,
+      "volume7d": 22.062932437
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "famous_fox_dens",
+    "name": "Famous Fox Dens",
+    "image": "https://bafybeieoohxemxjxiztuftvrczcrazaa7nafrmcskbxu6tdzfqelpbceui.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.13343,
+      "listedCount": 83,
+      "transactions7d": 19,
+      "volume7d": 22.044054235
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "ghost_kid_dao",
+    "name": "Ghost Kid",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/ghost_kid_dao_pfp_1700240062011.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.24544,
+      "listedCount": 190,
+      "transactions7d": 75,
+      "volume7d": 21.690213159
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "drippies",
+    "name": "Drippies™️",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/drippies_pfp_1720142820192.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.684,
+      "listedCount": 499,
+      "transactions7d": 25,
+      "volume7d": 21.533725996
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "retardio_cousins",
+    "name": "Retardio Cousins",
+    "image": "https://we-assets.pinit.io/J2Q2j6kpSg7tq8JzueCHNTQNcyNnQkvr85RhsFnYZWeG/f7ac2fd2-13c4-4ca1-85ee-962772caf73e/79",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.561,
+      "listedCount": 413,
+      "transactions7d": 32,
+      "volume7d": 21.018968
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "critters_quest",
+    "name": "Critters Quest",
+    "image": "https://gateway.pinata.cloud/ipfs/bafkreidpkbxibfhoyaayaepsqafnsoi5lpelsstgom5hdxefcgjhabdwpu",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.8896,
+      "listedCount": 156,
+      "transactions7d": 31,
+      "volume7d": 20.862499428
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "pythenians",
+    "name": "Pythenians",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/pythenians_pfp_1733175638213.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.1238,
+      "listedCount": 78,
+      "transactions7d": 21,
+      "volume7d": 19.31035163
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "zmb_0735",
+    "name": "Zero Monke Biz",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/zmb_0735_pfp_1675737312377.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.627,
+      "listedCount": 151,
+      "transactions7d": 11,
+      "volume7d": 17.435314987
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "puffsterz",
+    "name": "Puffsterz",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/puffsterz_pfp_1685453834283.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 2.53,
+      "listedCount": 14,
+      "transactions7d": 7,
+      "volume7d": 16.846
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "deadkingsocietysignets",
+    "name": "Dead King Society Nobles",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/deadkingsocietysignets_pfp_1705542771069.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 6.744,
+      "listedCount": 17,
+      "transactions7d": 3,
+      "volume7d": 15.659
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "marketelites",
+    "name": "Market Elites",
+    "image": "https://bafybeifrmyissgcn3nwnadlytpqzq3lxzj4pgaj6puxjhav756eg6z3abm.ipfs.w3s.link/f3oGyFbJ_400x400_1.jpg",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.3953,
+      "listedCount": 108,
+      "transactions7d": 13,
+      "volume7d": 15.617
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "oshi_pod",
+    "name": "OSHI POD",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/oshi_pod_pfp_1794034929410.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.040959,
+      "listedCount": 124,
+      "transactions7d": 444,
+      "volume7d": 15.216110595
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "lifinity_flares",
+    "name": "Lifinity Flares",
+    "image": "https://bafkreiec2rotips5txqx3u5wto4bqyumckv25kkspgmvl27ms3ilzam2he.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 22.935,
+      "listedCount": 15,
+      "transactions7d": 1,
+      "volume7d": 14.9
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "cets_on_creck",
+    "name": "CETS",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/cats_on_crack_pfp_1644850873089.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.319,
+      "listedCount": 461,
+      "transactions7d": 43,
+      "volume7d": 14.636711761
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "stonk_cats",
+    "name": "Stonk Cats",
+    "image": "https://we-assets.pinit.io/BTRcwVTSoBwXg9XXEXcK4UYYCTmhd6iv81TZggFG522q/2640c204-132b-42b7-aabb-16d4cbb8327f/f1e0e7f5-9fe9-42d6-b899-b3b8df62b22d-0696.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.23333,
+      "listedCount": 139,
+      "transactions7d": 58,
+      "volume7d": 13.817430999
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bored_ape_solana_club",
+    "name": "Bored Ape Solana Club",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/bored_ape_solana_club_pfp_1773034207596.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.7026,
+      "listedCount": 575,
+      "transactions7d": 18,
+      "volume7d": 13.566326161
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "mudwater_cards",
+    "name": "Mudwater Cards",
+    "image": "https://assets.mudwater.bayc.com/art/bafkreidiy7lxzb5obgqq2csxuhiguuh72gt5szeyoe3zz7e2sd477jk5eu",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.0047,
+      "listedCount": 780,
+      "transactions7d": 1893,
+      "volume7d": 13.453554225
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "the_misfits_order",
+    "name": "The Misfits Order",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/the_misfits_order_pfp_1780007232653.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.6399,
+      "listedCount": 75,
+      "transactions7d": 25,
+      "volume7d": 13.01608465
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "taiyo_robotics",
+    "name": "Taiyo Robotics",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/collection_images/taiyo_robotics.jpg",
+    "description": "",
+    "stats": {
+      "floorPrice": 16.9685,
+      "listedCount": 16,
+      "transactions7d": 1,
+      "volume7d": 12.964
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bullbears",
+    "name": "BullBears",
+    "image": "https://we-assets.pinit.io/5RxxaZCsezSD3nJbMef4idk7kFizuuzfWJdPkh9nuJHQ/29334bc7-f173-4860-831a-e332cecbfc99/0",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.118136321,
+      "listedCount": 416,
+      "transactions7d": 96,
+      "volume7d": 12.518637403
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "blocksmith_labs",
+    "name": "Smyths",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/blocksmith_labs_pfp_1693481161444.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.4607,
+      "listedCount": 130,
+      "transactions7d": 24,
+      "volume7d": 12.173951905
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "fomo_friends_oe",
+    "name": "FOMO Friends",
+    "image": "https://media.cdn.magiceden.dev/launchpad/upload/34e26bf1-d3b6-4d6a-a020-10248046b63a",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.0045,
+      "listedCount": 248,
+      "transactions7d": 2,
+      "volume7d": 11.8045
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "drifters_masterwork",
+    "name": "Drifters: Masterwork",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/drifters_masterwork_pfp_1772396501202.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.3057,
+      "listedCount": 260,
+      "transactions7d": 18,
+      "volume7d": 10.9071
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "sensei",
+    "name": "Sensei",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/sensei_pfp_1719400622289.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.9989,
+      "listedCount": 125,
+      "transactions7d": 11,
+      "volume7d": 10.624607895
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "cyber_frogs",
+    "name": "Cyber Frogs",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/cyber_frogs_pfp_1755627984758.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.8557,
+      "listedCount": 90,
+      "transactions7d": 12,
+      "volume7d": 10.223761961
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "littleswagworld",
+    "name": "little swag world",
+    "image": "https://nftstorage.link/ipfs/bafybeiddn3ujufppfg3azha6xrv34kw7t4uznwitve25egygq2v73uagq4",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.9,
+      "listedCount": 111,
+      "transactions7d": 9,
+      "volume7d": 9.86679129
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "solarians",
+    "name": "Solarians",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/solarians_pfp_1757954525422.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.985658,
+      "listedCount": 306,
+      "transactions7d": 10,
+      "volume7d": 9.629271899
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "shaolin_saga",
+    "name": "Shaolin Saga",
+    "image": "https://gateway.irys.xyz/3nPBZGqvtFNXBkQhdVHfjCAZTGNc23sskQBuqWxuhakZ",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.479442346,
+      "listedCount": 40,
+      "transactions7d": 14,
+      "volume7d": 9.569014224
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "degenerate_ape_academy",
+    "name": "Degenerate Ape Academy",
+    "image": "https://bafkreie44hlb5xve225n6p2siebaevxiwha37aefyvs2ul2kx2akalnree.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 1.516,
+      "listedCount": 630,
+      "transactions7d": 6,
+      "volume7d": 9.323286788
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "primates",
+    "name": "Primates",
+    "image": "https://bafybeifnx4apyushfc3i2tg5wx2xgudcfxgisd2sven2mhxixpghuo2jeu.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.246959997,
+      "listedCount": 753,
+      "transactions7d": 28,
+      "volume7d": 9.15745345
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "smb_barrel",
+    "name": "SMB Barrel",
+    "image": "https://nftstorage.link/ipfs/bafkreihka22rqdxvqy7fj4cgeslfdunt44fexwx6tij6hqdryet2v45qvu",
+    "description": "",
+    "stats": {
+      "floorPrice": 4.9,
+      "listedCount": 29,
+      "transactions7d": 2,
+      "volume7d": 8.79
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "midevils",
+    "name": "MidEvils",
+    "image": "https://media.cdn.magiceden.dev/launchpad//8809d569-9302-4000-a0ce-ab428c4c5fa8",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.28375,
+      "listedCount": 258,
+      "transactions7d": 28,
+      "volume7d": 8.767584089
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "jito_cabal",
+    "name": "JITO CABAL",
+    "image": "https://turquoise-major-vole-741.mypinata.cloud/ipfs/bafkreiebqlggej34npzuq5bx7574uxnsd2yebstwfxm2smj3gevxnzkta4",
+    "description": "",
+    "stats": {
+      "floorPrice": 2,
+      "listedCount": 19,
+      "transactions7d": 5,
+      "volume7d": 8.266
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "gomining_solana",
+    "name": "GoMining Solana",
+    "image": "https://media.cdn.magiceden.dev/launchpad/upload/299c79c7-9a92-4004-b5b7-98f06e138e7a",
+    "description": "",
+    "stats": {
+      "floorPrice": 2.1999,
+      "listedCount": 14,
+      "transactions7d": 7,
+      "volume7d": 8.097136585
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "moon_rollers",
+    "name": "Moon Rollers | moonroll.io",
+    "image": "https://media.cdn.magiceden.dev/launchpad/moon_rollers/1a39b200-5d71-4a74-9b24-5d01ee41b3d8",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.525,
+      "listedCount": 30,
+      "transactions7d": 11,
+      "volume7d": 8.095999609
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "lesharx_",
+    "name": "LeSharX",
+    "image": "https://ap-assets.pinit.io/Cxsj4N3sYYKbDPWdAVRUNPjn3dYHaNdCyXnyyKT7Xyxo/b44ef5a3-011b-41b7-8c33-acdda512c3c5/713c4c5f-321b-442a-a0b9-b8d3449b103d-nft_2183.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.039396195,
+      "listedCount": 151,
+      "transactions7d": 59,
+      "volume7d": 7.983703963
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bodoggos",
+    "name": "BoDoggos",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/bodoggos_pfp_1687370020180.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.53011719,
+      "listedCount": 664,
+      "transactions7d": 15,
+      "volume7d": 7.862728339
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "eden",
+    "name": "Eden: Discovery - Humans",
+    "image": "https://media.cdn.magiceden.dev/launchpad/eden/f7d3ff07-89c7-4b11-9b39-068a8ecff5c1",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.0950054,
+      "listedCount": 151,
+      "transactions7d": 54,
+      "volume7d": 7.337817073
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "claymaker",
+    "name": "Claynosaurz: Claymaker",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/claymaker_pfp_1670632629921.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.07,
+      "listedCount": 371,
+      "transactions7d": 12,
+      "volume7d": 7.279058741
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "card_nft_2",
+    "name": "Card NFT 2",
+    "image": "https://assets.mons.link/drops/cardnft2/img/cover.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.207,
+      "listedCount": 414,
+      "transactions7d": 13,
+      "volume7d": 7.178551287
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "lp_doll",
+    "name": "LP Dollz",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/lp_doll_pfp_1727553005524.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.42,
+      "listedCount": 90,
+      "transactions7d": 10,
+      "volume7d": 7.074588916
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "meatbags",
+    "name": "MEATBAGS",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/meatbags_pfp_1785375098369.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.33428,
+      "listedCount": 137,
+      "transactions7d": 23,
+      "volume7d": 6.844052311
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "kinfolks",
+    "name": "Kinfolks",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/kinfolks_pfp_1763160112669.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.5,
+      "listedCount": 218,
+      "transactions7d": 12,
+      "volume7d": 6.37890883
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "undead_genesis",
+    "name": "Undead Genesis ",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/undead_genesis_pfp_1708478421033.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.1562,
+      "listedCount": 250,
+      "transactions7d": 36,
+      "volume7d": 6.233756697
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "candies",
+    "name": "Candies",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/candies_pfp_1713992877710.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.3472,
+      "listedCount": 143,
+      "transactions7d": 20,
+      "volume7d": 6.177741388
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "degenerate_ape_kindergarten",
+    "name": "Degenerate Drop Bears",
+    "image": "https://bafkreiaa3ncbdhrq2xx3j5gcxjxg6qn7zwsn2axw73pbfgfuq72s7imbpy.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.63,
+      "listedCount": 136,
+      "transactions7d": 9,
+      "volume7d": 5.963545782
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "meerkat_millionaires_country_club",
+    "name": "Meerkat Millionaires Country Club",
+    "image": "https://bafkreiaqh732s44ulksit2vuys5dod2osvl62mxzjy25fvilbqi43pktla.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.25,
+      "listedCount": 2007,
+      "transactions7d": 8,
+      "volume7d": 5.9454
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "collector_crypt_",
+    "name": "Collector Crypt",
+    "image": "https://arweave.net/tVggdCR2m_CRNDyntbPRv1Zp-8lPDe8Aqgq-T1N-Pxw",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.1344,
+      "listedCount": 299,
+      "transactions7d": 34,
+      "volume7d": 5.516055909
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bascv2",
+    "name": "BASC",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/bascv2_pfp_1773035262545.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.1997,
+      "listedCount": 480,
+      "transactions7d": 22,
+      "volume7d": 5.476412071
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "nuddies_",
+    "name": "Nuddies",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/nuddies__pfp_1761254325449.jpeg",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.133453,
+      "listedCount": 182,
+      "transactions7d": 39,
+      "volume7d": 5.432371102
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "crawlmd",
+    "name": "crawl.md",
+    "image": "https://nft.crawlnet.network/collection.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.02499,
+      "listedCount": 164,
+      "transactions7d": 78,
+      "volume7d": 5.203007168
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "dumpstr_bags",
+    "name": "DUMPSTR Bags",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/dumpstr_bags_pfp_1782978240844.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.093858724,
+      "listedCount": 136,
+      "transactions7d": 23,
+      "volume7d": 5.101607405
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "player2_",
+    "name": "<Player2>",
+    "image": "https://arweave.net/-536qBlFx2j3_w0Hqs_sLJMVRyi_AXXKDigJc142DS4",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.11681114,
+      "listedCount": 275,
+      "transactions7d": 42,
+      "volume7d": 5.08470588
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "primals",
+    "name": "Primals",
+    "image": "https://gateway.irys.xyz/EM9mJPJsPcDJz1xHJyfsBRBpTr98XaGc6THw96ANcJ6p",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.081808467,
+      "listedCount": 48,
+      "transactions7d": 55,
+      "volume7d": 4.96489097
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "thugbirdz",
+    "name": "Thugbirdz",
+    "image": "https://www.arweave.net/nGvadeW0UuvIgzZUyNKaQ-c8400CDQn1FwNthOJ_KUw?ext=png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.64803,
+      "listedCount": 136,
+      "transactions7d": 7,
+      "volume7d": 4.794972391
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "enchanted_miner",
+    "name": "ENCHANTED MINERS",
+    "image": "https://na-assets.pinit.io/BvKeWCU3nsfW5VpzKhMd7atD5i5qeEQ2ga2t5coDagNr/50c47b25-1d43-436f-b28f-2206959d00ba/166",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.090366619,
+      "listedCount": 71,
+      "transactions7d": 32,
+      "volume7d": 4.768432359
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "solana_deads",
+    "name": "Solana Deads",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/solana_deads_pfp_1749216696953.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.7999,
+      "listedCount": 10,
+      "transactions7d": 13,
+      "volume7d": 4.764827224
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "helions",
+    "name": "HelioX Pass",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/helions_pfp_1695296679320.gif",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.011,
+      "listedCount": 281,
+      "transactions7d": 325,
+      "volume7d": 4.700688028
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "micros",
+    "name": "Micros",
+    "image": "https://na-assets.pinit.io/3M2xsZtaBTScbuWBxYQ7jjeV6SinvLLeaxFcQCrH1oK3/ae0e8be1-fdee-479d-97ed-f3086bfcc57c/0",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.04752,
+      "listedCount": 483,
+      "transactions7d": 80,
+      "volume7d": 4.657142549
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "play_solana",
+    "name": "Play Solana NFT",
+    "image": "https://media.cdn.magiceden.dev/launchpad/play_solana/84d0ffa2-225b-4530-8deb-e8d7dad75d3c",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.36034,
+      "listedCount": 70,
+      "transactions7d": 16,
+      "volume7d": 4.549304777
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bonkznft",
+    "name": "BONKz",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/bonkznft_pfp_1675111749066.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.035080001,
+      "listedCount": 797,
+      "transactions7d": 52,
+      "volume7d": 4.508493219
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "printer",
+    "name": "Printer",
+    "image": "https://printerotc.fun/assets/nfts/0001.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.03869775,
+      "listedCount": 91,
+      "transactions7d": 115,
+      "volume7d": 4.46973711
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "iron_paw_gang_solana",
+    "name": "Iron Paw Gang (Solana)",
+    "image": "https://nftstorage.link/ipfs/bafybeianyk7fxr6amce3vxdm5o22betnp64sxujgc7brfggf7md75oki3i",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.275,
+      "listedCount": 45,
+      "transactions7d": 26,
+      "volume7d": 4.4215182
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "froganas",
+    "name": "Frogana",
+    "image": "https://nftstorage.link/ipfs/bafkreicloy7xn3h2gxr3rj5aditynulgi2lsebnufchddp7agzjeu3mmiu",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.352380951,
+      "listedCount": 971,
+      "transactions7d": 10,
+      "volume7d": 4.388943599
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "pool_party",
+    "name": "Pool Party",
+    "image": "https://media.poolparty.yachts/launchpad/collections/covers/e6336a1407bc34062cac1f961e04f6398a421e0ce289602207faeb1775794ad7.webp",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.3499,
+      "listedCount": 19,
+      "transactions7d": 15,
+      "volume7d": 4.077
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "prophets_",
+    "name": "Prophets",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/prophets__pfp_1788189869565.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.08222,
+      "listedCount": 67,
+      "transactions7d": 37,
+      "volume7d": 3.957334465
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "solcity_",
+    "name": "SolCity",
+    "image": "https://na-assets.pinit.io/6SHjDHLFpGQnE241cxeTiCBe8rVVa7Bqnq7RCdNtBURt/cfe2e09c-14b3-4f59-a00e-a39acf01908a/0",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.282853676,
+      "listedCount": 50,
+      "transactions7d": 15,
+      "volume7d": 3.843087888
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "mefo",
+    "name": "MEFO",
+    "image": "https://creator-hub-prod.s3.us-east-2.amazonaws.com/mefo_pfp_1794000267269.png",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.031359965,
+      "listedCount": 166,
+      "transactions7d": 99,
+      "volume7d": 3.822237036
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "doge_capital",
+    "name": "Doge Capital",
+    "image": "https://bafkreiciwyvorwy4zdqbhlzifyiwg5iqhwdddnlpxcx5uxfdfbottzas34.ipfs.nftstorage.link/",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.171923683,
+      "listedCount": 280,
+      "transactions7d": 23,
+      "volume7d": 3.820703223
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "phantom_fox",
+    "name": "Phantom Fox",
+    "image": "https://gateway.pinit.io/ipfs/QmTB7AFDRtrWvqtHru5n1U72XV16Ex1RCzw7qBPJgaGMkJ/0",
+    "description": "",
+    "stats": {
+      "floorPrice": 1,
+      "listedCount": 636,
+      "transactions7d": 3,
+      "volume7d": 3.79
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
+  },
+  {
+    "id": "bert_coin",
+    "name": "Bert",
+    "image": "https://media.cdn.magiceden.dev/launchpad//71a6fb3c-9e96-4e6d-b5cc-e9639e9f0f1a",
+    "description": "",
+    "stats": {
+      "floorPrice": 0.25308,
+      "listedCount": 222,
+      "transactions7d": 14,
+      "volume7d": 3.575417646
+    },
+    "checkedAt": "2026-11-12T16:22:06.271Z"
   }
 ]
