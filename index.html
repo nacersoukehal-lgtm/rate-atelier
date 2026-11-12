@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Live Currency Rates &amp; Precious Metals Prices | Rate Atelier</title>
+<link rel="canonical" href="https://nacersoukehal-lgtm.github.io/rate-atelier/">
 <meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -11,7 +12,7 @@
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel">
-<div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Live currency rates &amp; precious metals prices</h1><p>Convert currencies, check metal prices, and compare transfer offers.</p></div><div class="status" id="status" role="status">Connecting to feeds…</div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
+<div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Follow global markets in one place</h1><p>Track currencies, metals, stocks, and crypto. Convert currencies and compare transfer offers.</p></div><div class="status" id="status" role="status">Connecting to feeds…</div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Currency converter</h2>
 <label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
 <div class="fields pair"><label>From<select id="home-from"></select></label><button id="home-swap" class="swap" type="button" aria-label="Swap homepage currencies">⇄</button><label>To<select id="home-to"></select></label></div>
@@ -20,15 +21,15 @@
 <div class="quick-pairs" aria-label="Popular USD pairs"><button type="button" data-pair="EUR">USD/EUR</button><button type="button" data-pair="GBP">USD/GBP</button><button type="button" data-pair="CAD">USD/CAD</button><button type="button" data-pair="AUD">USD/AUD</button><button type="button" data-pair="DZD">USD/DZD</button></div>
 </aside></div>
 <section class="quotes" aria-label="Market quotes">
-<article><div class="quote-head"><span class="icon gold">Au</span><div><h2>Gold</h2><small>XAU · USD / troy oz</small></div></div><strong id="gold">—</strong><small id="gold-time">Standard Bullion</small><small id="gold-purity-quotes"></small></article>
-<article><div class="quote-head"><span class="icon silver">Ag</span><div><h2>Silver</h2><small>XAG · USD / troy oz</small></div></div><strong id="silver">—</strong><small id="silver-time">Standard Bullion</small></article>
-<article><div class="quote-head"><span class="icon fx">$</span><div><h2>US Dollar</h2><small>USD / EUR</small></div></div><strong id="usd">—</strong><small id="usd-time">Frankfurter</small></article>
-<article><div class="quote-head"><span class="icon ratio">÷</span><div><h2>Gold / Silver</h2><small>Troy ounce ratio</small></div></div><strong id="ratio">—</strong><small>Silver ounces per ounce of gold</small></article>
+<article><div class="quote-head"><span class="icon gold">Au</span><div><h2>Gold</h2><small>XAU · USD / troy oz</small></div></div><strong id="gold">—</strong><div class="quote-trend"><span id="gold-move" class="quote-move"></span><span id="gold-spark" class="quote-spark"></span></div><small id="gold-time">Standard Bullion</small><small id="gold-purity-quotes"></small></article>
+<article><div class="quote-head"><span class="icon silver">Ag</span><div><h2>Silver</h2><small>XAG · USD / troy oz</small></div></div><strong id="silver">—</strong><div class="quote-trend"><span id="silver-move" class="quote-move"></span><span id="silver-spark" class="quote-spark"></span></div><small id="silver-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon fx">$</span><div><h2>US Dollar</h2><small>USD / EUR</small></div></div><strong id="usd">—</strong><div class="quote-trend"><span id="usd-move" class="quote-move"></span><span id="usd-spark" class="quote-spark"></span></div><small id="usd-time">Frankfurter</small></article>
+<article><div class="quote-head"><span class="icon ratio">÷</span><div><h2>Gold / Silver</h2><small>Troy ounce ratio</small></div></div><strong id="ratio">—</strong><div class="quote-trend"><span id="ratio-move" class="quote-move"></span><span id="ratio-spark" class="quote-spark"></span></div><small>Silver ounces per ounce of gold</small></article>
 </section>
 <section class="quotes more-metals" aria-label="Platinum, palladium, and copper quotes">
-<article><div class="quote-head"><span class="icon silver">Pt</span><div><h2>Platinum</h2><small>XPT · USD / troy oz</small></div></div><strong id="platinum">—</strong><small id="platinum-time">Standard Bullion</small></article>
-<article><div class="quote-head"><span class="icon silver">Pd</span><div><h2>Palladium</h2><small>XPD · USD / troy oz</small></div></div><strong id="palladium">—</strong><small id="palladium-time">Standard Bullion</small></article>
-<article><div class="quote-head"><span class="icon copper">Cu</span><div><h2>Copper futures</h2><small>COMEX HG · USD / lb</small></div></div><strong id="copper">—</strong><small id="copper-time">Yahoo Finance</small></article>
+<article><div class="quote-head"><span class="icon silver">Pt</span><div><h2>Platinum</h2><small>XPT · USD / troy oz</small></div></div><strong id="platinum">—</strong><div class="quote-trend"><span id="platinum-move" class="quote-move"></span><span id="platinum-spark" class="quote-spark"></span></div><small id="platinum-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon silver">Pd</span><div><h2>Palladium</h2><small>XPD · USD / troy oz</small></div></div><strong id="palladium">—</strong><div class="quote-trend"><span id="palladium-move" class="quote-move"></span><span id="palladium-spark" class="quote-spark"></span></div><small id="palladium-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon copper">Cu</span><div><h2>Copper futures</h2><small>COMEX HG · USD / lb</small></div></div><strong id="copper">—</strong><div class="quote-trend"><span id="copper-move" class="quote-move"></span><span id="copper-spark" class="quote-spark"></span></div><small id="copper-time">Yahoo Finance</small></article>
 </section>
 <div class="market-workspace market-history"><section class="chart" aria-labelledby="chart-title">
 <div class="chart-head"><div><div class="eyebrow">HISTORICAL PRICES</div><h2 id="chart-title">Market performance</h2></div><div class="chart-controls"><label class="sr" for="series">Asset</label><select id="series"><option value="XAU">Gold · XAU</option><option value="XAG">Silver · XAG</option><option value="XPT">Platinum · XPT</option><option value="XPD">Palladium · XPD</option><option value="HG">Copper futures · HG</option><option value="FX">USD / EUR</option></select><div class="period" aria-label="Chart range"><button data-range="24h" aria-pressed="false">1D</button><button data-range="7d" aria-pressed="false">1W</button><button data-range="1m" aria-pressed="true">1M</button><button data-range="1y" aria-pressed="false">1Y</button><button data-range="max" aria-pressed="false">All</button></div></div></div>
@@ -168,5 +169,9 @@
 <section aria-labelledby="coin-about-title"><h3 id="coin-about-title">About this asset</h3><p id="coin-description"></p><ul id="coin-history"></ul><div id="coin-tags" class="coin-tags"></div></section>
 <p id="coin-profile-status" role="status"></p><button id="coin-profile-retry" type="button" hidden>Retry data</button><small id="coin-credit">Market quotes and project data by CoinPaprika. Price records and supplemental metrics by CoinGecko where available.</small>
 </dialog>
-<footer><div class="wrap foot"><strong>Rate Atelier</strong><nav aria-label="Market guides"><a href="./usd-to-eur.html">USD to EUR</a> <a href="./usd-to-aud.html">USD to AUD</a> <a href="./gold-price-today.html">Gold price</a> <a href="./silver-price-today.html">Silver price</a> <a href="./gold-vs-silver.html">Gold vs. silver</a> <a href="#about">Data sources</a></nav></div></footer>
+<footer class="site-footer"><div class="wrap footer-grid">
+<div><a class="footer-brand" href="./#markets">Rate Atelier</a><p>Market data and currency tools.</p></div>
+<nav aria-label="Market guides"><strong>Markets</strong><a href="./usd-to-eur.html">USD to EUR</a><a href="./eur-to-usd.html">EUR to USD</a><a href="./usd-to-aud.html">USD to AUD</a><a href="./gold-price-today.html">Gold price</a><a href="./silver-price-today.html">Silver price</a><a href="./bitcoin-price.html">Bitcoin price</a><a href="./gold-vs-silver.html">Gold-to-silver ratio</a></nav>
+<nav aria-label="About and policies"><strong>About Rate Atelier</strong><a href="#about">About</a><a href="#about">Data sources</a><a href="./site-information.html#contact">Contact</a><a href="./site-information.html#privacy">Privacy</a><a href="./site-information.html#disclaimer">Disclaimer</a><a href="./site-information.html#terms">Terms</a></nav>
+</div></footer>
 </body></html>

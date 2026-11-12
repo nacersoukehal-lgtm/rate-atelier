@@ -176,6 +176,7 @@ async function refresh() {
   status.textContent = degraded ? "Some feeds unavailable" : "Auto-refresh every 60 sec";
   updateQuotes();
   updateMarketSummary();
+  document.dispatchEvent(new Event("market-quotes-updated"));
   applyLandingPair();
   convert();
   calculateMetal();
@@ -1230,7 +1231,7 @@ async function refreshCopper() {
   if (!isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime)) {
     throw new Error("Copper quote unavailable");
   }
-  metals.set("HG",{price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString()});
+  metals.set("HG",{price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString(),move:meta.regularMarketChangePercent});
 }
 
 async function copperHistory(range) {
@@ -1457,8 +1458,8 @@ let landingPairApplied = false;
 function applyLandingPair() {
   const params = new URLSearchParams(location.search);
   const pair = params.get("pair");
-  if (landingPairApplied || !["EUR","AUD"].includes(pair) || !rates.has(pair)) return;
+  if (landingPairApplied || !["EUR","AUD","EURUSD"].includes(pair) || !rates.has(pair === "EURUSD" ? "EUR" : pair)) return;
   landingPairApplied = true;
-  byId("home-from").value = "USD";
-  byId("home-to").value = pair;
+  byId("home-from").value = pair === "EURUSD" ? "EUR" : "USD";
+  byId("home-to").value = pair === "EURUSD" ? "USD" : pair;
 }

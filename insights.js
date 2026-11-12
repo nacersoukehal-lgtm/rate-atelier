@@ -137,3 +137,90 @@ byId("quick-aud").addEventListener("click",() => {
   byId("to").value = "USD";
   convert();
 });
+
+const overviewTrends = [
+  ...metalCatalog.map(({id,code,name}) => ({id,code,label:name,type:"metal"})),
+  {id:"usd",code:"USD/EUR",label:"USD to EUR",type:"fx"},
+  {id:"ratio",code:"XAU/XAG",label:"Gold-to-silver ratio",type:"ratio"}
+];
+let overviewHistory = new Map();
+let overviewLoading = false;
+let overviewChecked = 0;
+
+function sessionMove(item) {
+  if (item.type === "metal") return metals.get(item.code)?.move;
+  if (item.type === "ratio") {
+    const gold = metals.get("XAU")?.move;
+    const silver = metals.get("XAG")?.move;
+    return Number.isFinite(gold) && Number.isFinite(silver) && silver > -100
+      ? ((1+gold/100)/(1+silver/100)-1)*100 : undefined;
+  }
+  const history = overviewHistory.get(item.id);
+  return history?.length > 1 ? (history.at(-1).price/history.at(-2).price-1)*100 : undefined;
+}
+
+function showOverviewTrends() {
+  for (const item of overviewTrends) {
+    const move = sessionMove(item);
+    const value = byId(item.id+"-move");
+    value.textContent = Number.isFinite(move)
+      ? (move > 0 ? "▲ " : move < 0 ? "▼ " : "— ") + percent(move) : "";
+    value.className = "quote-move " + (move > 0 ? "positive" : move < 0 ? "negative" : "");
+    value.title = item.type === "fx" ? "Change from previous daily reference rate" : "Session change";
+  }
+}
+
+function drawOverviewSparkline(item,series) {
+  if (series.length < 2) return;
+  const holder = byId(item.id+"-spark");
+  const canvas = document.createElement("canvas");
+  canvas.width = 176;
+  canvas.height = 52;
+  canvas.setAttribute("role","img");
+  canvas.setAttribute("aria-label",item.label + " price history for the past seven days");
+  const prices = series.map(point => point.price);
+  const min = Math.min(...prices);
+  const spread = Math.max(...prices)-min;
+  const ctx = canvas.getContext("2d");
+  ctx.strokeStyle = prices.at(-1) < prices[0] ? "#cf6866" : "#4ca483";
+  ctx.lineWidth = 3;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  prices.forEach((price,index) => {
+    const x = 3 + 170*index/(prices.length-1);
+    const y = spread ? 47-42*(price-min)/spread : 26;
+    if (index === 0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  holder.replaceChildren(canvas);
+}
+
+async function refreshOverviewTrends() {
+  showOverviewTrends();
+  if (overviewLoading || byId("markets").hidden || Date.now()-overviewChecked<300000) return;
+  overviewLoading = true;
+  const assets = overviewTrends.filter(item => item.type !== "ratio");
+  const results = await Promise.allSettled(assets.map(item => watchHistory(item)));
+  results.forEach((result,index) => {
+    if (result.status !== "fulfilled" || result.value.length < 2) return;
+    const item = assets[index];
+    overviewHistory.set(item.id,result.value);
+    drawOverviewSparkline(item,result.value);
+  });
+  const gold = overviewHistory.get("gold") ?? [];
+  const silver = overviewHistory.get("silver") ?? [];
+  const daily = series => new Map(series.map(point => [point.date.slice(0,10),point.price]));
+  const silverByDay = daily(silver);
+  const ratio = [...daily(gold)].filter(([date]) => silverByDay.has(date))
+    .map(([date,price]) => ({date,price:price/silverByDay.get(date)}));
+  drawOverviewSparkline(overviewTrends.at(-1),ratio);
+  showOverviewTrends();
+  overviewChecked = Date.now();
+  overviewLoading = false;
+}
+
+document.addEventListener("market-quotes-updated",refreshOverviewTrends);
+new MutationObserver(() => { if (!byId("markets").hidden) refreshOverviewTrends(); })
+  .observe(byId("markets"),{attributes:true,attributeFilter:["hidden"]});
+refreshOverviewTrends();

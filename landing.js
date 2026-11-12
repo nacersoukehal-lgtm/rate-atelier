@@ -7,15 +7,25 @@ const usd = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
 
 async function updateLandingQuote() {
   try {
-    const isCurrency = ["EUR","AUD"].includes(asset);
-    const endpoint = isCurrency ? "https://api.frankfurter.dev/v2/rate/USD/" + asset
+    const isCurrency = ["EUR","AUD","EURUSD"].includes(asset);
+    const baseCurrency = asset === "EURUSD" ? "EUR" : "USD";
+    const quoteCurrency = asset === "EURUSD" ? "USD" : asset;
+    const endpoint = asset === "BTC" ? "https://api.coinpaprika.com/v1/tickers/btc-bitcoin" : isCurrency ? "https://api.frankfurter.dev/v2/rate/" + baseCurrency + "/" + quoteCurrency
       : "https://standardbullion.com/spot-prices.json";
     const response = await fetch(endpoint,{signal:AbortSignal.timeout(10000)});
     if (!response.ok) throw new Error("Feed unavailable");
     const data = await response.json();
+    if (asset === "BTC") {
+      const quote = data.quotes?.USD;
+      if (!(quote?.price > 0)) throw new Error("Bitcoin price unavailable");
+      const move = quote.percent_change_24h;
+      quoteOutput.textContent = usd.format(quote.price) + (Number.isFinite(move) ? " · " + (move > 0 ? "+" : "") + decimal(move,2) + "% in 24h" : "");
+      sourceOutput.textContent = "CoinPaprika · " + new Date(data.last_updated).toLocaleString();
+      return;
+    }
     if (isCurrency) {
       if (!(data.rate > 0)) throw new Error("Rate unavailable");
-      quoteOutput.textContent = "1 USD = " + decimal(data.rate,6) + " " + asset;
+      quoteOutput.textContent = "1 " + baseCurrency + " = " + decimal(data.rate,6) + " " + quoteCurrency;
       sourceOutput.textContent = "Frankfurter · Reference rate dated " + data.date;
       return;
     }
