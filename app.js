@@ -468,7 +468,7 @@ function activateTab(tab, updateUrl = false) {
     candidate.tabIndex = active ? 0 : -1;
     byId(candidate.hash.slice(1)).hidden = !active;
   }
-  if (tab.hash === "#stocks") refreshStocks(true);
+  if (tab.hash === "#stocks") refreshStocks();
   if (tab.hash === "#calendar") loadCalendar();
   if (tab.hash === "#markets") refreshStocks();
   if (updateUrl && window.location.hash !== tab.hash) {
@@ -1279,7 +1279,7 @@ const stockCatalog = [
   ["NASDAQ:TLT","TLT","iShares 20+ Year Treasury Bond ETF","U.S.","Nasdaq","Tracks U.S. Treasury bonds with more than 20 years to maturity.","ETF"],
   ["AMEX:GLD","GLD","SPDR Gold Shares","U.S.","NYSE Arca","An exchange-traded trust designed to reflect the price of gold bullion.","ETF"],
   ["AMEX:SLV","SLV","iShares Silver Trust","U.S.","NYSE Arca","An exchange-traded trust designed to reflect the price of silver bullion.","ETF"]
-].map(([code,symbol,name,region,exchange,about,type = region === "Indices" ? "Index" : "Stock"]) =>
+].concat(additionalStockListings).map(([code,symbol,name,region,exchange,about = "",type = region === "Indices" ? "Index" : "Stock"]) =>
   ({code,symbol,name,region,exchange,about,type}));
 const stockExchanges = [...new Set(stockCatalog.filter(asset => asset.type !== "Index").map(asset => asset.exchange))].sort();
 for (const exchange of stockExchanges) byId("stock-exchange").add(new Option(exchange,exchange));
@@ -1291,7 +1291,9 @@ const stockDialog = byId("stock-profile");
 const stockPageSize = 12;
 let stockPage = 0;
 let stockLoading = false;
-let stockAttempted = false;
+let stockRefreshPending = false;
+let stockRefreshTimer;
+const attemptedStockQuotes = new Set();
 let activeStock;
 let stockChartRequest = 0;
 
@@ -1357,22 +1359,35 @@ function stockValue(data,value) {
   return data.asset.region === "Indices" ? amount : amount + (data.currency ? " " + data.currency : "");
 }
 
-async function refreshStocks(full = !byId("stocks").hidden) {
-  if (stockLoading) return;
-  const codes = full ? stockCatalog.map(asset => asset.code) : pinned.filter(item => item.type === "stock").map(item => item.code);
-  if (!codes.length) return;
+async function refreshStocks() {
+  clearTimeout(stockRefreshTimer);
+  if (stockLoading) {
+    stockRefreshPending = true;
+    return;
+  }
+  const visible = !byId("stocks").hidden;
+  const codes = visible ? currentStockPage().map(asset => asset.code)
+    : pinned.filter(item => item.type === "stock").map(item => item.code);
+  if (!codes.length) {
+    if (visible) renderStocks();
+    return;
+  }
   stockLoading = true;
-  if (full) renderStocks();
-  for (let offset=0; offset<codes.length; offset+=6) {
-    await Promise.allSettled(codes.slice(offset,offset+6).map(async code => stockQuotes.set(code,await fetchStock(code))));
-    if (full && !byId("stocks").hidden) renderStocks();
+  if (visible) renderStocks();
+  for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
+    await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
+      try { stockQuotes.set(code,await fetchStock(code)); }
+      finally { attemptedStockQuotes.add(code); }
+    }));
   }
   stockLoading = false;
-  stockAttempted = stockAttempted || full;
-  renderStocks();
+  if (!byId("stocks").hidden) renderStocks();
   updateWatchQuotes();
   if (activeStock && stockDialog.open) renderStockProfile(activeStock);
-  if (!full && !byId("stocks").hidden && !stockAttempted) refreshStocks(true);
+  if (stockRefreshPending) {
+    stockRefreshPending = false;
+    refreshStocks();
+  }
 }
 
 function matchesStockFilters(asset) {
@@ -1383,14 +1398,23 @@ function matchesStockFilters(asset) {
     (!exchange || asset.exchange === exchange);
 }
 
-function renderStocks() {
-  document.dispatchEvent(new Event("stock-ranking-rendered"));
+function matchingStockAssets() {
   const query = byId("stock-search").value.trim().toLowerCase();
-  const visible = stockCatalog.filter(asset => matchesStockFilters(asset) &&
+  return stockCatalog.filter(asset => matchesStockFilters(asset) &&
     (!query || (asset.name + " " + asset.symbol + " " + asset.exchange).toLowerCase().includes(query)));
+}
+
+function currentStockPage(assets = matchingStockAssets()) {
+  const start = stockPage * stockPageSize;
+  return assets.slice(start,start+stockPageSize);
+}
+
+function renderStocks() {
+  const visible = matchingStockAssets();
   stockPage = Math.min(stockPage,Math.max(0,Math.ceil(visible.length/stockPageSize)-1));
+  const page = currentStockPage(visible);
   const start = stockPage*stockPageSize;
-  byId("stock-rows").replaceChildren(...visible.slice(start,start+stockPageSize).map(asset => {
+  byId("stock-rows").replaceChildren(...page.map(asset => {
     const row = document.createElement("tr");
     const data = stockQuotes.get(asset.code);
     const lead = row.insertCell();
@@ -1414,9 +1438,12 @@ function renderStocks() {
     return row;
   }));
   const status = byId("stock-status");
-  status.hidden = !!visible.length && !!stockQuotes.size;
-  status.textContent = !visible.length ? "No assets match your filters."
-    : stockLoading || !stockAttempted ? "Loading market quotes…" : "Quotes are temporarily unavailable. Try Refresh.";
+  const missing = page.filter(asset => !stockQuotes.has(asset.code));
+  status.hidden = !!page.length && !missing.length;
+  status.textContent = !page.length ? "No assets match your filters."
+    : stockLoading || missing.some(asset => !attemptedStockQuotes.has(asset.code)) ? "Loading market quotes…"
+    : "Some quotes are unavailable. Try Refresh.";
+  document.dispatchEvent(new Event("stock-ranking-rendered"));
   byId("stock-prev").disabled = stockPage === 0;
   byId("stock-next").disabled = start+stockPageSize >= visible.length;
   write("stock-page",visible.length ? (start+1) + "–" + Math.min(start+stockPageSize,visible.length) + " of " + visible.length : "—");
@@ -1491,9 +1518,14 @@ function openStockProfile(asset) {
   renderStockHistory();
 }
 
-for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) byId(id).addEventListener("input",() => {stockPage=0;renderStocks();});
-byId("stock-prev").addEventListener("click",() => {stockPage--;renderStocks();});
-byId("stock-next").addEventListener("click",() => {stockPage++;renderStocks();});
+for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) byId(id).addEventListener("input",() => {
+  stockPage = 0;
+  renderStocks();
+  clearTimeout(stockRefreshTimer);
+  stockRefreshTimer = setTimeout(refreshStocks,250);
+});
+byId("stock-prev").addEventListener("click",() => {stockPage--;refreshStocks();});
+byId("stock-next").addEventListener("click",() => {stockPage++;refreshStocks();});
 byId("stock-range").addEventListener("input",renderStockHistory);
 byId("stock-pin").addEventListener("click",() => {
   const asset = activeStock;

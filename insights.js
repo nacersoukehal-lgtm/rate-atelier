@@ -291,15 +291,13 @@ function renderCryptoMovers() {
 
 function renderStockMovers() {
   if (byId("stocks").hidden) return;
-  const region = byId("stock-region").value;
-  const type = byId("stock-type").value;
-  const assets = [...stockQuotes.values()].filter(data => matchesStockFilters(data.asset))
+  const assets = currentStockPage().map(asset => stockQuotes.get(asset.code)).filter(Boolean)
     .map(data => ({
       code:data.asset.code,label:data.asset.name,price:stockValue(data,data.price),
       move:data.percent,period:"past month",open:() => openStockProfile(data.asset),
       history:() => data.points
     }));
-  renderMovers("stock",assets,"Session price change · "+([type,byId("stock-exchange").value,region].filter(Boolean).join(" · ") || "All listed assets"));
+  renderMovers("stock",assets,"Session price change · Assets on this page");
 }
 
 document.addEventListener("crypto-ranking-rendered",renderCryptoMovers);

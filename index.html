@@ -7,7 +7,7 @@
 <meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=exchanges"><script src="app.js?v=exchanges" defer></script><script src="insights.js?v=exchanges" defer></script>
+<link rel="stylesheet" href="style.css?v=exchanges"><script src="stock-directory.js" defer></script><script src="app.js?v=stock-directory" defer></script><script src="insights.js?v=stock-directory" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
@@ -49,7 +49,7 @@
 <p id="alert-status" role="status"></p><ul id="alert-items" class="watch-items"></ul>
 </section>
 </section><section id="stocks" class="tools tab-panel">
-<h2>Stocks, ETFs &amp; indices</h2><p class="stocks-intro">Compare stocks, ETFs, and global benchmarks. Select an asset to see its chart and trading details.</p>
+<h2>Stocks, ETFs &amp; indices</h2><p class="stocks-intro">Browse 1,500 stocks across 12 exchanges, plus ETFs and global benchmarks. Select an asset to see its chart and trading details.</p>
 <div class="calendar-filters stock-filters"><label>Search markets<input type="search" id="stock-search" placeholder="Name or ticker"></label><label>Market<select id="stock-region"><option value="">All markets</option><option>U.S.</option><option>UK</option><option>Asia</option></select></label><label>Exchange<select id="stock-exchange"><option value="">All exchanges</option></select></label><label>Asset type<select id="stock-type"><option value="">All assets</option><option>Stock</option><option>ETF</option><option>Index</option></select></label></div>
 <section class="movers" id="stock-movers" aria-label="Stock, ETF, and index market movers" hidden>
 <div><h3>Top gainers</h3><ul id="stock-gainers"></ul></div>
@@ -59,7 +59,7 @@
 <div class="crypto-panel">
 <div class="table-scroll" tabindex="0" role="region" aria-label="Stock and index quotes"><table class="stock-table"><thead><tr><th scope="col">Asset</th><th scope="col">Price / level</th><th scope="col">Change</th><th scope="col">Change %</th><th scope="col">Open</th><th scope="col">High</th><th scope="col">Low</th><th scope="col">Previous</th></tr></thead><tbody id="stock-rows"></tbody></table></div>
 <p id="stock-status" class="crypto-state" role="status">Loading stock quotes…</p>
-<div class="table-foot"><small>Yahoo Finance · Quotes may be delayed or reflect the last close.</small><div class="pager"><button id="stock-prev" aria-label="Previous stocks" disabled>‹</button><span id="stock-page">—</span><button id="stock-next" aria-label="Next stocks" disabled>›</button></div></div>
+<div class="table-foot"><small>Listings from <a href="https://stockanalysis.com/list/exchanges/">Stock Analysis</a> · Quotes from Yahoo Finance. Quotes may be delayed or reflect the last close.</small><div class="pager"><button id="stock-prev" aria-label="Previous stocks" disabled>‹</button><span id="stock-page">—</span><button id="stock-next" aria-label="Next stocks" disabled>›</button></div></div>
 </div></section>
 <dialog id="stock-profile" class="coin-profile" aria-labelledby="stock-title">
 <div class="coin-profile-head"><div><p class="eyebrow" id="stock-symbol"></p><h2 id="stock-title"></h2></div><form method="dialog"><button type="submit" aria-label="Close stock profile" autofocus>×</button></form></div>
@@ -165,7 +165,7 @@
 <h3>Data sources and refresh intervals</h3><dl class="source-list">
 <dt><a href="https://frankfurter.dev/">Frankfurter</a></dt><dd>Currency reference rates. The dashboard checks every minute while active. The underlying rates are generally published daily or on business days.</dd>
 <dt><a href="https://standardbullion.com/market-data">Standard Bullion</a></dt><dd>Gold, silver, platinum, and palladium bid and ask midpoints. The dashboard checks every minute and shows the feed timestamp.</dd>
-<dt>Yahoo Finance</dt><dd>Stocks, indices, the U.S. Dollar Index, and copper futures. Stocks and indices are checked every five minutes when their page is active. Copper and the Dollar Index are checked with the dashboard. Quotes may be delayed or reflect the last close.</dd>
+<dt>Yahoo Finance</dt><dd>Stocks, indices, the U.S. Dollar Index, and copper futures. Quotes for the visible results are checked every five minutes while the page is active. Copper and the Dollar Index are checked with the dashboard. Quotes may be delayed or reflect the last close.</dd>
 <dt>CoinPaprika and CoinGecko</dt><dd>Cryptocurrency quotes are checked every five minutes while active. CoinGecko provides supplemental price records and profile data.</dd>
 <dt>ShowMyTrades, FXStreet, CNBC, European Central Bank, and Federal Reserve</dt><dd>The economic calendar and news feeds are checked every 15 minutes while their tabs are active.</dd></dl>
 <h3>Using the numbers</h3><p>Rates may be delayed and should not be considered financial advice. Actual transfer, dealer, and trading prices can differ from the figures shown.</p>
