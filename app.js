@@ -195,6 +195,7 @@ async function refresh() {
   if (refreshing) return;
   refreshing = true;
   byId("refresh").disabled = true;
+  const snapshot = loadStockSnapshot();
   const results = await Promise.allSettled([
     refreshRates(),
     json(bullion + "/spot-prices.json").then(data => {
@@ -211,6 +212,7 @@ async function refresh() {
     refreshCopper(),
     refreshDollarIndex()
   ]);
+  await snapshot;
   if (results[0].status === "rejected" && !currencyDirectory) write("currency-count","Currency list temporarily unavailable. Try Refresh.");
   const freshMetals = new Set(results[1].status === "fulfilled" ? results[1].value : []);
   if (results[2].status === "fulfilled") freshMetals.add("HG");
@@ -1537,6 +1539,10 @@ function rememberStock(code,data) {
     current.stale = true;
     return;
   }
+  if (current?.points.length >= 2 &&
+      (data.points.length < 2 || Date.parse(data.points[0].date) > Date.parse(current.points[0].date))) {
+    data = {...data,points:current.points};
+  }
   stockQuotes.delete(code);
   stockQuotes.set(code,data);
   saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) =>
@@ -1548,8 +1554,16 @@ function recentStockPoints(points) {
   return points.filter(point => Date.parse(point.date) >= cutoff);
 }
 let stockSnapshotRequest;
+let stockYearSnapshots = {};
 function loadStockSnapshot() {
-  stockSnapshotRequest ??= json("./stock-quote-snapshot.json?v=history").then(snapshot => {
+  stockSnapshotRequest ??= json("./stock-quote-snapshot.json?v=restored").then(snapshot => {
+    const copper = snapshot.benchmarks?.copper;
+    const dollar = snapshot.benchmarks?.dollar;
+    if (!metals.has("HG") && copper) metals.set("HG",{...copper,stale:true});
+    if (!dollarIndex && dollar) dollarIndex = {...dollar,stale:true};
+    updateQuotes();
+    updateMarketSummary();
+    stockYearSnapshots = snapshot.yearHistory ?? {};
     for (const [code,quote] of Object.entries(snapshot.quotes)) {
       const asset = stockAssets.get(code);
       const existing = stockQuotes.get(code);
@@ -1577,24 +1591,21 @@ const attemptedStockQuotes = new Set();
 let activeStock;
 let stockChartRequest = 0;
 
-async function yahooChart(symbol,range,interval = "1d",cache = "default") {
+async function yahooChart(symbol,range,interval = "1d",cache = "default",accept = series => !!series?.meta) {
   const path = "/v8/finance/chart/" + encodeURIComponent(symbol) + "?" + new URLSearchParams({range,interval});
   for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
     try {
       const data = await json("https://proxy.cors.dev/https://" + host + path,cache);
       const series = data.chart?.result?.[0];
-      if (series?.meta) return series;
+      if (accept(series)) return series;
     } catch { /* Retry through the alternate Yahoo Finance host. */ }
   }
   throw new Error("Market data unavailable");
 }
 
 async function refreshCopper() {
-  const {meta} = await yahooChart("HG=F","5d");
-  if (!isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime)) {
-    throw new Error("Copper quote unavailable");
-  }
-  metals.set("HG",{price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString(),move:meta.regularMarketChangePercent});
+  const quote = await fetchBenchmark("HG=F");
+  metals.set("HG",quote);
 }
 
 async function copperHistory(range) {
@@ -1612,12 +1623,24 @@ async function fetchStock(code,range = "1mo",force = false) {
   const cached = stockCache.get(key);
   if (cached && !force && Date.now() - cached.time < 120000) return cached.request;
   const request = (async () => {
-    const series = await yahooChart(asset.symbol,range,"1d","no-cache");
+    const valid = result => {
+      const meta = result?.meta;
+      if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime)) return false;
+      if (range !== "1y") return true;
+      const closes = result.indicators?.quote?.[0]?.close ?? [];
+      const dates = (result.timestamp ?? []).filter((time,index) => isPositive(time) && isPositive(closes[index]));
+      return dates.at(-1) - dates[0] >= 330 * 86400;
+    };
+    const series = await yahooChart(asset.symbol,range,"1d","default",valid)
+      .catch(error => {
+        if (range !== "1mo") throw error;
+        return yahooChart(asset.symbol,"5d","1d","default",valid);
+      });
     const meta = series?.meta;
     const candle = series?.indicators?.quote?.[0];
-    if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime) || !candle) throw new Error("Quote unavailable");
+    if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime)) throw new Error("Quote unavailable");
     const rows = (series.timestamp ?? []).map((time,index) => ({
-      date:new Date(time * 1000).toISOString(),price:candle.close[index],open:candle.open[index]
+      date:new Date(time * 1000).toISOString(),price:candle?.close?.[index],open:candle?.open?.[index]
     })).filter(point => isPositive(point.price));
     const quoteTime = new Date(meta.regularMarketTime * 1000);
     const day = new Intl.DateTimeFormat("en-CA",{timeZone:meta.exchangeTimezoneName || "UTC",dateStyle:"short"});
@@ -1824,6 +1847,15 @@ async function renderStockHistory(requestedRange, notice = "") {
   } catch {
     if (!active()) return;
     if (requestedRange === "1y") {
+      await loadStockSnapshot();
+      if (!active()) return;
+      const saved = stockYearSnapshots[asset.code];
+      if (saved?.length >= 2) {
+        control.value = "1y";
+        write("stock-range-status","Saved 1-year history");
+        drawStockHistory(host,asset,saved,true);
+        return;
+      }
       renderStockHistory("1mo","1 year unavailable");
       return;
     }
@@ -1886,9 +1918,15 @@ function chartDate(date) {
 }
 
 async function refreshDollarIndex() {
-  const {meta} = await yahooChart("DX-Y.NYB","5d");
-  if (!isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime)) throw new Error("Dollar index unavailable");
-  dollarIndex = {price:meta.regularMarketPrice,move:meta.regularMarketChangePercent,date:new Date(meta.regularMarketTime*1000).toISOString()};
+  dollarIndex = await fetchBenchmark("DX-Y.NYB");
+}
+
+async function fetchBenchmark(symbol) {
+  const valid = result => isPositive(result?.meta?.regularMarketPrice) && isPositive(result.meta.regularMarketTime);
+  const {meta} = await yahooChart(symbol,"5d","1d","default",valid)
+    .catch(() => yahooChart(symbol,"1mo","1d","default",valid));
+  return {price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime*1000).toISOString(),
+    move:meta.regularMarketChangePercent};
 }
 
 function updateMarketSummary() {
