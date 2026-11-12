@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Currency Converter Widget | Rate Atelier</title>
+<meta name="description" content="Convert currencies using Frankfurter reference rates with Rate Atelier’s standalone widget.">
+<link rel="stylesheet" href="./style.css">
+<script src="./converter-widget.js" defer></script>
+</head>
+<body>
+<main class="widget-shell">
+<section class="panel" aria-labelledby="widget-title">
+<h1 id="widget-title">Currency converter</h1>
+<form id="widget-form">
+<label>Amount<input id="widget-amount" type="number" min="0" step="any" value="100"></label>
+<div class="fields pair">
+<label>From<select id="widget-from"><option value="USD">USD</option></select></label>
+<button type="button" class="swap" id="widget-swap" aria-label="Swap currencies">⇄</button>
+<label>To<select id="widget-to"><option value="EUR">EUR</option></select></label>
+</div>
+</form>
+<output id="widget-result" for="widget-amount widget-from widget-to" aria-live="polite">—</output>
+<small id="widget-status" role="status">Loading exchange rates…</small>
+<a class="guide-link" href="./#markets" target="_top">Rate Atelier</a>
+<details id="widget-embed">
+<summary>Embed this widget</summary>
+<label>HTML embed code<textarea id="widget-code" readonly rows="3"></textarea></label>
+</details>
+</section>
+</main>
+</body>
+</html>

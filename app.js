@@ -365,6 +365,7 @@ function cryptoRanking() {
 function renderCrypto() {
   const kind = byId("crypto-ranking").value || "major";
   const ranked = cryptoRanking();
+  document.dispatchEvent(new Event("crypto-ranking-rendered"));
   const source = byId("crypto-source");
   source.textContent = kind === "meme" ? "CoinGecko" : "CoinPaprika";
   source.href = kind === "meme" ? "https://www.coingecko.com/en/categories/meme-token" : "https://coinpaprika.com/";
@@ -1333,6 +1334,7 @@ async function refreshStocks(full = !byId("stocks").hidden) {
 }
 
 function renderStocks() {
+  document.dispatchEvent(new Event("stock-ranking-rendered"));
   const query = byId("stock-search").value.trim().toLowerCase();
   const region = byId("stock-region").value;
   const visible = stockCatalog.filter(asset => (!region || asset.region === region) &&
@@ -1505,7 +1507,7 @@ async function refreshMemes(force = false) {
       (!force && Date.now()-memeChecked < 300000)) return;
   memeLoading = true;
   try {
-    const rows = await json(coinGeckoApi + "/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=50&price_change_percentage=7d,30d");
+    const rows = await json(coinGeckoApi + "/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=50&price_change_percentage=7d,30d&sparkline=true");
     memeAssets = rows.filter(row => isPositive(row.current_price) && isPositive(row.market_cap))
       .sort((a,b) => b.market_cap-a.market_cap).map(row => ({
         id:"gecko:"+row.id,name:row.name,symbol:row.symbol.toUpperCase(),last_updated:row.last_updated,gecko:row,

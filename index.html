@@ -18,7 +18,7 @@
 <div class="fields pair"><label>From<select id="home-from"></select></label><button id="home-swap" class="swap" type="button" aria-label="Swap homepage currencies">⇄</button><label>To<select id="home-to"></select></label></div>
 <output id="home-result" aria-live="polite">—</output><small id="home-rate"></small>
 <div class="home-cta"><a class="primary-action" id="home-compare" href="#compare">Compare offers →</a><button id="save-pair" type="button">☆ Save pair</button></div>
-<div class="quick-pairs" aria-label="Popular USD pairs"><button type="button" data-pair="EUR">USD/EUR</button><button type="button" data-pair="GBP">USD/GBP</button><button type="button" data-pair="CAD">USD/CAD</button><button type="button" data-pair="AUD">USD/AUD</button><button type="button" data-pair="DZD">USD/DZD</button></div>
+<a class="guide-link" href="./converter-widget.html">Open or embed the converter</a><div class="quick-pairs" aria-label="Popular USD pairs"><button type="button" data-pair="EUR">USD/EUR</button><button type="button" data-pair="GBP">USD/GBP</button><button type="button" data-pair="CAD">USD/CAD</button><button type="button" data-pair="AUD">USD/AUD</button><button type="button" data-pair="DZD">USD/DZD</button></div>
 </aside></div>
 <section class="quotes" aria-label="Market quotes">
 <article><div class="quote-head"><span class="icon gold">Au</span><div><h2>Gold</h2><small>XAU · USD / troy oz</small></div></div><strong id="gold">—</strong><div class="quote-trend"><span id="gold-move" class="quote-move"></span><span id="gold-spark" class="quote-spark"></span></div><small id="gold-time">Standard Bullion</small><small id="gold-purity-quotes"></small></article>
@@ -51,6 +51,11 @@
 </section><section id="stocks" class="tools tab-panel">
 <h2>Stocks &amp; indices</h2><p class="stocks-intro">Compare global benchmarks and stock quotes. Select an asset to see its chart and trading details.</p>
 <div class="calendar-filters stock-filters"><label>Search markets<input type="search" id="stock-search" placeholder="Name or ticker"></label><label>Market<select id="stock-region"><option value="">All markets</option><option>Indices</option><option>U.S.</option><option>UK</option><option>Asia</option></select></label></div>
+<section class="movers" id="stock-movers" aria-label="Stock and index market movers" hidden>
+<div><h3>Top gainers</h3><ul id="stock-gainers"></ul></div>
+<div><h3>Top losers</h3><ul id="stock-losers"></ul></div>
+<p id="stock-movers-scope"></p>
+</section>
 <div class="crypto-panel">
 <div class="table-scroll" tabindex="0" role="region" aria-label="Stock and index quotes"><table class="stock-table"><thead><tr><th scope="col">Asset</th><th scope="col">Price / level</th><th scope="col">Change</th><th scope="col">Change %</th><th scope="col">Open</th><th scope="col">High</th><th scope="col">Low</th><th scope="col">Previous</th></tr></thead><tbody id="stock-rows"></tbody></table></div>
 <p id="stock-status" class="crypto-state" role="status">Loading stock quotes…</p>
@@ -66,6 +71,11 @@
 </dialog>
 <section id="crypto" class="tools tab-panel">
 <div class="crypto-head"><div><h2>Crypto markets</h2><p id="crypto-method">Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><div class="crypto-filters"><label>Ranking<select id="crypto-ranking"><option value="major">Top 50 overall</option><option value="micro">Top 50 micro-caps</option><option value="meme">Top 50 meme coins</option></select></label><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div></div>
+<section class="movers" id="crypto-movers" aria-label="Crypto market movers" hidden>
+<div><h3>Top gainers</h3><ul id="crypto-gainers"></ul></div>
+<div><h3>Top losers</h3><ul id="crypto-losers"></ul></div>
+<p id="crypto-movers-scope"></p>
+</section>
 <div class="crypto-panel">
 <div class="table-scroll" tabindex="0" role="region" aria-label="Cryptocurrency rankings"><table><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price (USD)</th><th scope="col">24h change</th><th scope="col">Market cap</th><th scope="col">24h volume</th></tr></thead><tbody id="crypto-rows"></tbody></table></div>
 <p id="crypto-state" class="crypto-state" role="status">Loading crypto markets…</p>

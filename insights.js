@@ -170,14 +170,13 @@ function showOverviewTrends() {
   }
 }
 
-function drawOverviewSparkline(item,series) {
+function drawOverviewSparkline(item,series,holder = byId(item.id+"-spark"),period = "past seven days") {
   if (series.length < 2) return;
-  const holder = byId(item.id+"-spark");
   const canvas = document.createElement("canvas");
   canvas.width = 176;
   canvas.height = 52;
   canvas.setAttribute("role","img");
-  canvas.setAttribute("aria-label",item.label + " price history for the past seven days");
+  canvas.setAttribute("aria-label",item.label + " price history for the " + period);
   const prices = series.map(point => point.price);
   const min = Math.min(...prices);
   const spread = Math.max(...prices)-min;
@@ -224,3 +223,87 @@ document.addEventListener("market-quotes-updated",refreshOverviewTrends);
 new MutationObserver(() => { if (!byId("markets").hidden) refreshOverviewTrends(); })
   .observe(byId("markets"),{attributes:true,attributeFilter:["hidden"]});
 refreshOverviewTrends();
+
+
+const moverSignatures = new Map();
+
+function renderMovers(kind,assets,scope) {
+  const section = byId(kind+"-movers");
+  const ranked = assets.filter(asset => Number.isFinite(asset.move) && asset.move !== 0)
+    .sort((a,b) => b.move-a.move);
+  section.hidden = !ranked.length;
+  if (!ranked.length) return;
+
+  const groups = [
+    ["gainers",ranked.filter(asset => asset.move > 0).slice(0,3)],
+    ["losers",ranked.filter(asset => asset.move < 0).reverse().slice(0,3)]
+  ];
+  const signature = JSON.stringify([scope,groups.map(([,rows]) => rows.map(asset => [asset.code,asset.move,asset.price]))]);
+  if (moverSignatures.get(kind) === signature) return;
+  moverSignatures.set(kind,signature);
+  write(kind+"-movers-scope",scope);
+
+  for (const [group,rows] of groups) {
+    const list = byId(kind+"-"+group);
+    if (!rows.length) {
+      const empty = document.createElement("li");
+      empty.textContent = group === "gainers" ? "No gainers in this view." : "No losers in this view.";
+      list.replaceChildren(empty);
+      continue;
+    }
+    list.replaceChildren(...rows.map(asset => {
+      const card = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "coin-open";
+      button.setAttribute("aria-haspopup","dialog");
+      button.textContent = asset.label;
+      button.addEventListener("click",asset.open);
+      const price = document.createElement("small");
+      price.textContent = asset.price;
+      const change = document.createElement("strong");
+      change.className = asset.move > 0 ? "positive" : "negative";
+      change.textContent = (asset.move > 0 ? "▲ " : "▼ ") + percent(asset.move);
+      const chart = document.createElement("span");
+      chart.className = "quote-spark mover-chart";
+      card.append(button,price,change,chart);
+      Promise.resolve().then(asset.history).then(points => {
+        if (chart.isConnected) drawOverviewSparkline(asset,points,chart,asset.period);
+      }).catch(() => {});
+      return card;
+    }));
+  }
+}
+
+function renderCryptoMovers() {
+  if (byId("crypto").hidden) return;
+  const ranking = byId("crypto-ranking");
+  const assets = cryptoRanking().map(asset => ({
+    code:asset.id,label:asset.name,price:cryptoPrice.format(asset.quotes.USD.price),
+    move:asset.quotes.USD.percent_change_24h,period:"past seven days",
+    open:() => openCoinProfile(asset),
+    history:() => asset.gecko
+      ? (asset.gecko.sparkline_in_7d?.price ?? []).filter(isPositive).map(price => ({price}))
+      : watchHistory({type:"crypto",code:asset.id})
+  }));
+  renderMovers("crypto",assets,"24-hour price change · "+ranking.options[ranking.selectedIndex].text);
+}
+
+function renderStockMovers() {
+  if (byId("stocks").hidden) return;
+  const region = byId("stock-region").value;
+  const assets = [...stockQuotes.values()].filter(data => !region || data.asset.region === region)
+    .map(data => ({
+      code:data.asset.code,label:data.asset.name,price:stockValue(data,data.price),
+      move:data.percent,period:"past month",open:() => openStockProfile(data.asset),
+      history:() => data.points
+    }));
+  renderMovers("stock",assets,"Session price change · "+(region || "All listed stocks and indices"));
+}
+
+document.addEventListener("crypto-ranking-rendered",renderCryptoMovers);
+document.addEventListener("stock-ranking-rendered",renderStockMovers);
+for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMovers]]) {
+  new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
+  render();
+}
