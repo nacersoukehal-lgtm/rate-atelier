@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Currency Rates &amp; Precious Metals Prices | Rate Atelier</title>
+<meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"><script src="app.js" defer></script><script src="insights.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
+<main class="wrap"><section id="markets" class="tab-panel">
+<div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Live currency rates &amp; precious metals prices</h1><p>Convert currencies, check metal prices, and compare transfer offers.</p></div><div class="status" id="status" role="status">Connecting to feeds…</div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
+<h2 id="home-converter-title">Currency converter</h2>
+<label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
+<div class="fields pair"><label>From<select id="home-from"></select></label><button id="home-swap" class="swap" type="button" aria-label="Swap homepage currencies">⇄</button><label>To<select id="home-to"></select></label></div>
+<output id="home-result" aria-live="polite">—</output><small id="home-rate"></small>
+<div class="home-cta"><a class="primary-action" id="home-compare" href="#compare">Compare offers →</a><button id="save-pair" type="button">☆ Save pair</button></div>
+<div class="quick-pairs" aria-label="Popular USD pairs"><button type="button" data-pair="EUR">USD/EUR</button><button type="button" data-pair="GBP">USD/GBP</button><button type="button" data-pair="CAD">USD/CAD</button><button type="button" data-pair="AUD">USD/AUD</button><button type="button" data-pair="DZD">USD/DZD</button></div>
+</aside></div>
+<section class="quotes" aria-label="Market quotes">
+<article><div class="quote-head"><span class="icon gold">Au</span><div><h2>Gold</h2><small>XAU · USD / troy oz</small></div></div><strong id="gold">—</strong><small id="gold-time">Standard Bullion</small><small id="gold-purity-quotes"></small></article>
+<article><div class="quote-head"><span class="icon silver">Ag</span><div><h2>Silver</h2><small>XAG · USD / troy oz</small></div></div><strong id="silver">—</strong><small id="silver-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon fx">$</span><div><h2>US Dollar</h2><small>USD / EUR</small></div></div><strong id="usd">—</strong><small id="usd-time">Frankfurter</small></article>
+<article><div class="quote-head"><span class="icon ratio">÷</span><div><h2>Gold / Silver</h2><small>Troy ounce ratio</small></div></div><strong id="ratio">—</strong><small>Silver ounces per ounce of gold</small></article>
+</section>
+<section class="quotes more-metals" aria-label="Platinum, palladium, and copper quotes">
+<article><div class="quote-head"><span class="icon silver">Pt</span><div><h2>Platinum</h2><small>XPT · USD / troy oz</small></div></div><strong id="platinum">—</strong><small id="platinum-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon silver">Pd</span><div><h2>Palladium</h2><small>XPD · USD / troy oz</small></div></div><strong id="palladium">—</strong><small id="palladium-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon copper">Cu</span><div><h2>Copper futures</h2><small>COMEX HG · USD / lb</small></div></div><strong id="copper">—</strong><small id="copper-time">Yahoo Finance</small></article>
+</section>
+<div class="market-workspace market-history"><section class="chart" aria-labelledby="chart-title">
+<div class="chart-head"><div><div class="eyebrow">HISTORICAL PRICES</div><h2 id="chart-title">Market performance</h2></div><div class="chart-controls"><label class="sr" for="series">Asset</label><select id="series"><option value="XAU">Gold · XAU</option><option value="XAG">Silver · XAG</option><option value="XPT">Platinum · XPT</option><option value="XPD">Palladium · XPD</option><option value="HG">Copper futures · HG</option><option value="FX">USD / EUR</option></select><div class="period" aria-label="Chart range"><button data-range="24h" aria-pressed="false">1D</button><button data-range="7d" aria-pressed="false">1W</button><button data-range="1m" aria-pressed="true">1M</button><button data-range="1y" aria-pressed="false">1Y</button><button data-range="max" aria-pressed="false">All</button></div></div></div>
+<div id="chart-summary" class="chart-summary" hidden><strong id="chart-value"></strong><span id="chart-change"></span><small id="chart-date"></small></div><div class="plot"><canvas id="chart" role="img" aria-label="Historical chart"></canvas><p id="chart-state" role="status">Loading historical prices…</p></div><div id="chart-source" class="chart-source"></div>
+</section>
+</div>
+<section class="panel daily-summary" aria-labelledby="daily-summary-title"><h2 id="daily-summary-title">Market summary</h2><div class="summary-values"><div><strong>Gold</strong><span id="daily-gold">—</span><small id="daily-gold-time"></small></div><div><strong>Silver</strong><span id="daily-silver">—</span><small id="daily-silver-time"></small></div><div><strong>U.S. Dollar Index</strong><span id="daily-dollar">—</span><small id="daily-dollar-time"></small></div></div></section>
+<section class="watchlist" aria-labelledby="watch-title">
+<div class="watch-head"><div><h2 id="watch-title">Your watchlist</h2><p>Save currencies, metals, crypto, stocks, and indices on this browser.</p></div>
+<div class="watch-picker"><label>Market<select id="watch-type"><option value="metal">Metals</option><option value="crypto">Crypto</option><option value="stock">Stocks &amp; indices</option></select></label><label>Asset<select id="watch-asset"></select></label><button id="save-asset" type="button">Add</button></div></div>
+<p id="watch-state" role="status">Save a currency pair above or add an asset to get started.</p>
+<ul id="watch-items" class="watch-items"></ul>
+</section>
+<section class="watchlist alerts" aria-labelledby="alerts-title">
+<div class="watch-head"><div><h2 id="alerts-title">Price alerts</h2><p>Get an alert when a saved currency pair, metal, or cryptocurrency reaches your target. Keep this page open and active for checks.</p></div><button class="secondary-action" id="alert-notifications" type="button">Enable browser notifications</button></div>
+<form id="alert-form" class="alert-form"><label>Saved asset<select id="alert-asset" required></select></label><label>Condition<select id="alert-direction"><option value="above">At or above</option><option value="below">At or below</option></select></label><label><span id="alert-unit">Target price</span><input id="alert-target" type="number" min="0" step="any" required></label><button id="alert-add" type="submit">Set alert</button></form>
+<p id="alert-status" role="status"></p><ul id="alert-items" class="watch-items"></ul>
+</section>
+</section><section id="stocks" class="tools tab-panel">
+<h2>Stocks &amp; indices</h2><p class="stocks-intro">Compare global benchmarks and stock quotes. Select an asset to see its chart and trading details.</p>
+<div class="calendar-filters stock-filters"><label>Search markets<input type="search" id="stock-search" placeholder="Name or ticker"></label><label>Market<select id="stock-region"><option value="">All markets</option><option>Indices</option><option>U.S.</option><option>UK</option><option>Asia</option></select></label></div>
+<div class="crypto-panel">
+<div class="table-scroll" tabindex="0" role="region" aria-label="Stock and index quotes"><table class="stock-table"><thead><tr><th scope="col">Asset</th><th scope="col">Price / level</th><th scope="col">Change</th><th scope="col">Change %</th><th scope="col">Open</th><th scope="col">High</th><th scope="col">Low</th><th scope="col">Previous</th></tr></thead><tbody id="stock-rows"></tbody></table></div>
+<p id="stock-status" class="crypto-state" role="status">Loading stock quotes…</p>
+<div class="table-foot"><small>Yahoo Finance · Quotes may be delayed or reflect the last close.</small><div class="pager"><button id="stock-prev" aria-label="Previous stocks" disabled>‹</button><span id="stock-page">—</span><button id="stock-next" aria-label="Next stocks" disabled>›</button></div></div>
+</div></section>
+<dialog id="stock-profile" class="coin-profile" aria-labelledby="stock-title">
+<div class="coin-profile-head"><div><p class="eyebrow" id="stock-symbol"></p><h2 id="stock-title"></h2></div><form method="dialog"><button type="submit" aria-label="Close stock profile" autofocus>×</button></form></div>
+<div class="coin-price"><strong id="stock-price">—</strong><span id="stock-change"></span><small id="stock-time"></small></div>
+<section><div class="stock-chart-head"><h3>Price history</h3><label><span class="sr">Price history range</span><select id="stock-range"><option value="1mo">1 month</option><option value="1y">1 year</option></select></label></div><div id="stock-profile-chart" class="native-stock-chart" role="status"></div></section>
+<section><h3>Trading details</h3><dl class="coin-metrics" id="stock-metrics"></dl></section>
+<section><h3>About this asset</h3><p id="stock-about"></p></section>
+<button id="stock-pin" class="secondary-action" type="button">☆ Save to watchlist</button><small id="stock-pin-status" role="status"></small>
+</dialog>
+<section id="crypto" class="tools tab-panel">
+<div class="crypto-head"><div><h2>Crypto markets</h2><p>Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div>
+<div class="crypto-panel">
+<div class="table-scroll" tabindex="0" role="region" aria-label="Cryptocurrency rankings"><table><thead><tr><th scope="col">Rank</th><th scope="col">Asset</th><th scope="col">Price (USD)</th><th scope="col">24h change</th><th scope="col">Market cap</th><th scope="col">24h volume</th></tr></thead><tbody id="crypto-rows"></tbody></table></div>
+<p id="crypto-state" class="crypto-state" role="status">Loading crypto markets…</p>
+<div class="table-foot"><small><a href="https://coinpaprika.com/">CoinPaprika</a><span id="crypto-time"></span></small><div class="pager"><button id="crypto-prev" disabled aria-label="Previous crypto page">‹</button><span id="crypto-page">—</span><button id="crypto-next" disabled aria-label="Next crypto page">›</button></div></div>
+</div></section>
+<section id="calendar" class="tools tab-panel">
+<h2>Economic calendar</h2>
+<p class="stocks-intro">Follow central bank decisions, inflation releases, and jobs reports. Times are shown in your local time zone.</p>
+<div class="calendar-filters">
+<label>Search events<input id="calendar-search" type="search" placeholder="e.g. CPI, jobs, or GDP"></label>
+<label>Currency<select id="calendar-currency"><option value="">All currencies</option></select></label>
+<label>Impact<select id="calendar-impact"><option value="">High and medium</option><option value="high">High only</option><option value="medium">Medium only</option></select></label>
+</div>
+<div class="crypto-panel">
+<div class="table-scroll" tabindex="0" role="region" aria-label="Economic releases"><table class="calendar-table"><thead><tr><th scope="col">Local time</th><th scope="col">Event</th><th scope="col">Actual</th><th scope="col">Forecast</th><th scope="col">Previous</th></tr></thead><tbody id="calendar-rows"></tbody></table></div>
+<p id="calendar-status" class="crypto-state" role="status">Loading economic events…</p>
+<div class="table-foot"><small id="calendar-source">Calendar data by ShowMyTrades · Next 14 days</small><div class="pager"><button id="calendar-prev" aria-label="Previous events" disabled>‹</button><span id="calendar-page">—</span><button id="calendar-next" aria-label="Next events" disabled>›</button></div></div>
+</div>
+</section>
+<dialog id="calendar-event" class="coin-profile calendar-event" aria-labelledby="calendar-title">
+<div class="coin-profile-head"><div><p class="eyebrow" id="event-label"></p><h2 id="calendar-title"></h2></div><form method="dialog"><button type="submit" aria-label="Close economic event" autofocus>×</button></form></div>
+<p id="event-time"></p><p class="stock-note" id="event-schedule"></p>
+<section aria-labelledby="event-values-heading"><h3 id="event-values-heading">Release figures</h3><dl class="coin-metrics" id="event-values"></dl><small>Forecast is the estimate before release. Previous is the prior reported figure.</small></section>
+<section aria-labelledby="event-about-heading"><h3 id="event-about-heading">What it measures</h3><p id="event-about"></p><p id="event-why" class="stock-note"></p></section>
+<small id="event-credit">Event schedule and figures by ShowMyTrades.</small>
+</dialog>
+<section id="calculators" class="tools tab-panel">
+<h2>Calculators</h2>
+<div class="tool-grid">
+<article class="panel"><h3>Currency converter</h3><p>Convert at the latest available reference rate.</p>
+<div class="fields"><label>Amount<input id="amount" type="number" min="0" step="any" value="100"></label><label>Find a currency<input id="currency-search" type="search" placeholder="Name or code" aria-describedby="currency-count"></label></div><small id="currency-count" role="status">Loading currency list…</small><div class="fields pair"><label>From<select id="from"></select></label><button id="swap" class="swap" aria-label="Swap currencies">⇄</button><label>To<select id="to"></select></label></div><button type="button" id="quick-aud" class="secondary-action">Try 70,000 AUD to USD</button><output id="converted" aria-live="polite">—</output><small id="fx-detail"></small></article>
+<article class="panel"><h3>Metal value calculator</h3><p>Estimate the value of the precious metal in an item.</p>
+<div class="fields"><label>Metal<select id="metal"><option value="XAU">Gold</option><option value="XAG">Silver</option><option value="XPT">Platinum</option><option value="XPD">Palladium</option></select></label><label>Purity<select id="purity"></select></label></div>
+<div class="fields"><label>Weight<input id="weight" type="number" min="0" step="any" value="10"></label><label>Weight unit<select id="weight-unit"><option value="1">Grams</option><option value="31.1034768">Troy ounces</option><option value="1000">Kilograms</option></select></label><label>Currency<select id="metal-currency"></select></label></div><button type="button" id="quick-gold" class="secondary-action">Try 5 troy oz of gold</button><output id="melt" aria-live="polite">—</output><small id="metal-detail"></small></article>
+</div>
+</section>
+<section id="compare" class="tools compare tab-panel"><h2>Compare two offers</h2><p>Enter the rates and fees you were quoted to see what arrives from the same budget.</p>
+<div class="panel"><div class="fields"><label>Total budget<input id="budget" type="number" min="0" step="any" value="500"></label><label>Sending<select id="send"></select></label><label>Receiving<select id="receive"></select></label></div>
+<div class="tool-grid offers"><fieldset><legend>Offer A</legend><div class="fields"><label>Quoted rate<input id="rate-a" type="number" min="0" step="any" placeholder="e.g. 0.88"></label><label>Fee<input id="fee-a" type="number" min="0" step="any" value="0"></label></div><output id="offer-a">—</output></fieldset><fieldset><legend>Offer B</legend><div class="fields"><label>Quoted rate<input id="rate-b" type="number" min="0" step="any" placeholder="e.g. 0.90"></label><label>Fee<input id="fee-b" type="number" min="0" step="any" value="0"></label></div><output id="offer-b">—</output></fieldset></div><small id="offer-units"></small><p class="verdict" id="verdict" role="status"></p></div></section>
+<section id="news" class="tools tab-panel"><h2>Market news</h2><p class="stocks-intro">Headlines on gold, foreign exchange, and Federal Reserve policy.</p><div class="tool-grid news-grid">
+<article class="panel"><h3>Gold markets</h3><ul id="news-gold" class="news-list"><li>Loading headlines…</li></ul></article>
+<article class="panel"><h3>Currency markets</h3><ul id="news-fx" class="news-list"><li>Loading headlines…</li></ul></article>
+<article class="panel"><h3>Federal Reserve</h3><ul id="news-fed" class="news-list"><li>Loading releases…</li></ul></article>
+</div><small id="news-updated"></small></section>
+<section id="blog" class="tools tab-panel">
+<h2>Rate Atelier Blog</h2>
+<p class="blog-intro">Practical guides to exchange rates, precious metals, and global markets.</p>
+<div class="blog-grid">
+<article class="panel blog-card">
+<p class="eyebrow">MONEY TRANSFERS</p>
+<h3>How to compare two money transfer quotes</h3>
+<p>Compare what the recipient actually gets when both providers start with the same budget.</p>
+<details><summary>Read the guide</summary>
+<p>Ask each provider for the total amount you’ll pay, the exchange rate, and the amount the recipient will receive. Check whether the fee comes out of your budget, is charged on top, or is deducted by an intermediary.</p>
+<p>Suppose you have 500 USD. Offer A charges 5 USD and quotes 0.88 EUR per USD. It delivers 435.60 EUR. Offer B charges 10 USD and quotes 0.90 EUR per USD. It delivers 441.00 EUR. The higher fee still leaves the recipient with 5.40 EUR more.</p>
+<p>Check delivery time and any recipient-side charges before choosing. Quotes can expire, so compare offers close together.</p>
+<a class="guide-link" href="#compare">Compare your two quotes →</a>
+</details></article>
+<article class="panel blog-card">
+<p class="eyebrow">PRECIOUS METALS</p>
+<h3>How much gold is in an 18K ring?</h3>
+<p>Use the ring’s weight and karat to estimate the value of its gold content.</p>
+<details><summary>Read the guide</summary>
+<p>Karat expresses gold purity in parts out of 24. An 18K alloy is 18 ÷ 24, or 75% gold by weight. A 10-gram ring made entirely of 18K alloy therefore contains about 7.5 grams of pure gold.</p>
+<p>Multiply the pure gold weight by the current price per gram. If your quote is per troy ounce, divide it by about 31.1035 to get the price per gram.</p>
+<p>Weigh the metal separately if the item has stones or non-gold parts. A dealer’s offer can differ from the estimated metal value because of testing, refining, and resale costs. A finished piece can also carry value for its design or maker.</p>
+<a class="guide-link" href="#calculators">Estimate metal value →</a>
+</details></article>
+<article class="panel blog-card">
+<p class="eyebrow">GLOBAL MARKETS</p>
+<h3>How to read a stock index quote</h3>
+<p>Understand the index level, point change, and percentage move at a glance.</p>
+<details><summary>Read the guide</summary>
+<p>An index level summarizes the performance of a group of securities using that index’s methodology. Its level is measured in points. Comparing the levels of two different indices tells you little because each uses its own starting value and weighting.</p>
+<p>If an index moves from 5,000 to 5,050, it has risen 50 points, or 1%. Percentage moves are more useful for comparing benchmarks. Check the session and quote time, especially when comparing markets in different time zones.</p>
+<p>Some rows use cash CFDs that track a benchmark. These are labeled in the quote table and can differ from the underlying index level. Exchange quotes can also be delayed or reflect the last close.</p>
+<a class="guide-link" href="#stocks">Explore stocks and indices →</a>
+</details></article>
+<article class="panel blog-card"><h3>What affects gold prices?</h3><p>Gold trades globally, usually in U.S. dollars. Real interest rates influence the opportunity cost of holding it, and shifts in the dollar can change what it costs in other currencies. Central bank purchases, investment demand, jewelry buying, and mine supply can also affect prices. These forces can pull in different directions, so compare moves over several time periods.</p><a class="guide-link" href="./gold-price-today.html">See gold prices →</a></article>
+<article class="panel blog-card"><h3>Why do exchange rates change?</h3><p>Currency prices respond to relative interest rates, economic data, trade flows, and changes in investor demand. A release can move a pair when it differs from what markets expected. The reference rate gives you a comparison point for a bank or transfer quote, which may include its own spread and fees.</p><a class="guide-link" href="./usd-to-eur.html">See USD to EUR →</a></article>
+<article class="panel blog-card"><h3>Gold vs. silver</h3><p>Gold and silver serve different markets. Silver has substantial industrial demand, while gold demand also comes from central banks, jewelry, and investment. The gold-to-silver ratio compares their prices in the same units. A higher ratio means an ounce of gold costs more ounces of silver.</p><a class="guide-link" href="./gold-vs-silver.html">Compare gold and silver →</a></article>
+<article class="panel blog-card"><h3>What is spot price?</h3><p>Spot price is a market reference for metal traded for near-term delivery. A retail coin or bar can carry a premium for fabrication, distribution, and dealer margin. Compare prices in the same unit and at the same purity. A troy ounce is about 31.1 grams.</p><a class="guide-link" href="./silver-price-today.html">See silver prices →</a></article>
+</div>
+</section>
+<section id="about" class="tools tab-panel"><h2>About Rate Atelier</h2><div class="panel about-panel">
+<h3>Purpose</h3><p>Rate Atelier is an independently maintained market dashboard and calculator. It helps people compare currency quotes, estimate metal value, and follow market prices in one place.</p>
+<h3>Data sources and refresh intervals</h3><dl class="source-list">
+<dt><a href="https://frankfurter.dev/">Frankfurter</a></dt><dd>Currency reference rates. The dashboard checks every minute while active. The underlying rates are generally published daily or on business days.</dd>
+<dt><a href="https://standardbullion.com/market-data">Standard Bullion</a></dt><dd>Gold, silver, platinum, and palladium bid and ask midpoints. The dashboard checks every minute and shows the feed timestamp.</dd>
+<dt>Yahoo Finance</dt><dd>Stocks, indices, the U.S. Dollar Index, and copper futures. Stocks and indices are checked every five minutes when their page is active. Copper and the Dollar Index are checked with the dashboard. Quotes may be delayed or reflect the last close.</dd>
+<dt>CoinPaprika and CoinGecko</dt><dd>Cryptocurrency quotes are checked every five minutes while active. CoinGecko provides supplemental price records and profile data.</dd>
+<dt>ShowMyTrades, FXStreet, CNBC, European Central Bank, and Federal Reserve</dt><dd>The economic calendar and news feeds are checked every 15 minutes while their tabs are active.</dd></dl>
+<h3>Using the numbers</h3><p>Rates may be delayed and should not be considered financial advice. Actual transfer, dealer, and trading prices can differ from the figures shown.</p>
+<p>Price alerts are checked in your browser while the dashboard is open and active.</p></div></section>
+</main>
+<dialog id="coin-profile" class="coin-profile" aria-labelledby="coin-title">
+<div class="coin-profile-head"><div><p class="eyebrow" id="coin-symbol"></p><h2 id="coin-title"></h2></div><form method="dialog"><button type="submit" aria-label="Close crypto profile" autofocus>×</button></form></div>
+<div class="coin-price"><strong id="coin-price">—</strong><span id="coin-change"></span><small id="coin-quote-time"></small></div>
+<section aria-labelledby="coin-history-title"><h3 id="coin-history-title">Price records</h3><div id="coin-records" class="coin-records"></div><small>All-time records cover each provider’s tracked trading history.</small></section>
+<section aria-labelledby="coin-market-title"><h3 id="coin-market-title">Market data</h3><dl class="coin-metrics" id="coin-metrics"></dl></section>
+<section aria-labelledby="coin-about-title"><h3 id="coin-about-title">About this asset</h3><p id="coin-description"></p><ul id="coin-history"></ul><div id="coin-tags" class="coin-tags"></div></section>
+<p id="coin-profile-status" role="status"></p><button id="coin-profile-retry" type="button" hidden>Retry data</button><small id="coin-credit">Market quotes and project data by CoinPaprika. Price records and supplemental metrics by CoinGecko where available.</small>
+</dialog>
+<footer><div class="wrap foot"><strong>Rate Atelier</strong><nav aria-label="Market guides"><a href="./usd-to-eur.html">USD to EUR</a> <a href="./usd-to-aud.html">USD to AUD</a> <a href="./gold-price-today.html">Gold price</a> <a href="./silver-price-today.html">Silver price</a> <a href="./gold-vs-silver.html">Gold vs. silver</a> <a href="#about">Data sources</a></nav></div></footer>
+</body></html>

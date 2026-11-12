@@ -1,0 +1,54 @@
+{
+  "news-gold": [
+    {
+      "title": "Gold falls below $4,000 as Fed rate hike bets grow",
+      "href": "https://www.fxstreet.com/news/gold-falls-below-4-000-as-fed-rate-hike-bets-grow-202611112326",
+      "time": "Wed, 11 Nov 2026 23:26:23 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "Gold drifts below $4,000 as high US yields fuel December Fed hike odds",
+      "href": "https://www.fxstreet.com/news/gold-drifts-below-4-000-as-high-us-yields-fuel-december-fed-hike-odds-202611111838",
+      "time": "Wed, 11 Nov 2026 18:38:29 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "Gold struggles below $4,050 as Fed rate-hike bets boost US Dollar",
+      "href": "https://www.fxstreet.com/news/gold-struggles-near-4-050-as-fed-rate-hike-bets-intensify-202611111103",
+      "time": "Wed, 11 Nov 2026 11:03:41 GMT",
+      "source": "FXStreet"
+    }
+  ],
+  "news-fx": [
+    {
+      "title": "British Pound steadies above 1.3250 as traders await UK GDP data",
+      "href": "https://www.fxstreet.com/news/british-pound-steadies-above-13250-as-traders-await-uk-gdp-data-202611120107",
+      "time": "Thu, 12 Nov 2026 01:07:37 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "US Dollar: Supportive fundamentals offset deficit worries – Rabobank",
+      "href": "https://www.fxstreet.com/news/usd-supportive-fundamentals-offset-deficit-worries-rabobank-202611112346",
+      "time": "Wed, 11 Nov 2026 23:46:20 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "Australian Dollar dips under 0.6850 as Fed-RBA policy divergence widens",
+      "href": "https://www.fxstreet.com/news/australian-dollar-dips-under-06850-as-fed-rba-policy-divergence-widens-202611112303",
+      "time": "Wed, 11 Nov 2026 23:03:09 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "Yen slides toward 160.00 with Fed speakers and US PPI ahead",
+      "href": "https://www.fxstreet.com/news/yen-slides-toward-16000-with-fed-speakers-and-us-ppi-ahead-202611112230",
+      "time": "Wed, 11 Nov 2026 22:30:00 GMT",
+      "source": "FXStreet"
+    },
+    {
+      "title": "UK growth figures are next for a Pound at a three-week low",
+      "href": "https://www.fxstreet.com/news/uk-growth-figures-are-next-for-a-pound-at-a-three-week-low-202611112201",
+      "time": "Wed, 11 Nov 2026 22:01:58 GMT",
+      "source": "FXStreet"
+    }
+  ]
+}
