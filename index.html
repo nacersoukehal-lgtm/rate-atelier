@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="style.css"><script src="app.js" defer></script><script src="insights.js" defer></script>
 </head>
 <body>
-<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
+<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel">
 <div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Follow global markets in one place</h1><p>Track currencies, metals, stocks, and crypto. Convert currencies and compare transfer offers.</p></div><div class="status" id="status" role="status">Connecting to feeds…</div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Currency converter</h2>
@@ -39,7 +39,7 @@
 <section class="panel daily-summary" aria-labelledby="daily-summary-title"><h2 id="daily-summary-title">Market summary</h2><div class="summary-values"><div><strong>Gold</strong><span id="daily-gold">—</span><small id="daily-gold-time"></small></div><div><strong>Silver</strong><span id="daily-silver">—</span><small id="daily-silver-time"></small></div><div><strong>U.S. Dollar Index</strong><span id="daily-dollar">—</span><small id="daily-dollar-time"></small></div></div></section>
 <section class="watchlist" aria-labelledby="watch-title">
 <div class="watch-head"><div><h2 id="watch-title">Your watchlist</h2><p>Save currencies, metals, crypto, stocks, and indices on this browser.</p></div>
-<div class="watch-picker"><label>Market<select id="watch-type"><option value="metal">Metals</option><option value="crypto">Crypto</option><option value="stock">Stocks &amp; indices</option></select></label><label>Asset<select id="watch-asset"></select></label><button id="save-asset" type="button">Add</button></div></div>
+<div class="watch-picker"><label>Market<select id="watch-type"><option value="metal">Metals</option><option value="crypto">Crypto</option><option value="stock">Stocks, ETFs &amp; indices</option></select></label><label>Asset<select id="watch-asset"></select></label><button id="save-asset" type="button">Add</button></div></div>
 <p id="watch-state" role="status">Save a currency pair above or add an asset to get started.</p>
 <ul id="watch-items" class="watch-items"></ul>
 </section>
@@ -49,9 +49,9 @@
 <p id="alert-status" role="status"></p><ul id="alert-items" class="watch-items"></ul>
 </section>
 </section><section id="stocks" class="tools tab-panel">
-<h2>Stocks &amp; indices</h2><p class="stocks-intro">Compare global benchmarks and stock quotes. Select an asset to see its chart and trading details.</p>
-<div class="calendar-filters stock-filters"><label>Search markets<input type="search" id="stock-search" placeholder="Name or ticker"></label><label>Market<select id="stock-region"><option value="">All markets</option><option>Indices</option><option>U.S.</option><option>UK</option><option>Asia</option></select></label></div>
-<section class="movers" id="stock-movers" aria-label="Stock and index market movers" hidden>
+<h2>Stocks, ETFs &amp; indices</h2><p class="stocks-intro">Compare stocks, ETFs, and global benchmarks. Select an asset to see its chart and trading details.</p>
+<div class="calendar-filters stock-filters"><label>Search markets<input type="search" id="stock-search" placeholder="Name or ticker"></label><label>Market<select id="stock-region"><option value="">All markets</option><option>U.S.</option><option>UK</option><option>Asia</option></select></label><label>Asset type<select id="stock-type"><option value="">All assets</option><option>Stock</option><option>ETF</option><option>Index</option></select></label></div>
+<section class="movers" id="stock-movers" aria-label="Stock, ETF, and index market movers" hidden>
 <div><h3>Top gainers</h3><ul id="stock-gainers"></ul></div>
 <div><h3>Top losers</h3><ul id="stock-losers"></ul></div>
 <p id="stock-movers-scope"></p>

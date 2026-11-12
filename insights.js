@@ -292,13 +292,14 @@ function renderCryptoMovers() {
 function renderStockMovers() {
   if (byId("stocks").hidden) return;
   const region = byId("stock-region").value;
-  const assets = [...stockQuotes.values()].filter(data => !region || data.asset.region === region)
+  const type = byId("stock-type").value;
+  const assets = [...stockQuotes.values()].filter(data => matchesStockFilters(data.asset))
     .map(data => ({
       code:data.asset.code,label:data.asset.name,price:stockValue(data,data.price),
       move:data.percent,period:"past month",open:() => openStockProfile(data.asset),
       history:() => data.points
     }));
-  renderMovers("stock",assets,"Session price change · "+(region || "All listed stocks and indices"));
+  renderMovers("stock",assets,"Session price change · "+([type,region].filter(Boolean).join(" · ") || "All listed assets"));
 }
 
 document.addEventListener("crypto-ranking-rendered",renderCryptoMovers);

@@ -1229,7 +1229,7 @@ const stockCatalog = [
   ["NYSE:KO","KO","Coca-Cola","U.S.","NYSE","A global beverage company with a portfolio of sparkling drinks, water, juices, and other beverages."],
   ["NYSE:XOM","XOM","Exxon Mobil","U.S.","NYSE","An integrated energy company involved in oil and gas production, refining, and chemicals."],
   ["AMEX:UUUU","UUUU","Energy Fuels","U.S.","NYSE American","Produces uranium and develops rare earth and other critical mineral products."],
-  ["AMEX:SPY","SPY","SPDR S&P 500 ETF","U.S.","NYSE Arca","An exchange-traded fund designed to track the S&P 500."],
+  ["AMEX:SPY","SPY","SPDR S&P 500 ETF","U.S.","NYSE Arca","An exchange-traded fund designed to track the S&P 500.","ETF"],
   ["NASDAQ:AAPL","AAPL","Apple","U.S.","Nasdaq","Designs and sells consumer electronics, software, and services."],
   ["NASDAQ:MSFT","MSFT","Microsoft","U.S.","Nasdaq","Develops enterprise and consumer software, cloud services, and hardware."],
   ["NASDAQ:NVDA","NVDA","Nvidia","U.S.","Nasdaq","Designs GPUs and computing platforms used in AI, data centers, and gaming."],
@@ -1240,8 +1240,32 @@ const stockCatalog = [
   ["SZSE:002594","002594.SZ","BYD","Asia","Shenzhen","A Chinese manufacturer of electric vehicles, batteries, and electronics."],
   ["BSE:TCS","TCS.BO","Tata Consultancy Services","Asia","BSE","An Indian information technology services and consulting company."],
   ["SSE:600519","600519.SS","Kweichow Moutai","Asia","Shanghai","A Chinese producer of baijiu spirits, including its flagship Moutai."],
-  ["BSE:RELIANCE","RELIANCE.BO","Reliance Industries","Asia","BSE","An Indian group with energy, petrochemicals, retail, and telecommunications businesses."]
-].map(([code,symbol,name,region,exchange,about]) => ({code,symbol,name,region,exchange,about}));
+  ["BSE:RELIANCE","RELIANCE.BO","Reliance Industries","Asia","BSE","An Indian group with energy, petrochemicals, retail, and telecommunications businesses."],
+  ["NYSE:BRK.B","BRK-B","Berkshire Hathaway","U.S.","NYSE","A holding company with insurance, rail, energy, and other businesses."],
+  ["NYSE:V","V","Visa","U.S.","NYSE","Operates a global payments network."],
+  ["NASDAQ:WMT","WMT","Walmart","U.S.","Nasdaq","Operates retail stores and e-commerce businesses."],
+  ["NASDAQ:AMZN","AMZN","Amazon","U.S.","Nasdaq","Operates e-commerce, cloud computing, and advertising businesses."],
+  ["NASDAQ:GOOGL","GOOGL","Alphabet","U.S.","Nasdaq","Operates Google Search, YouTube, and Google Cloud."],
+  ["NASDAQ:META","META","Meta Platforms","U.S.","Nasdaq","Operates Facebook, Instagram, and WhatsApp."],
+  ["NASDAQ:TSLA","TSLA","Tesla","U.S.","Nasdaq","Manufactures electric vehicles and energy storage products."],
+  ["AMEX:BTG","BTG","B2Gold","U.S.","NYSE American","Produces gold and develops mining projects."],
+  ["LSE:ULVR","ULVR.L","Unilever","UK","London","Makes personal care, home care, and food products."],
+  ["LSE:RIO","RIO.L","Rio Tinto","UK","London","Produces iron ore, aluminum, copper, and other minerals."],
+  ["TSE:7203","7203.T","Toyota Motor","Asia","Tokyo","Manufactures passenger and commercial vehicles."],
+  ["KRX:005930","005930.KS","Samsung Electronics","Asia","Korea Exchange","Makes semiconductors, smartphones, and consumer electronics."],
+  ["HKEX:700","0700.HK","Tencent","Asia","Hong Kong","Operates messaging, gaming, and other digital services."],
+  ["AMEX:VOO","VOO","Vanguard S&P 500 ETF","U.S.","NYSE Arca","Tracks the S&P 500 Index.","ETF"],
+  ["NASDAQ:QQQ","QQQ","Invesco QQQ","U.S.","Nasdaq","Tracks the Nasdaq-100 Index.","ETF"],
+  ["AMEX:VTI","VTI","Vanguard Total Stock Market ETF","U.S.","NYSE Arca","Tracks a broad index of U.S. stocks across company sizes.","ETF"],
+  ["AMEX:VT","VT","Vanguard Total World Stock ETF","U.S.","NYSE Arca","Tracks developed and emerging market equities worldwide.","ETF"],
+  ["AMEX:IWM","IWM","iShares Russell 2000 ETF","U.S.","NYSE Arca","Tracks U.S. small-cap stocks in the Russell 2000 Index.","ETF"],
+  ["AMEX:VWO","VWO","Vanguard FTSE Emerging Markets ETF","U.S.","NYSE Arca","Tracks equities in emerging markets.","ETF"],
+  ["NASDAQ:BND","BND","Vanguard Total Bond Market ETF","U.S.","Nasdaq","Tracks a broad index of U.S. investment-grade bonds.","ETF"],
+  ["NASDAQ:TLT","TLT","iShares 20+ Year Treasury Bond ETF","U.S.","Nasdaq","Tracks U.S. Treasury bonds with more than 20 years to maturity.","ETF"],
+  ["AMEX:GLD","GLD","SPDR Gold Shares","U.S.","NYSE Arca","An exchange-traded trust designed to reflect the price of gold bullion.","ETF"],
+  ["AMEX:SLV","SLV","iShares Silver Trust","U.S.","NYSE Arca","An exchange-traded trust designed to reflect the price of silver bullion.","ETF"]
+].map(([code,symbol,name,region,exchange,about,type = region === "Indices" ? "Index" : "Stock"]) =>
+  ({code,symbol,name,region,exchange,about,type}));
 const stockAssets = new Map(stockCatalog.map(asset => [asset.code,asset]));
 const watchStocks = new Map(stockCatalog.map(asset => [asset.code,asset.name + " · " + asset.exchange]));
 const stockQuotes = new Map();
@@ -1324,6 +1348,7 @@ async function refreshStocks(full = !byId("stocks").hidden) {
   if (full) renderStocks();
   for (let offset=0; offset<codes.length; offset+=6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => stockQuotes.set(code,await fetchStock(code))));
+    if (full && !byId("stocks").hidden) renderStocks();
   }
   stockLoading = false;
   stockAttempted = stockAttempted || full;
@@ -1333,11 +1358,16 @@ async function refreshStocks(full = !byId("stocks").hidden) {
   if (!full && !byId("stocks").hidden && !stockAttempted) refreshStocks(true);
 }
 
+function matchesStockFilters(asset) {
+  const region = byId("stock-region").value;
+  const type = byId("stock-type").value;
+  return (!region || asset.region === region) && (!type || asset.type === type);
+}
+
 function renderStocks() {
   document.dispatchEvent(new Event("stock-ranking-rendered"));
   const query = byId("stock-search").value.trim().toLowerCase();
-  const region = byId("stock-region").value;
-  const visible = stockCatalog.filter(asset => (!region || asset.region === region) &&
+  const visible = stockCatalog.filter(asset => matchesStockFilters(asset) &&
     (!query || (asset.name + " " + asset.symbol + " " + asset.exchange).toLowerCase().includes(query)));
   stockPage = Math.min(stockPage,Math.max(0,Math.ceil(visible.length/stockPageSize)-1));
   const start = stockPage*stockPageSize;
@@ -1352,7 +1382,7 @@ function renderStocks() {
     button.textContent = asset.name;
     button.addEventListener("click",() => openStockProfile(asset));
     const info = document.createElement("small");
-    info.textContent = asset.symbol + " · " + asset.exchange;
+    info.textContent = asset.symbol + " · " + asset.exchange + " · " + asset.type;
     lead.append(button,info);
     const values = data ? [stockValue(data,data.price),
       Number.isFinite(data.change) ? (data.change > 0 ? "+" : "") + num(data.change) : "—",percent(data.percent),
@@ -1366,8 +1396,8 @@ function renderStocks() {
   }));
   const status = byId("stock-status");
   status.hidden = !!visible.length && !!stockQuotes.size;
-  status.textContent = !visible.length ? "No stocks or indices match your filters."
-    : stockLoading || !stockAttempted ? "Loading stock quotes…" : "Quotes are temporarily unavailable. Try Refresh.";
+  status.textContent = !visible.length ? "No assets match your filters."
+    : stockLoading || !stockAttempted ? "Loading market quotes…" : "Quotes are temporarily unavailable. Try Refresh.";
   byId("stock-prev").disabled = stockPage === 0;
   byId("stock-next").disabled = start+stockPageSize >= visible.length;
   write("stock-page",visible.length ? (start+1) + "–" + Math.min(start+stockPageSize,visible.length) + " of " + visible.length : "—");
@@ -1442,7 +1472,7 @@ function openStockProfile(asset) {
   renderStockHistory();
 }
 
-for (const id of ["stock-search","stock-region"]) byId(id).addEventListener("input",() => {stockPage=0;renderStocks();});
+for (const id of ["stock-search","stock-region","stock-type"]) byId(id).addEventListener("input",() => {stockPage=0;renderStocks();});
 byId("stock-prev").addEventListener("click",() => {stockPage--;renderStocks();});
 byId("stock-next").addEventListener("click",() => {stockPage++;renderStocks();});
 byId("stock-range").addEventListener("input",renderStockHistory);
