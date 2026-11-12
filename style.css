@@ -348,3 +348,20 @@ footer { padding: 18px 0; margin-top: 32px; }
 .finance-chart { color: inherit; margin-block: .65rem; }
 .finance-chart svg { width: 100%; max-height: 13rem; display: block; color: var(--ink); }
 .finance-chart small { display: block; margin-top: .4rem; }
+
+.market-history .plot { height: clamp(250px,33vw,410px); }
+.market-history .chart-head { flex-wrap: wrap; }
+.market-history .chart-controls { flex-wrap: wrap; }
+.market-history #series { max-width: 14rem; }
+.chart-shortcuts { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .9rem; align-items: center; }
+.chart-shortcuts button { background: #203b31; color: inherit; border: 1px solid #476053; border-radius: 6px; padding: .25rem .7rem; }
+.chart-shortcuts button[aria-pressed=true] { border-color: #e6ca92; color: #f9dea2; }
+.chart-shortcuts a { padding: .25rem .4rem; color: #e6ca92; font-size: .85rem; }
+.chart-point { position: absolute; right: .65rem; top: .1rem; pointer-events: none; font-size: .8rem; padding: .35rem .55rem; background: #203b31; border: 1px solid #627f70; border-radius: 6px; color: #fff6e3; }
+.metal-benchmarks { margin-block: 1.2rem; scroll-margin-top: 6rem; }
+.metal-benchmarks h2 { font: 32px/1.1 var(--serif); margin-bottom: .5rem; }
+.metal-reference-scroll { overflow-x: auto; }
+.metal-reference-scroll table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.metal-reference-scroll :is(th,td) { padding: .55rem .7rem; border-bottom: 1px solid var(--line); text-align: left; }
+.metal-reference-scroll th { color: var(--muted); font-size: .8rem; }
+.metal-reference-scroll td:nth-child(n+2) { white-space: nowrap; }

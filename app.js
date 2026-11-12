@@ -191,14 +191,94 @@ async function refresh() {
   refreshing = false;
 }
 
+const forexPair = asset => asset === "FX" ? ["USD","EUR"] : asset.startsWith("FX:") ? asset.slice(3).split("/") : null;
+const referenceCode = asset => asset.startsWith("REF:") ? asset.slice(4) : "";
+let referenceData;
+let chartInspection = -1;
+let chartPosition;
+let referenceRequest;
+const marketRangeDays = {"7d":7,"1m":30,"1y":365};
+
+async function loadMetalReferences() {
+  if (referenceData) return referenceData;
+  if (referenceRequest) return referenceRequest;
+  referenceRequest = json("./metal-references.json").then(data => {
+    referenceData = data;
+    return data;
+  });
+  try { return await referenceRequest; }
+  finally { referenceRequest = null; }
+}
+
+function referenceDate(date,cadence) {
+  if (cadence === "Annual") return date.slice(0,4);
+  if (cadence === "Monthly") return new Date(date+"T00:00:00Z").toLocaleDateString(undefined,{month:"short",year:"numeric",timeZone:"UTC"});
+  return dateOnly(date);
+}
+
+async function renderMetalReferences() {
+  const status = byId("metal-reference-state");
+  try {
+    const data = await loadMetalReferences();
+    const rows = Object.entries(data).map(([code,item]) => {
+      const row = document.createElement("tr");
+      const [date,price] = item.points.at(-1);
+      const lead = row.insertCell();
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "coin-open";
+      button.textContent = item.name;
+      button.addEventListener("click",() => {
+        byId("series").value = "REF:" + code;
+        loadMarketHistory();
+        byId("chart-title").scrollIntoView({block:"center"});
+        byId("series").focus({preventScroll:true});
+      });
+      const grade = document.createElement("small");
+      grade.textContent = item.grade;
+      lead.append(button,grade);
+      row.insertCell().textContent = num(price,2) + " " + item.unit;
+      row.insertCell().textContent = referenceDate(date,item.cadence) + " · " + item.cadence.toLowerCase();
+      const link = document.createElement("a");
+      link.href = item.link;
+      link.textContent = item.source;
+      row.insertCell().append(link);
+      return row;
+    });
+    byId("metal-reference-rows").replaceChildren(...rows);
+    status.hidden = true;
+  } catch {
+    status.textContent = "Published metal prices are temporarily unavailable.";
+  }
+}
+
+function marketChartValue(asset,price) {
+  const pair = forexPair(asset);
+  const benchmark = referenceData?.[referenceCode(asset)];
+  if (pair) return num(price,4) + " " + pair[1] + " per " + pair[0];
+  if (benchmark) return num(price,2) + " " + benchmark.unit;
+  return "$" + num(price,asset === "HG" ? 4 : 2);
+}
+
 async function loadMarketHistory(force = false) {
   const request = ++chartRequest;
   const asset = byId("series").value;
-  const intraday = document.querySelector('[data-range="24h"]');
-  intraday.disabled = asset === "FX";
-  if (asset === "FX" && range === "24h") {
-    range = "7d";
-    document.querySelectorAll("[data-range]").forEach(button => button.setAttribute("aria-pressed",String(button.dataset.range === range)));
+  const pair = forexPair(asset);
+  const code = referenceCode(asset);
+  const benchmark = code ? await loadMetalReferences().catch(() => null).then(data => data?.[code]) : null;
+  if (request !== chartRequest) return;
+  chartInspection = -1;
+  byId("chart-point").hidden = true;
+  const disabled = pair || code ? ["24h"] : [];
+  if (benchmark?.cadence === "Monthly") disabled.push("7d","1m");
+  if (benchmark?.cadence === "Annual") disabled.push("7d","1m","1y");
+  if (disabled.includes(range)) range = benchmark?.cadence === "Annual" ? "max" : benchmark?.cadence === "Monthly" ? "1y" : "1m";
+  document.querySelectorAll(".period [data-range]").forEach(button => {
+    button.disabled = disabled.includes(button.dataset.range);
+    button.setAttribute("aria-pressed",String(button.dataset.range === range));
+  });
+  for (const button of document.querySelectorAll("[data-chart-asset]")) {
+    button.setAttribute("aria-pressed",String(button.dataset.chartAsset === asset));
   }
   const key = asset + range;
   const state = byId("chart-state");
@@ -210,14 +290,22 @@ async function loadMarketHistory(force = false) {
     updateChartSummary(asset);
     draw();
   }
-  write("chart-source",asset === "FX" ? "Frankfurter · EUR per USD · Reference rates are published on business days" : "Data by " + metalSource(asset) + " · " + metalUnit(asset));
+  write("chart-source",pair ? "Frankfurter · " + pair[1] + " per " + pair[0] + " · Business-day reference rates"
+    : benchmark ? benchmark.source + " · " + benchmark.cadence + " observations · " + benchmark.grade + " · " + benchmark.unit
+    : "Data by " + metalSource(asset) + " · " + metalUnit(asset));
   try {
     let next = cached?.points;
     if (!cached || force || Date.now() - cached.saved > 300000) {
-      if (asset === "FX") {
-        const start = new Date(Date.now() - ({"7d":7,"1m":30,"1y":365}[range] ?? 365) * 86400000).toISOString().slice(0,10);
-        const rows = await json(fxApi + "?base=USD&quotes=EUR&from=" + (range === "max" ? "1999-01-01&group=month" : start));
-        next = rows.map(row => ({date:row.date, price:row.rate}));
+      if (pair) {
+        const start = range === "max" ? "1999-01-01" : new Date(Date.now() - marketRangeDays[range] * 86400000).toISOString().slice(0,10);
+        const params = new URLSearchParams({base:pair[0],quotes:pair[1],from:start});
+        if (range === "max") params.set("group","month");
+        const rows = await json(fxApi + "?" + params);
+        next = rows.map(row => ({date:row.date,price:row.rate}));
+      } else if (code) {
+        const latest = Date.parse(benchmark.points.at(-1)[0]);
+        const cutoff = range === "max" ? -Infinity : latest-marketRangeDays[range]*86400000;
+        next = benchmark.points.filter(([date]) => Date.parse(date)>=cutoff).map(([date,price]) => ({date,price}));
       } else if (asset === "HG") {
         next = await copperHistory(range);
       } else {
@@ -252,8 +340,9 @@ function updateChartSummary(asset) {
   const badge = byId("chart-change");
   badge.textContent = (change > 0 ? "+" : "") + num(change,2) + "% over range";
   badge.dataset.direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
-  write("chart-value",asset === "FX" ? "€" + num(latest.price,4) : "$" + num(latest.price,asset === "HG" ? 4 : 2));
-  write("chart-date","Latest plotted value · " + chartDate(latest.date));
+  write("chart-value",marketChartValue(asset,latest.price));
+  const cadence = referenceData?.[referenceCode(asset)]?.cadence;
+  write("chart-date","Latest observation · " + (cadence ? referenceDate(latest.date,cadence) : chartDate(latest.date)));
 }
 
 function draw() {
@@ -264,15 +353,16 @@ function draw() {
   canvas.height = height * scale;
   const ctx = canvas.getContext("2d");
   ctx.scale(scale,scale);
-  if (points.length < 2) return;
+  chartPosition = null;
+  if (points.length < 2 || width < 100 || height < 100) return;
   const values = points.map(point => point.price);
   const low = Math.min(...values);
   const high = Math.max(...values);
   const pad = (high-low || high*.01)*.12;
-  const left = 61;
-  const right = width-7;
-  const top = 12;
-  const bottom = height-26;
+  const left = width < 460 ? 67 : 88;
+  const right = width-16;
+  const top = 16;
+  const bottom = height-34;
   const y = value => bottom - (value - low + pad) / (high - low + 2*pad) * (bottom-top);
   const first = Date.parse(points[0].date);
   const last = Date.parse(points.at(-1).date);
@@ -290,10 +380,16 @@ function draw() {
     ctx.lineTo(right,level);
     ctx.stroke();
   }
-  ctx.textAlign = "left";
-  ctx.fillText(chartDate(points[0].date),left,height-5);
-  ctx.textAlign = "right";
-  ctx.fillText(chartDate(points.at(-1).date),right,height-5);
+  const labelCount = width < 520 ? 3 : 5;
+  for (let tick = 0; tick < labelCount; tick++) {
+    const fraction = tick/(labelCount-1);
+    const position = left+fraction*(right-left);
+    ctx.textAlign = tick === 0 ? "left" : tick === labelCount-1 ? "right" : "center";
+    const date = new Date(first+fraction*(last-first));
+    const label = date.toLocaleDateString(undefined,last-first > 500*86400000
+      ? {year:"numeric",timeZone:"UTC"} : {month:"short",day:"numeric",timeZone:"UTC"});
+    ctx.fillText(label,position,height-9);
+  }
   const gradient = ctx.createLinearGradient(0,top,0,bottom);
   gradient.addColorStop(0,"#d8b76a55");
   gradient.addColorStop(1,"#d8b76a02");
@@ -307,7 +403,66 @@ function draw() {
   ctx.closePath();
   ctx.fillStyle = gradient;
   ctx.fill();
+  chartPosition = {x,left,right,first,last};
+  const selected = points[chartInspection];
+  if (selected) {
+    const cx = x(selected.date), cy = y(selected.price);
+    ctx.strokeStyle = "#adc2b6";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx,top);
+    ctx.lineTo(cx,bottom);
+    ctx.stroke();
+    ctx.fillStyle = "#f6d898";
+    ctx.beginPath();
+    ctx.arc(cx,cy,4,0,Math.PI*2);
+    ctx.fill();
+  }
   canvas.setAttribute("aria-label","Historical chart from " + dateOnly(points[0].date) + " to " + dateOnly(points.at(-1).date) + ". Range " + num(low,4) + " to " + num(high,4) + ".");
+}
+
+function inspectChart(index) {
+  if (!chartPosition || !points.length) return;
+  chartInspection = Math.max(0,Math.min(index,points.length-1));
+  const point = points[chartInspection];
+  const asset = byId("series").value;
+  const cadence = referenceData?.[referenceCode(asset)]?.cadence;
+  const detail = byId("chart-point");
+  detail.textContent = (cadence ? referenceDate(point.date,cadence) : chartDate(point.date)) + " · " + marketChartValue(asset,point.price);
+  detail.hidden = false;
+  draw();
+}
+function clearChartInspection() {
+  if (chartInspection < 0) return;
+  chartInspection = -1;
+  byId("chart-point").hidden = true;
+  draw();
+}
+byId("chart").addEventListener("pointermove",event => {
+  if (!chartPosition) return;
+  const {first,last,left,right} = chartPosition;
+  const date = first+(last-first)*(event.offsetX-left)/(right-left);
+  let low = 0, high = points.length-1;
+  while (low < high) {
+    const middle = Math.floor((low+high)/2);
+    if (date > (Date.parse(points[middle].date)+Date.parse(points[middle+1].date))/2) low = middle+1;
+    else high = middle;
+  }
+  if (chartInspection !== low) inspectChart(low);
+});
+byId("chart").addEventListener("pointerleave",clearChartInspection);
+byId("chart").addEventListener("blur",clearChartInspection);
+byId("chart").addEventListener("keydown",event => {
+  if (!["ArrowLeft","ArrowRight","Escape"].includes(event.key)) return;
+  event.preventDefault();
+  if (event.key === "Escape") clearChartInspection();
+  else inspectChart(chartInspection < 0 ? points.length-1 : chartInspection+(event.key === "ArrowLeft" ? -1 : 1));
+});
+for (const button of document.querySelectorAll("[data-chart-asset]")) {
+  button.addEventListener("click",() => {
+    byId("series").value = button.dataset.chartAsset;
+    loadMarketHistory();
+  });
 }
 
 function setPurity() {
@@ -344,6 +499,7 @@ refresh();
 const landingChart = new URLSearchParams(location.search).get("chart");
 if (["XAU","XAG"].includes(landingChart)) byId("series").value = landingChart;
 loadMarketHistory();
+renderMetalReferences();
 setInterval(() => { if (!document.hidden) refresh(); },60000);
 document.addEventListener("visibilitychange",() => { if (!document.hidden) refresh(); });
 
