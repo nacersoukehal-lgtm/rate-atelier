@@ -342,3 +342,9 @@ footer { padding: 18px 0; margin-top: 32px; }
 .widget-shell h1 { font: 36px/1.1 var(--serif); margin: 0 0 12px; }
 .widget-shell details { margin-top: 7px; font-size: 13px; }
 .widget-shell textarea { width: 100%; font: inherit; margin-top: 5px; }
+
+.finance-history { margin-top: 1rem; }
+.finance-history summary { cursor: pointer; font-weight: 600; }
+.finance-chart { color: inherit; margin-block: .65rem; }
+.finance-chart svg { width: 100%; max-height: 13rem; display: block; color: var(--ink); }
+.finance-chart small { display: block; margin-top: .4rem; }

@@ -134,6 +134,7 @@ function compare() {
     const quoted = input("rate-" + offer);
     const received = valid(budget) && valid(fee) && fee <= budget && isPositive(quoted) ? (budget - fee) * quoted : NaN;
     write("offer-" + offer,format(received,receive));
+    write("effective-" + offer,Number.isFinite(received) && budget > 0 ? "Effective rate: " + num(received/budget,6) + " " + receive + " per " + send : "");
     return received;
   });
   write("offer-units","Fee in " + send + " · Rate in " + receive + " per " + send);
@@ -141,7 +142,10 @@ function compare() {
   let result = "Enter both quoted rates and fees within your budget.";
   if (Number.isFinite(a) && Number.isFinite(b)) {
     const difference = money(Math.abs(a-b),receive);
-    result = difference === money(0,receive) ? "Both offers deliver the same amount at display precision." : "Offer " + (a > b ? "A" : "B") + " delivers " + difference + " more.";
+    const winner = a > b ? "a" : "b";
+    const provider = byId("provider-" + winner).value;
+    const name = "Offer " + winner.toUpperCase() + (provider ? " (" + provider + ")" : "");
+    result = difference === money(0,receive) ? "Both offers deliver the same amount at display precision." : name + " delivers " + difference + " more.";
   }
   write("verdict",result);
 }
@@ -316,7 +320,7 @@ function setPurity() {
 
 for (const id of ["amount","from","to"]) byId(id).addEventListener("input",convert);
 for (const id of ["weight","weight-unit","purity","metal-currency"]) byId(id).addEventListener("input",calculateMetal);
-for (const id of ["budget","send","receive","rate-a","rate-b","fee-a","fee-b"]) byId(id).addEventListener("input",compare);
+for (const id of ["budget","send","receive","rate-a","rate-b","fee-a","fee-b","provider-a","provider-b"]) byId(id).addEventListener("input",compare);
 byId("metal").addEventListener("change",setPurity);
 byId("swap").addEventListener("click",() => {
   const from = byId("from");
