@@ -23,7 +23,18 @@ const metalPrice = (code,price) => code === "HG" ? "USD " + num(price,4) : money
 
 const ouncesInGrams = 31.1034768;
 const rates = new Map([["USD", { rate: 1 }]]);
-const metals = new Map();
+const unavailable = "Quote unavailable";
+const quoteKey = key => "rate-atelier-last-quote:" + key;
+function readQuotes(key,fallback) {
+  try { return JSON.parse(localStorage.getItem(quoteKey(key))) ?? fallback; }
+  catch { return fallback; }
+}
+function saveQuotes(key,value) {
+  try { localStorage.setItem(quoteKey(key),JSON.stringify(value)); } catch {}
+}
+const metals = new Map(readQuotes("metals",[]).map(([code,quote]) => [code,{...quote,stale:true}]));
+let dollarIndex = readQuotes("dollar",null);
+if (dollarIndex) dollarIndex.stale = true;
 const seriesCache = new Map();
 const goldPurities = [["18K", .75], ["24K", 1], ["22K", 22/24], ["21K", 21/24], ["14K", 14/24], ["10K", 10/24], ["9K", 9/24]];
 const silverPurities = [["Sterling · 92.5%", .925], ["Fine · 99.9%", .999], ["Coin silver · 90%", .9], ["Pure · 100%", 1]];
@@ -57,16 +68,29 @@ byId("currency-search").addEventListener("input",() => populateCurrencySelects(t
 async function refreshRates() {
   try {
     const result = await currencyFeed.latest();
+    const saved = readQuotes("fx",null);
+    const prior = rates.size > 1 ? new Map(rates) : new Map(saved?.rates ?? []);
     currentFxSource = result.source;
     usingSavedRates = false;
-    currencyDirectory = result.source === "Frankfurter" ? result.names : new Map([...(currencyDirectory ?? []),...result.names]);
+    currencyDirectory = new Map([...(currencyDirectory ?? saved?.names ?? []),...result.names]);
     rates.clear();
-    for (const [code,row] of result.rates) rates.set(code,row);
+    for (const [code,row] of prior) rates.set(code,{...row,stale:true});
+    for (const [code,row] of result.rates) rates.set(code,{...row,source:result.source});
     currencyOptions = [...currencyDirectory].sort(([a],[b]) => a.localeCompare(b)).map(([code,name]) => [code+" — "+name,code]);
+    saveQuotes("fx",{source:currentFxSource,names:[...currencyDirectory],rates:[...rates]});
     populateCurrencySelects();
     compare();
     return result.source;
   } catch (error) {
+    const saved = rates.size <= 1 ? readQuotes("fx",null) : null;
+    if (saved) {
+      currentFxSource = saved.source;
+      currencyDirectory = new Map(saved.names);
+      for (const [code,row] of saved.rates) rates.set(code,row);
+      currencyOptions = saved.names.sort(([a],[b]) => a.localeCompare(b)).map(([code,name]) => [code+" — "+name,code]);
+      populateCurrencySelects();
+      compare();
+    }
     usingSavedRates = rates.size > 1;
     throw error;
   }
@@ -74,14 +98,23 @@ async function refreshRates() {
 
 function fxRateDetail(from,to) {
   if (from === to) return "";
-  const dates = [...new Set([rates.get(from)?.date,rates.get(to)?.date].filter(Boolean))];
-  return [currentFxSource,...dates.map(dateOnly),usingSavedRates ? "Saved rates" : ""].filter(Boolean).join(" · ");
+  const quotes = [from,to].filter(code => code !== "USD").map(code => rates.get(code)).filter(Boolean);
+  const sources = [...new Set(quotes.map(row => row.source || currentFxSource))];
+  const dates = [...new Set(quotes.map(row => row.date).filter(Boolean))];
+  const stale = usingSavedRates || quotes.some(row => row.stale);
+  return [...sources,...dates.map(dateOnly),stale ? "Stale · last known rate" : ""].filter(Boolean).join(" · ");
 }
 
 const num = (value, digits = 2) => new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(value);
 const money = (value, currency) => new Intl.NumberFormat(undefined, { style:"currency", currency, currencyDisplay:"code" }).format(value);
 const dateOnly = date => new Date(date.slice(0,10) + "T00:00:00Z").toLocaleDateString(undefined, {month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});
-const timestamp = date => new Date(date).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+const timestamp = date => new Date(date).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+function quoteDetail(quote,source = "",maxAge = 0) {
+  const time = Date.parse(quote?.date);
+  const stale = quote?.stale || (maxAge && Number.isFinite(time) && Date.now()-time > maxAge);
+  return [stale ? "Stale" : "",source,Number.isFinite(time) ? timestamp(time) : ""].filter(Boolean).join(" · ");
+}
+const metalDetail = (code,quote) => quoteDetail(quote,metalSource(code),code === "HG" ? 0 : 3600000);
 const isPositive = value => Number.isFinite(value) && value > 0;
 const input = id => byId(id).valueAsNumber;
 const valid = value => Number.isFinite(value) && value >= 0;
@@ -97,14 +130,17 @@ async function json(url) {
 function updateQuotes() {
   for (const {id,code} of metalCatalog) {
     const metal = metals.get(code);
-    write(id, metal ? metalPrice(code,metal.price) : "—");
-    write(id + "-time", metalSource(code) + (metal ? " · " + timestamp(metal.date) : ""));
+    write(id, metal ? metalPrice(code,metal.price) : unavailable);
+    write(id + "-time", metal ? metalDetail(code,metal) : metalSource(code));
   }
   const gold = metals.get("XAU");
   const silver = metals.get("XAG");
-  write("ratio", gold && silver ? num(gold.price / silver.price) + "×" : "—");
+  write("ratio", gold && silver ? num(gold.price / silver.price) + "×" : unavailable);
+  write("ratio-time",gold && silver ? metalDetail("XAU",{
+    date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
+  }) : "Silver ounces per ounce of gold");
   const eur = rates.get("EUR");
-  write("usd", eur ? "€" + num(eur.rate,4) : "—");
+  write("usd", eur ? "€" + num(eur.rate,4) : unavailable);
   write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
 }
 
@@ -127,7 +163,7 @@ function calculateMetal() {
   const unitPrice = quote?.price * rate(currency) * unit / ouncesInGrams;
   write("melt", format(valid(weight) ? unitPrice * weight * purity : NaN,currency));
   const unitName = {"1":"g","31.1034768":"troy oz","1000":"kg"}[unit];
-  write("metal-detail", isPositive(unitPrice) ? money(unitPrice,currency) + " / " + unitName + " pure · " + timestamp(quote.date) : "Price or exchange rate unavailable.");
+  write("metal-detail", isPositive(unitPrice) ? money(unitPrice,currency) + " / " + unitName + " pure · " + metalDetail(byId("metal").value,quote) : "Price or exchange rate unavailable.");
 }
 
 function compare() {
@@ -180,9 +216,13 @@ async function refresh() {
   if (results[0].status === "rejected" && !currencyDirectory) write("currency-count","Currency list temporarily unavailable. Try Refresh.");
   const freshMetals = new Set(results[1].status === "fulfilled" ? results[1].value : []);
   if (results[2].status === "fulfilled") freshMetals.add("HG");
-  const degraded = results[0].status === "rejected" || freshMetals.size !== metalCatalog.length;
+  for (const [code,quote] of metals) quote.stale = !freshMetals.has(code);
+  if (dollarIndex) dollarIndex.stale = results[3].status === "rejected";
+  saveQuotes("metals",[...metals]);
+  if (dollarIndex) saveQuotes("dollar",dollarIndex);
+  const degraded = results[0].status === "rejected" || results[3].status === "rejected" || freshMetals.size !== metalCatalog.length;
   status.dataset.error = degraded;
-  status.textContent = degraded ? "Some feeds unavailable" : "Auto-refresh every 60 sec";
+  status.textContent = degraded ? "Some quotes could not refresh" : "Auto-refresh every 60 sec";
   updateQuotes();
   updateMarketSummary();
   document.dispatchEvent(new Event("market-quotes-updated"));
@@ -285,7 +325,8 @@ async function loadMarketHistory(force = false) {
   for (const button of document.querySelectorAll("[data-chart-asset]")) {
     button.setAttribute("aria-pressed",String(button.dataset.chartAsset === asset));
   }
-  const key = asset + range;
+  const selectedRange = range;
+  const key = asset + selectedRange;
   const state = byId("chart-state");
   const cached = seriesCache.get(key);
   if (!force || !points.length) {
@@ -319,6 +360,11 @@ async function loadMarketHistory(force = false) {
       }
       next = next.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)));
       next.sort((a,b) => Date.parse(a.date) - Date.parse(b.date));
+      const days = marketRangeDays[selectedRange] ?? (selectedRange === "24h" ? 1 : 0);
+      if (days && next.length) {
+        const cutoff = Date.parse(next.at(-1).date) - days * 86400000;
+        next = next.filter(point => Date.parse(point.date) >= cutoff);
+      }
       if (next.length < 2) throw new Error("Insufficient historical data");
       seriesCache.set(key,{points:next,saved:Date.now()});
     }
@@ -347,7 +393,8 @@ function updateChartSummary(asset) {
   badge.dataset.direction = change > 0 ? "up" : change < 0 ? "down" : "flat";
   write("chart-value",marketChartValue(asset,latest.price));
   const cadence = referenceData?.[referenceCode(asset)]?.cadence;
-  write("chart-date","Latest observation · " + (cadence ? referenceDate(latest.date,cadence) : chartDate(latest.date)));
+  const label = point => cadence ? referenceDate(point.date,cadence) : chartDate(point.date);
+  write("chart-date",label(first) + " – " + label(latest));
 }
 
 function draw() {
@@ -514,7 +561,16 @@ let memeAssets = [];
 let memeLoading = false;
 let memeChecked = 0;
 const cryptoStatus = {major:"",micro:"",meme:""};
-let cryptoQuotes = new Map();
+const staleCrypto = new Set();
+const savedCrypto = readQuotes("crypto",null);
+if (savedCrypto) {
+  cryptoAssets = savedCrypto.major;
+  microAssets = savedCrypto.micro;
+  staleCrypto.add("major").add("micro");
+}
+memeAssets = readQuotes("meme",[]);
+if (memeAssets.length) staleCrypto.add("meme");
+let cryptoQuotes = new Map([...cryptoAssets,...microAssets].map(asset => [asset.id,asset]));
 let cryptoPage = 0;
 let loadingCrypto = false;
 let lastCryptoCheck = 0;
@@ -568,7 +624,9 @@ function renderCrypto() {
     const symbol = document.createElement("small");
     symbol.textContent = asset.symbol;
     row.cells[1].append(link,symbol);
-    if (Number.isFinite(Date.parse(asset.last_updated))) row.cells[2].title = "Quote time: " + timestamp(asset.last_updated);
+    const detail = document.createElement("small");
+    detail.textContent = quoteDetail({date:asset.last_updated,stale:staleCrypto.has(kind)},"",1800000);
+    row.cells[2].append(detail);
     return row;
   });
   byId("crypto-rows").replaceChildren(...rows);
@@ -578,7 +636,7 @@ function renderCrypto() {
   const state = byId("crypto-state");
   state.hidden = !!matches.length;
   state.textContent = ranked.length ? "No matching cryptocurrency."
-    : cryptoStatus[kind] ? "This ranking is temporarily unavailable. Use Refresh to retry." : "Loading cryptocurrency rankings…";
+    : cryptoStatus[kind] ? "Quote unavailable. Use Refresh to retry." : "Loading cryptocurrency rankings…";
 }
 
 async function refreshCrypto(force = false) {
@@ -597,6 +655,9 @@ async function refreshCrypto(force = false) {
         quote.market_cap < 10000000 && quote.volume_24h >= 100000;
     }).sort((a,b) => b.quotes.USD.market_cap-a.quotes.USD.market_cap).slice(0,50);
     cryptoQuotes = new Map(assets.map(asset => [asset.id,asset]));
+    staleCrypto.delete("major");
+    staleCrypto.delete("micro");
+    saveQuotes("crypto",{major:cryptoAssets,micro:microAssets});
     populateWatchPicker();
     updateWatchQuotes();
     checkPriceAlerts(new Set(["crypto"]));
@@ -607,7 +668,11 @@ async function refreshCrypto(force = false) {
     renderCrypto();
     refreshOpenCoinQuote();
   } catch {
-    cryptoStatus.major = cryptoStatus.micro = " · Refresh failed. Last available quotes shown.";
+    staleCrypto.add("major").add("micro");
+    cryptoStatus.major = cryptoAssets.length ? " · Stale · refresh failed" : " · Quote unavailable";
+    cryptoStatus.micro = microAssets.length ? " · Stale · refresh failed" : " · Quote unavailable";
+    updateWatchQuotes();
+    refreshOpenCoinQuote();
     renderCrypto();
   } finally {
     loadingCrypto = false;
@@ -624,13 +689,18 @@ refreshCrypto();
 
 const sectionNav = byId("section-nav");
 const sectionTabs = Array.from(sectionNav.querySelectorAll("a[href^='#']"));
+const secondarySections = Array.from(byId("secondary-sections").querySelectorAll("a"));
+const sectionLinks = [...sectionTabs,...secondarySections];
 sectionNav.setAttribute("role","tablist");
 
 function activateTab(tab, updateUrl = false) {
-  for (const candidate of sectionTabs) {
+  for (const candidate of sectionLinks) {
     const active = candidate === tab;
-    candidate.setAttribute("aria-selected",String(active));
-    candidate.tabIndex = active ? 0 : -1;
+    if (sectionTabs.includes(candidate)) {
+      candidate.setAttribute("aria-selected",String(active));
+      candidate.tabIndex = active || (!sectionTabs.includes(tab) && candidate === sectionTabs[0]) ? 0 : -1;
+    } else if (active) candidate.setAttribute("aria-current","location");
+    else candidate.removeAttribute("aria-current");
     byId(candidate.hash.slice(1)).hidden = !active;
   }
   if (tab.hash === "#stocks") refreshStocks();
@@ -643,7 +713,7 @@ function activateTab(tab, updateUrl = false) {
 }
 
 function syncTabs() {
-  activateTab(sectionTabs.find(tab => tab.hash === window.location.hash) ?? sectionTabs[0]);
+  activateTab(sectionLinks.find(tab => tab.hash === window.location.hash) ?? sectionTabs[0]);
 }
 
 for (const [index, tab] of sectionTabs.entries()) {
@@ -675,6 +745,16 @@ for (const [index, tab] of sectionTabs.entries()) {
       sectionTabs[nextIndex].focus();
       activateTab(sectionTabs[nextIndex],true);
     }
+  });
+}
+for (const link of secondarySections) {
+  link.addEventListener("click",event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    activateTab(link,true);
+    const panel = byId(link.hash.slice(1));
+    panel.tabIndex = -1;
+    panel.focus({preventScroll:true});
   });
 }
 window.addEventListener("popstate",syncTabs);
@@ -726,16 +806,18 @@ function updateWatchQuotes() {
     if (item.type === "fx") {
       const [from,to] = item.code.split("/");
       const cross = exchangeRate(from,to);
-      quote.textContent = isPositive(cross) ? num(cross,6) + " " + to : "Unavailable";
+      quote.textContent = isPositive(cross) ? num(cross,6) + " " + to + (fxRateDetail(from,to) ? " · " + fxRateDetail(from,to) : "") : unavailable;
     } else if (item.type === "metal") {
-      const price = metals.get(item.code)?.price;
-      quote.textContent = isPositive(price) ? metalPrice(item.code,price) + (item.code === "HG" ? " / lb" : " / troy oz") : "Unavailable";
+      const data = metals.get(item.code);
+      quote.textContent = data ? metalPrice(item.code,data.price) + " · " + metalDetail(item.code,data) : unavailable;
     } else if (item.type === "crypto") {
-      const price = cryptoQuotes.get(item.code)?.quotes?.USD?.price;
-      quote.textContent = isPositive(price) ? cryptoPrice.format(price) : "Unavailable";
+      const data = cryptoQuotes.get(item.code);
+      const price = data?.quotes?.USD?.price;
+      quote.textContent = isPositive(price) ? cryptoPrice.format(price) + " · " +
+        quoteDetail({date:data.last_updated,stale:staleCrypto.has("major")},"CoinPaprika",1800000) : unavailable;
     } else if (item.type === "stock") {
       const data = stockQuotes.get(item.code);
-      quote.textContent = data ? stockValue(data,data.price) : "Quote unavailable";
+      quote.textContent = data ? stockValue(data,data.price) + " · " + quoteDetail(data,"Yahoo Finance") : unavailable;
     }
   }
 }
@@ -1236,7 +1318,7 @@ function refreshOpenCoinQuote() {
   write("coin-change",percent(quote.percent_change_24h) + " · 24h");
   byId("coin-change").className = quote.percent_change_24h < 0 ? "negative" : "positive";
   const source = openCoin.gecko ? "CoinGecko" : "CoinPaprika";
-  write("coin-quote-time",source + (quoteDate(openCoin.last_updated) ? " · " + timestamp(openCoin.last_updated) : ""));
+  write("coin-quote-time",quoteDetail({date:openCoin.last_updated,stale:staleCrypto.has(openCoin.gecko ? "meme" : "major")},source,1800000));
   renderCoinMetrics();
 }
 
@@ -1450,7 +1532,15 @@ const stockExchanges = [...new Set(stockCatalog.filter(asset => asset.type !== "
 for (const exchange of stockExchanges) byId("stock-exchange").add(new Option(exchange,exchange));
 const stockAssets = new Map(stockCatalog.map(asset => [asset.code,asset]));
 const watchStocks = new Map(stockCatalog.map(asset => [asset.code,asset.name + " · " + asset.exchange]));
-const stockQuotes = new Map();
+const stockQuotes = new Map(readQuotes("stocks",[]).flatMap(([code,quote]) => {
+  const asset = stockAssets.get(code);
+  return asset ? [[code,{...quote,asset,points:[],stale:true}]] : [];
+}));
+function rememberStock(code,data) {
+  stockQuotes.delete(code);
+  stockQuotes.set(code,data);
+  saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) => [key,quote]));
+}
 const stockCache = new Map();
 const stockDialog = byId("stock-profile");
 const stockPageSize = 12;
@@ -1463,11 +1553,15 @@ let activeStock;
 let stockChartRequest = 0;
 
 async function yahooChart(symbol,range,interval = "1d") {
-  const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol);
-  const data = await json("https://proxy.cors.dev/" + endpoint + "?range=" + range + "&interval=" + interval);
-  const series = data.chart?.result?.[0];
-  if (!series?.meta) throw new Error("Market data unavailable");
-  return series;
+  const path = "/v8/finance/chart/" + encodeURIComponent(symbol) + "?" + new URLSearchParams({range,interval});
+  for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
+    try {
+      const data = await json("https://proxy.cors.dev/https://" + host + path);
+      const series = data.chart?.result?.[0];
+      if (series?.meta) return series;
+    } catch { /* Retry through the alternate Yahoo Finance host. */ }
+  }
+  throw new Error("Market data unavailable");
 }
 
 async function refreshCopper() {
@@ -1496,7 +1590,7 @@ async function fetchStock(code,range = "1mo") {
     const series = await yahooChart(asset.symbol,range);
     const meta = series?.meta;
     const candle = series?.indicators?.quote?.[0];
-    if (!isPositive(meta?.regularMarketPrice) || !candle) throw new Error("Quote unavailable");
+    if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime) || !candle) throw new Error("Quote unavailable");
     const rows = (series.timestamp ?? []).map((time,index) => ({
       date:new Date(time * 1000).toISOString(),price:candle.close[index],open:candle.open[index]
     })).filter(point => isPositive(point.price));
@@ -1541,7 +1635,11 @@ async function refreshStocks() {
   if (visible) renderStocks();
   for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
-      try { stockQuotes.set(code,await fetchStock(code)); }
+      try { rememberStock(code,await fetchStock(code)); }
+      catch {
+        const previous = stockQuotes.get(code);
+        if (previous) previous.stale = true;
+      }
       finally { attemptedStockQuotes.add(code); }
     }));
   }
@@ -1594,10 +1692,15 @@ function renderStocks() {
     lead.append(button,info);
     const values = data ? [stockValue(data,data.price),
       Number.isFinite(data.change) ? (data.change > 0 ? "+" : "") + num(data.change) : "—",percent(data.percent),
-      stockValue(data,data.open),stockValue(data,data.high),stockValue(data,data.low),stockValue(data,data.previous)] : Array(7).fill("—");
+      stockValue(data,data.open),stockValue(data,data.high),stockValue(data,data.low),stockValue(data,data.previous)] : [attemptedStockQuotes.has(asset.code) ? unavailable : "Loading quote…",...Array(6).fill("—")];
     values.forEach((value,index) => {
       const cell = row.insertCell();
       cell.textContent = value;
+      if (index === 0 && data) {
+        const detail = document.createElement("small");
+        detail.textContent = quoteDetail(data);
+        cell.append(detail);
+      }
       if (index === 1 || index === 2) cell.className = data?.change < 0 ? "negative" : "positive";
     });
     return row;
@@ -1616,10 +1719,10 @@ function renderStocks() {
 
 function renderStockProfile(asset) {
   const data = stockQuotes.get(asset.code);
-  write("stock-price",data ? stockValue(data,data.price) : "—");
+  write("stock-price",data ? stockValue(data,data.price) : unavailable);
   write("stock-change",data ? percent(data.percent) + " · session" : "");
   byId("stock-change").className = data?.change < 0 ? "negative" : "positive";
-  write("stock-time",data?.date ? "Yahoo Finance · " + timestamp(data.date) : "Yahoo Finance");
+  write("stock-time",data ? quoteDetail(data,"Yahoo Finance") : "Yahoo Finance");
   const fields = [
     ["Open",data?.open],["Day high",data?.high],["Day low",data?.low],["Previous close",data?.previous],
     ["52-week high",data?.yearHigh],["52-week low",data?.yearLow],["Session volume",data?.volume]
@@ -1645,7 +1748,7 @@ async function renderStockHistory() {
   try {
     const data = await fetchStock(asset.code,range);
     if (request !== stockChartRequest || !stockDialog.open) return;
-    if (range === "1mo") stockQuotes.set(asset.code,data);
+    rememberStock(asset.code,data);
     renderStockProfile(asset);
     if (data.points.length < 2) throw new Error("Insufficient history");
     const values = data.points.map(point => point.price);
@@ -1666,7 +1769,11 @@ async function renderStockHistory() {
     caption.textContent = dateOnly(data.points[0].date) + " – " + dateOnly(data.points.at(-1).date) + " · Daily closes";
     host.replaceChildren(svg,caption);
   } catch {
-    if (request === stockChartRequest && stockDialog.open) host.textContent = "Price history is temporarily unavailable.";
+    if (request === stockChartRequest && stockDialog.open) {
+      if (range === "1mo" && stockQuotes.has(asset.code)) stockQuotes.get(asset.code).stale = true;
+      renderStockProfile(asset);
+      host.textContent = "Price history is temporarily unavailable.";
+    }
   }
 }
 
@@ -1717,7 +1824,6 @@ function chartDate(date) {
   return range === "24h" ? timestamp(date) : dateOnly(date);
 }
 
-let dollarIndex;
 async function refreshDollarIndex() {
   const {meta} = await yahooChart("DX-Y.NYB","5d");
   if (!isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime)) throw new Error("Dollar index unavailable");
@@ -1731,9 +1837,9 @@ function updateMarketSummary() {
     money(gold.price*22/24/ouncesInGrams,"USD") + " · 18K " + money(gold.price*.75/ouncesInGrams,"USD") + " per gram" : "");
   for (const [key,quote,source] of [["gold",gold,"Standard Bullion"],["silver",silver,"Standard Bullion"],["dollar",dollarIndex,"Yahoo Finance"]]) {
     const change = byId("daily-"+key);
-    change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + percent(quote.move) : "—";
+    change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + (Number.isFinite(quote.move) ? percent(quote.move) : "Daily change unavailable") : unavailable;
     change.className = quote?.move > 0 ? "positive" : quote?.move < 0 ? "negative" : "";
-    write("daily-"+key+"-time",quote ? source+" · "+timestamp(quote.date) : source);
+    write("daily-"+key+"-time",quote ? (key === "dollar" ? quoteDetail(quote,source) : metalDetail(key === "gold" ? "XAU" : "XAG",quote)) : source);
   }
 }
 
@@ -1754,19 +1860,25 @@ async function refreshMemes(force = false) {
   memeLoading = true;
   try {
     const rows = await json(coinGeckoApi + "/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=50&price_change_percentage=7d,30d&sparkline=true");
-    memeAssets = rows.filter(row => isPositive(row.current_price) && isPositive(row.market_cap))
+    const next = rows.filter(row => isPositive(row.current_price) && isPositive(row.market_cap))
       .sort((a,b) => b.market_cap-a.market_cap).map(row => ({
         id:"gecko:"+row.id,name:row.name,symbol:row.symbol.toUpperCase(),last_updated:row.last_updated,gecko:row,
         quotes:{USD:{price:row.current_price,market_cap:row.market_cap,volume_24h:row.total_volume,
           percent_change_24h:row.price_change_percentage_24h,percent_change_7d:row.price_change_percentage_7d_in_currency,
           percent_change_30d:row.price_change_percentage_30d_in_currency}}
       }));
+    if (!next.length) throw new Error("No meme quotes returned");
+    memeAssets = next;
+    staleCrypto.delete("meme");
+    saveQuotes("meme",memeAssets.map(({gecko,...asset}) => ({...asset,gecko:{id:gecko.id}})));
     const newest = Math.max(...memeAssets.map(asset => Date.parse(asset.last_updated)).filter(Number.isFinite));
     cryptoStatus.meme = Number.isFinite(newest) ? " · Latest quote " + timestamp(newest) + " · Refreshes every 5 min"
       : " · No eligible quotes returned.";
     if (openCoin?.gecko && profileDialog.open) refreshOpenCoinQuote();
   } catch {
-    cryptoStatus.meme = " · Refresh failed. Last available quotes shown.";
+    staleCrypto.add("meme");
+    cryptoStatus.meme = memeAssets.length ? " · Stale · refresh failed" : " · Quote unavailable";
+    if (openCoin?.gecko && profileDialog.open) refreshOpenCoinQuote();
   } finally {
     memeChecked = Date.now();
     memeLoading = false;
