@@ -7,7 +7,7 @@
 <meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=nfts"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=ecb-fallback" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js" defer></script>
+<link rel="stylesheet" href="style.css?v=nft-artwork"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=ecb-fallback" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=artwork" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
@@ -105,7 +105,7 @@
 </section>
 <dialog id="nft-profile" class="coin-profile" aria-labelledby="nft-profile-title">
 <form method="dialog" class="nft-dialog-close"><button class="secondary-action" aria-label="Close NFT profile">Close</button></form>
-<h2 id="nft-profile-title"></h2><p id="nft-profile-description"></p>
+<div id="nft-profile-artwork"></div><h2 id="nft-profile-title"></h2><p id="nft-profile-description"></p>
 <dl id="nft-profile-metrics" class="coin-records"></dl>
 <small id="nft-profile-time"></small>
 </dialog>

@@ -28,7 +28,24 @@ function nftMetrics(stats) {
   ];
 }
 
+function nftArtwork(collection, size) {
+  const image = document.createElement("img");
+  image.src = collection.image;
+  image.alt = size > 52 ? collection.imageLabel || collection.name + " collection artwork" : "";
+  image.width = size;
+  image.height = size;
+  image.decoding = "async";
+  image.loading = size > 52 ? "eager" : "lazy";
+  image.className = "nft-artwork";
+  return image;
+}
+
 function renderNftProfile(collection) {
+  const artwork = document.getElementById("nft-profile-artwork");
+  if (artwork.dataset.collection !== collection.id) {
+    artwork.replaceChildren(nftArtwork(collection,180));
+    artwork.dataset.collection = collection.id;
+  }
   document.getElementById("nft-profile-title").textContent = collection.name;
   document.getElementById("nft-profile-description").textContent = collection.description;
   document.getElementById("nft-profile-time").textContent = "Magic Eden · Fetched " + nftDates.format(new Date(collection.checkedAt));
@@ -66,7 +83,12 @@ function renderNftCollections() {
     });
     const chain = document.createElement("small");
     chain.textContent = "Solana";
-    lead.append(open,chain);
+    const identity = document.createElement("div");
+    identity.className = "nft-identity";
+    const text = document.createElement("div");
+    text.append(open,chain);
+    identity.append(nftArtwork(collection,52),text);
+    lead.append(identity);
     for (const [,value] of nftMetrics(collection.stats)) row.insertCell().textContent = value;
     row.insertCell().textContent = nftDates.format(new Date(collection.checkedAt));
     return row;
@@ -87,7 +109,7 @@ async function refreshNfts(force = false) {
   nftStatus.textContent = "Checking Magic Eden for updated collection data…";
   try {
     if (!nftCollections.length) {
-      const snapshot = await fetch("./nft-collections.json",{signal:AbortSignal.timeout(8000)});
+      const snapshot = await fetch("./nft-collections.json?v=artwork",{signal:AbortSignal.timeout(8000)});
       if (!snapshot.ok) throw new Error("Snapshot unavailable");
       nftCollections = await snapshot.json();
       renderNftCollections();

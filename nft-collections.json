@@ -10,7 +10,8 @@
       "avgPrice24hr": 6882309999.999999,
       "volume7d": 260886939999.99997
     },
-    "checkedAt": "2026-11-12T16:07:22.702Z"
+    "checkedAt": "2026-11-12T16:07:22.702Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fmad_lads_pfp_1682211343777.png@png"
   },
   {
     "id": "claynosaurz",
@@ -23,7 +24,8 @@
       "avgPrice24hr": 5887988888.888888,
       "volume7d": 208414831740
     },
-    "checkedAt": "2026-11-12T16:07:22.706Z"
+    "checkedAt": "2026-11-12T16:07:22.706Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fclaynosaurz_pfp_1679930706147.jpeg@png"
   },
   {
     "id": "solana_monkey_business",
@@ -36,7 +38,8 @@
       "avgPrice24hr": 12459666666.666666,
       "volume7d": 251330400000
     },
-    "checkedAt": "2026-11-12T16:07:22.712Z"
+    "checkedAt": "2026-11-12T16:07:22.712Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fi.imgur.com%2FbMH6qNc.png@png"
   },
   {
     "id": "degods",
@@ -49,7 +52,8 @@
       "avgPrice24hr": 3030500000,
       "volume7d": 122018005000
     },
-    "checkedAt": "2026-11-12T16:07:22.712Z"
+    "checkedAt": "2026-11-12T16:07:22.712Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fdegods_pfp_1759544355415.png@png"
   },
   {
     "id": "okay_bears",
@@ -62,7 +66,8 @@
       "avgPrice24hr": 3418333333.555556,
       "volume7d": 344668529352
     },
-    "checkedAt": "2026-11-12T16:07:22.706Z"
+    "checkedAt": "2026-11-12T16:07:22.706Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fbronze-legislative-cat-759.mypinata.cloud%2Fipfs%2Fbafkreidj6ilduqfofjyicu5ht4ljfi4yeuaj6wrr7fomvocpbrsqkeymha@png"
   },
   {
     "id": "famous_fox_federation",
@@ -75,7 +80,8 @@
       "avgPrice24hr": 3031602222.2222223,
       "volume7d": 243468740000
     },
-    "checkedAt": "2026-11-12T16:07:22.711Z"
+    "checkedAt": "2026-11-12T16:07:22.711Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Ffamous_fox_federation_pfp_1679672949828.gif@png"
   },
   {
     "id": "smb_gen3",
@@ -88,7 +94,8 @@
       "avgPrice24hr": 4201856343.3333335,
       "volume7d": 96711104530
     },
-    "checkedAt": "2026-11-12T16:07:22.705Z"
+    "checkedAt": "2026-11-12T16:07:22.705Z",
+    "image": "https://img-cdn.magiceden.dev/rs:fill:320:320:0:0/plain/https%3A%2F%2Fcreator-hub-prod.s3.us-east-2.amazonaws.com%2Fsmb_gen3_pfp_1688353503184.png@png"
   },
   {
     "id": "tensorians",
@@ -99,6 +106,8 @@
       "floorPrice": 500000000,
       "listedCount": 172
     },
-    "checkedAt": "2026-11-12T16:07:23.104Z"
+    "checkedAt": "2026-11-12T16:07:23.104Z",
+    "image": "https://prod-tensor-creators-s3.s3.us-east-1.amazonaws.com/drop-metadata/24f27171-430f-42ca-b442-6a75a8daadad/images/2789.png",
+    "imageLabel": "Tensorian #3163"
   }
 ]
