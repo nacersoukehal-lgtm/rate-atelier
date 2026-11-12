@@ -1,0 +1,104 @@
+[
+  {
+    "id": "mad_lads",
+    "name": "Mad Lads",
+    "description": "Illustrated characters with an associated xNFT ecosystem.",
+    "stats": {
+      "symbol": "mad_lads",
+      "floorPrice": 7144700000,
+      "listedCount": 191,
+      "avgPrice24hr": 6882309999.999999,
+      "volume7d": 260886939999.99997
+    },
+    "checkedAt": "2026-11-12T16:07:22.702Z"
+  },
+  {
+    "id": "claynosaurz",
+    "name": "Claynosaurz",
+    "description": "A collection of animated dinosaur characters.",
+    "stats": {
+      "symbol": "claynosaurz",
+      "floorPrice": 5757900000,
+      "listedCount": 216,
+      "avgPrice24hr": 5887988888.888888,
+      "volume7d": 208414831740
+    },
+    "checkedAt": "2026-11-12T16:07:22.706Z"
+  },
+  {
+    "id": "solana_monkey_business",
+    "name": "Solana Monkey Business",
+    "description": "Pixel-art monkeys from the Solana Monkey Business collection.",
+    "stats": {
+      "symbol": "solana_monkey_business",
+      "floorPrice": 12998000000,
+      "listedCount": 218,
+      "avgPrice24hr": 12459666666.666666,
+      "volume7d": 251330400000
+    },
+    "checkedAt": "2026-11-12T16:07:22.712Z"
+  },
+  {
+    "id": "degods",
+    "name": "DeGods",
+    "description": "The Solana listings for the DeGods profile-picture collection.",
+    "stats": {
+      "symbol": "degods",
+      "floorPrice": 3050400000,
+      "listedCount": 481,
+      "avgPrice24hr": 3030500000,
+      "volume7d": 122018005000
+    },
+    "checkedAt": "2026-11-12T16:07:22.712Z"
+  },
+  {
+    "id": "okay_bears",
+    "name": "Okay Bears",
+    "description": "A profile-picture collection of illustrated bears.",
+    "stats": {
+      "symbol": "okay_bears",
+      "floorPrice": 2990000000,
+      "listedCount": 565,
+      "avgPrice24hr": 3418333333.555556,
+      "volume7d": 344668529352
+    },
+    "checkedAt": "2026-11-12T16:07:22.706Z"
+  },
+  {
+    "id": "famous_fox_federation",
+    "name": "Famous Fox Federation",
+    "description": "A collection of pixel-art fox characters.",
+    "stats": {
+      "symbol": "famous_fox_federation",
+      "floorPrice": 3174100000,
+      "listedCount": 172,
+      "avgPrice24hr": 3031602222.2222223,
+      "volume7d": 243468740000
+    },
+    "checkedAt": "2026-11-12T16:07:22.711Z"
+  },
+  {
+    "id": "smb_gen3",
+    "name": "SMB Gen3",
+    "description": "The third generation of the Solana Monkey Business collection.",
+    "stats": {
+      "symbol": "smb_gen3",
+      "floorPrice": 3733263000,
+      "listedCount": 265,
+      "avgPrice24hr": 4201856343.3333335,
+      "volume7d": 96711104530
+    },
+    "checkedAt": "2026-11-12T16:07:22.705Z"
+  },
+  {
+    "id": "tensorians",
+    "name": "Tensorians",
+    "description": "A collection associated with the Tensor NFT marketplace.",
+    "stats": {
+      "symbol": "tensorians",
+      "floorPrice": 500000000,
+      "listedCount": 172
+    },
+    "checkedAt": "2026-11-12T16:07:23.104Z"
+  }
+]

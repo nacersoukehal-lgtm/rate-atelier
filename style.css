@@ -365,3 +365,13 @@ footer { padding: 18px 0; margin-top: 32px; }
 .metal-reference-scroll :is(th,td) { padding: .55rem .7rem; border-bottom: 1px solid var(--line); text-align: left; }
 .metal-reference-scroll th { color: var(--muted); font-size: .8rem; }
 .metal-reference-scroll td:nth-child(n+2) { white-space: nowrap; }
+
+.nft-table { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.nft-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.nft-table :is(th,td) { padding: .75rem .9rem; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.nft-table th { color: var(--muted); font-size: .82rem; }
+.nft-table tr:last-child td { border-bottom: 0; }
+.nft-dialog-close { display: flex; justify-content: flex-end; }
+#nft-profile h2 { font: 38px/1.1 var(--serif); margin-bottom: .4rem; }
+#nft-profile-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(135px,1fr)); gap: .7rem; }
+#nft-profile-metrics dd { margin: 0; font-weight: 700; }

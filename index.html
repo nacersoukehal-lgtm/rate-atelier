@@ -7,10 +7,10 @@
 <meta name="description" content="Track exchange rates and precious metals, convert currency, and compare transfer offers.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=forex-metals"><script src="stock-directory.js" defer></script><script src="app.js?v=forex-metals" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script>
+<link rel="stylesheet" href="style.css?v=nfts"><script src="stock-directory.js" defer></script><script src="app.js?v=forex-metals" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js" defer></script>
 </head>
 <body>
-<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
+<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calendar">Calendar</a><a href="#calculators">Calculators</a><a href="#compare">Compare offers</a><a href="#news">News</a><a href="#blog">Blog</a><a href="#about">About</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel">
 <div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Follow global markets in one place</h1><p>Track currencies, metals, stocks, and crypto. Convert currencies and compare transfer offers.</p></div><div class="status" id="status" role="status">Connecting to feeds…</div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Currency converter</h2>
@@ -88,6 +88,27 @@
 <p id="crypto-state" class="crypto-state" role="status">Loading crypto markets…</p>
 <div class="table-foot"><small><a id="crypto-source" href="https://coinpaprika.com/">CoinPaprika</a><span id="crypto-time"></span></small><div class="pager"><button id="crypto-prev" disabled aria-label="Previous crypto page">‹</button><span id="crypto-page">—</span><button id="crypto-next" disabled aria-label="Next crypto page">›</button></div></div>
 </div></section>
+<section id="nfts" class="tools tab-panel" hidden>
+<h2>NFT collections</h2>
+<p class="stocks-intro">Track floor prices, listings, and sales activity for selected Solana collections on Magic Eden.</p>
+<div class="calendar-filters stock-filters">
+<label>Find a collection<input id="nft-search" type="search" placeholder="Collection name"></label>
+<label>Sort by<select id="nft-sort"><option value="volume7d">7-day volume</option><option value="floorPrice">Floor price</option><option value="listedCount">Listed items</option><option value="name">Collection name</option></select></label>
+<button id="nft-refresh" class="secondary-action" type="button">Refresh NFT data</button>
+</div>
+<div class="nft-table" role="region" aria-label="NFT collection quotes" tabindex="0"><table>
+<thead><tr><th scope="col">Collection</th><th scope="col">Floor price</th><th scope="col">Listed items</th><th scope="col">24h average sale</th><th scope="col">7-day volume</th><th scope="col">Fetched</th></tr></thead>
+<tbody id="nft-rows"></tbody></table></div>
+<p id="nft-empty" class="crypto-state" hidden>No collections match your search.</p>
+<p id="nft-status" class="crypto-state" role="status">Loading NFT collections…</p>
+<small>Floor price is the lowest listed asking price. A dash indicates unavailable data.</small>
+</section>
+<dialog id="nft-profile" class="coin-profile" aria-labelledby="nft-profile-title">
+<form method="dialog" class="nft-dialog-close"><button class="secondary-action" aria-label="Close NFT profile">Close</button></form>
+<h2 id="nft-profile-title"></h2><p id="nft-profile-description"></p>
+<dl id="nft-profile-metrics" class="coin-records"></dl>
+<small id="nft-profile-time"></small>
+</dialog>
 <section id="calendar" class="tools tab-panel">
 <h2>Economic calendar</h2>
 <p class="stocks-intro">Follow central bank decisions, inflation releases, and jobs reports. Times are shown in your local time zone.</p>
