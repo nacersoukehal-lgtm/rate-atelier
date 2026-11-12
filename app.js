@@ -544,7 +544,7 @@ document.querySelectorAll("[data-range]").forEach(button => button.addEventListe
 new ResizeObserver(draw).observe(byId("chart"));
 setPurity();
 compare();
-refresh();
+queueMicrotask(refresh);
 const landingChart = new URLSearchParams(location.search).get("chart");
 if (["XAU","XAG"].includes(landingChart)) byId("series").value = landingChart;
 loadMarketHistory();
