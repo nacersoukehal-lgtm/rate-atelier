@@ -217,9 +217,9 @@ async function refresh() {
   await snapshot;
   if (results[0].status === "rejected" && !currencyDirectory) write("currency-count","Currency list temporarily unavailable. Try Refresh.");
   const freshMetals = new Set(results[1].status === "fulfilled" ? results[1].value : []);
-  if (results[2].status === "fulfilled") freshMetals.add("HG");
+  if (results[2].status === "fulfilled" && !metals.get("HG")?.stale) freshMetals.add("HG");
   for (const [code,quote] of metals) quote.stale = !freshMetals.has(code);
-  if (dollarIndex) dollarIndex.stale = results[3].status === "rejected";
+  if (dollarIndex) dollarIndex.stale = !!dollarIndex.stale || results[3].status === "rejected";
   saveQuotes("metals",[...metals]);
   if (dollarIndex) saveQuotes("dollar",dollarIndex);
   updateQuotes();
@@ -1642,11 +1642,11 @@ function hostedSeries(data,symbol,allowSaved = false) {
 }
 
 async function yahooQuoteBatch(symbols) {
-  const params = new URLSearchParams({symbols:symbols.join(","),range:"5d",interval:"1d"});
+  const params = new URLSearchParams({symbols:symbols.join(","),range:"5d",interval:"1d",_:Math.floor(Date.now()/60000)});
   const path = "/v7/finance/spark?" + params;
   for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
     try {
-      const payload = await json("https://proxy.cors.dev/https://" + host + path);
+      const payload = await json("https://proxy.cors.dev/https://" + host + path,"no-store");
       const rows = payload.spark?.result ?? [];
       const quotes = new Map(rows.map(row => [row.symbol,row.response?.[0]]).filter(([,series]) =>
         isPositive(series?.meta?.regularMarketPrice) && isPositive(series.meta.regularMarketTime)));
@@ -1727,7 +1727,7 @@ function stockQuoteDetail(data,source = "",checking = false,now = Date.now()) {
   const knownSession = Number.isFinite(sessionStart) && sessionEnd > sessionStart;
   const open = knownSession && now >= sessionStart && now < sessionEnd;
   const close = knownSession && (now >= sessionEnd && time >= sessionEnd - 15 * 60000 ||
-    now < sessionStart && time < sessionStart && sessionStart - time < 7 * 86400000 &&
+    now < sessionStart && time < sessionStart && sessionStart - time < 4 * 86400000 &&
     (!data.stale || data.confirmedClose));
   const outdated = open && now - time > 35 * 60000 ||
     knownSession && now >= sessionEnd + 35 * 60000 && !close;
@@ -1765,8 +1765,17 @@ async function improveStockQuote(asset,data,force) {
       change:previous ? latest.price-previous : undefined,percent:Number.isFinite(move) ? move : undefined};
   }
   if (!needsRange) return data;
-  const {sessionStart,sessionEnd} = data;
+  let {sessionStart,sessionEnd} = data;
   const quoteTime = Date.parse(data.date);
+  // The provider can publish the next trading period alongside the prior close.
+  if (quoteTime < sessionStart) {
+    const dailyStart = Date.parse(data.points.at(-1)?.date);
+    const duration = sessionEnd-sessionStart;
+    if (!Number.isFinite(dailyStart) || !(duration > 0) ||
+        quoteTime < dailyStart+duration || quoteTime > dailyStart+duration+30*60000) return data;
+    sessionStart = dailyStart;
+    sessionEnd = dailyStart+duration;
+  }
   if (!Number.isFinite(sessionStart) || !(sessionEnd > sessionStart) ||
       quoteTime < sessionStart || quoteTime > sessionEnd + 30 * 60000) return data;
   const candle = series.indicators?.quote?.[0];
@@ -1820,6 +1829,7 @@ async function refreshStocks(force = false) {
         const mirrorVerified = !!hostedSeries(backup,asset.symbol);
         let data = series ? parseStockQuote(asset,series) : undefined;
         const live = !!series && (series === direct || mirrorVerified);
+        const savedClose = data && stockQuoteDetail(data).startsWith("Latest session close");
         if (data && data.date === saved?.date) data.open ??= saved.open;
         const baseline = saved && (!data || Date.parse(saved.date) > Date.parse(data.date)) ? saved : data;
         const improved = await improveStockQuote(asset,baseline,force).catch(() => baseline);
@@ -1829,7 +1839,7 @@ async function refreshStocks(force = false) {
 
         // Keep an older hosted batch available while trying the individual feed.
         if (data) rememberStock(code,{...data,checkedAt:series === mirror ? Date.parse(backup[asset.symbol].verifiedAt) : data.checkedAt,
-          stale:true,refreshFailed:true});
+          stale:!savedClose,confirmedClose:!!savedClose,refreshFailed:true});
         const individual = await fetchStock(code,"1mo",force);
         const enriched = await improveStockQuote(asset,individual,force).catch(() => individual);
         if (!rememberStock(code,enriched)) throw new Error("Older quote");
@@ -1837,7 +1847,9 @@ async function refreshStocks(force = false) {
       catch {
         const previous = stockQuotes.get(code);
         if (previous) {
-          previous.stale = true;
+          const closed = stockQuoteDetail({...previous,refreshFailed:false}).startsWith("Latest session close");
+          previous.stale = !closed;
+          previous.confirmedClose = closed;
           previous.refreshFailed = true;
         }
       }
@@ -2080,9 +2092,21 @@ async function fetchBenchmark(symbol) {
   const mirror = hostedSeries(await hosted,symbol);
   const direct = batch.get(symbol);
   const latest = (mirror?.meta.regularMarketTime ?? 0) > (direct?.meta.regularMarketTime ?? 0) ? mirror : direct;
-  const series = latest ?? await yahooChart(symbol,"5d","1d","default",valid)
-    .catch(() => yahooChart(symbol,"1mo","1d","default",valid));
-  return parseBenchmarkQuote(series);
+  if (latest && Date.now()-latest.meta.regularMarketTime*1000 < hostedQuoteMaxAge) {
+    return parseBenchmarkQuote(latest);
+  }
+  const chart = await yahooChart(symbol,"5d","1d","no-store",valid).catch(() => null);
+  const saved = hostedSeries(await hosted,symbol,true);
+  const series = [latest,chart,saved].filter(Boolean).sort((a,b) =>
+    b.meta.regularMarketTime-a.meta.regularMarketTime)[0];
+  if (!series) throw new Error("Benchmark quote unavailable");
+  const quote = parseBenchmarkQuote(series);
+  const period = series.meta.currentTradingPeriod?.regular;
+  const time = Date.parse(quote.date);
+  const now = Date.now();
+  const closed = now >= period?.end*1000 && time >= period.end*1000-15*60000 ||
+    now < period?.start*1000 && time < period.start*1000 && period.start*1000-time < 12*3600000;
+  return {...quote,stale:!closed && now-time > hostedQuoteMaxAge};
 }
 
 let benchmarkRequest;
