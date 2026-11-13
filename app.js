@@ -1602,7 +1602,9 @@ let activeStock;
 let stockChartRequest = 0;
 
 async function yahooChart(symbol,range,interval = "1d",cache = "default",accept = series => !!series?.meta) {
-  const path = "/v8/finance/chart/" + encodeURIComponent(symbol) + "?" + new URLSearchParams({range,interval});
+  const params = new URLSearchParams({range,interval});
+  if (cache === "no-store") params.set("_",Math.floor(Date.now()/60000));
+  const path = "/v8/finance/chart/" + encodeURIComponent(symbol) + "?" + params;
   for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
     try {
       const data = await json("https://proxy.cors.dev/https://" + host + path,cache);
@@ -1744,17 +1746,19 @@ function stockHighLow(data,value) {
   return data && isPositive(value) ? stockValue(data,value) : "Unavailable";
 }
 
-async function improveStockQuote(asset,data) {
-  if (!data) return data;
+const priorityAsianSymbols = new Set(["^KS11","^TWII","6758.T"]);
+
+async function improveStockQuote(asset,data,force) {
   const now = Date.now();
-  const open = now >= data.sessionStart && now < data.sessionEnd;
+  const open = now >= data?.sessionStart && now < data?.sessionEnd;
   const lagging = open && now - Date.parse(data.date) > 10 * 60000;
-  const needsRange = asset.symbol === "^NYA" && (!data.high || !data.low);
-  if (!lagging && !needsRange) return data;
+  const needsRange = asset.symbol === "^NYA" && data && (!data.high || !data.low);
+  const priority = priorityAsianSymbols.has(asset.symbol);
+  if (!lagging && !needsRange && !(priority && (force || !data || data.stale))) return data;
   const series = await yahooChart(asset.symbol,needsRange ? "5d" : "1d","5m","no-store",
     result => result?.meta?.symbol === asset.symbol && isPositive(result.meta.regularMarketTime));
   const latest = parseStockQuote(asset,series);
-  if (Date.parse(latest.date) > Date.parse(data.date)) {
+  if (!data || Date.parse(latest.date) > Date.parse(data.date)) {
     const move = series.meta.regularMarketChangePercent;
     const previous = Number.isFinite(move) ? latest.price/(1+move/100) : undefined;
     data = {...latest,points:[],open:undefined,previous,
@@ -1763,7 +1767,8 @@ async function improveStockQuote(asset,data) {
   if (!needsRange) return data;
   const {sessionStart,sessionEnd} = data;
   const quoteTime = Date.parse(data.date);
-  if (quoteTime < sessionStart || quoteTime > sessionEnd + 30 * 60000) return data;
+  if (!Number.isFinite(sessionStart) || !(sessionEnd > sessionStart) ||
+      quoteTime < sessionStart || quoteTime > sessionEnd + 30 * 60000) return data;
   const candle = series.indicators?.quote?.[0];
   const interval = 5 * 60000;
   const cutoff = Math.min(sessionEnd-interval,quoteTime);
@@ -1816,16 +1821,18 @@ async function refreshStocks(force = false) {
         let data = series ? parseStockQuote(asset,series) : undefined;
         const live = !!series && (series === direct || mirrorVerified);
         if (data && data.date === saved?.date) data.open ??= saved.open;
-        if (data) {
-          const improved = await improveStockQuote(asset,data).catch(() => data);
-          if ((live || Date.parse(improved.date) > Date.parse(data.date)) && rememberStock(code,improved)) return;
-          data = improved;
-        }
+        const baseline = saved && (!data || Date.parse(saved.date) > Date.parse(data.date)) ? saved : data;
+        const improved = await improveStockQuote(asset,baseline,force).catch(() => baseline);
+        if (improved && (!baseline || Date.parse(improved.date) > Date.parse(baseline.date) ||
+            live && baseline === data) && rememberStock(code,improved)) return;
+        if (baseline === data) data = improved;
 
         // Keep an older hosted batch available while trying the individual feed.
         if (data) rememberStock(code,{...data,checkedAt:series === mirror ? Date.parse(backup[asset.symbol].verifiedAt) : data.checkedAt,
           stale:true,refreshFailed:true});
-        if (!rememberStock(code,await fetchStock(code,"1mo",force))) throw new Error("Older quote");
+        const individual = await fetchStock(code,"1mo",force);
+        const enriched = await improveStockQuote(asset,individual,force).catch(() => individual);
+        if (!rememberStock(code,enriched)) throw new Error("Older quote");
       }
       catch {
         const previous = stockQuotes.get(code);
@@ -1932,6 +1939,9 @@ function renderStockProfile(asset) {
     term.textContent = label;
     detail.textContent = /high|low/.test(label) ? stockHighLow(data,value)
       : data ? (label === "Session volume" ? positiveFormat(value,supplyFormat.format) : stockValue(data,value)) : "—";
+    if (asset.symbol === "^NYA" && ["Day high","Day low"].includes(label) && !isPositive(value)) {
+      detail.textContent += " · The feed did not provide this value or enough intraday data for this session.";
+    }
     block.append(term,detail);
     return block;
   }));
