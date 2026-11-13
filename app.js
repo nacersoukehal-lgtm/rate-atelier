@@ -1585,6 +1585,7 @@ const stockDialog = byId("stock-profile");
 const stockPageSize = 12;
 let stockPage = 0;
 let stockLoading = false;
+const checkingStockQuotes = new Set();
 let stockRefreshPending = false;
 let stockRefreshForced = false;
 let stockRefreshTimer;
@@ -1733,6 +1734,7 @@ async function refreshStocks(force = false) {
     return;
   }
   stockLoading = true;
+  for (const code of codes) checkingStockQuotes.add(code);
   loadStockSnapshot();
   if (visible) renderStocks();
   const symbols = codes.map(code => stockAssets.get(code).symbol);
@@ -1763,6 +1765,7 @@ async function refreshStocks(force = false) {
       finally { attemptedStockQuotes.add(code); }
     }));
   }
+  checkingStockQuotes.clear();
   stockLoading = false;
   if (!byId("stocks").hidden) renderStocks();
   updateWatchQuotes();
@@ -1820,7 +1823,10 @@ function renderStocks() {
       cell.textContent = value;
       if (index === 0 && data) {
         const detail = document.createElement("small");
-        detail.textContent = quoteDetail(data);
+        const checking = checkingStockQuotes.has(asset.code);
+        detail.textContent = checking
+          ? "Checking for updates · " + quoteDetail({...data,stale:false})
+          : quoteDetail(data);
         cell.append(detail);
       }
       if (index === 1 || index === 2) cell.className = data?.change < 0 ? "negative" : "positive";
