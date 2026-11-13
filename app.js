@@ -127,6 +127,8 @@ async function json(url,cache = "default") {
   return response.json();
 }
 
+const cardDecimals = new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
 function updateQuotes() {
   for (const {id,code} of metalCatalog) {
     const metal = metals.get(code);
@@ -135,12 +137,12 @@ function updateQuotes() {
   }
   const gold = metals.get("XAU");
   const silver = metals.get("XAG");
-  write("ratio", gold && silver ? num(gold.price / silver.price) + "×" : unavailable);
+  write("ratio", gold && silver ? cardDecimals.format(gold.price / silver.price) + "×" : unavailable);
   write("ratio-time",gold && silver ? metalDetail("XAU",{
     date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
   }) : "Silver ounces per ounce of gold");
   const eur = rates.get("EUR");
-  write("usd", eur ? "€" + num(eur.rate,4) : unavailable);
+  write("usd", eur ? "€" + cardDecimals.format(eur.rate) : unavailable);
   write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
 }
 
