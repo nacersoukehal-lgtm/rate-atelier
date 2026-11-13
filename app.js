@@ -1604,6 +1604,32 @@ async function yahooChart(symbol,range,interval = "1d",cache = "default",accept 
   throw new Error("Market data unavailable");
 }
 
+let hostedQuoteRequest;
+let hostedQuotes;
+let hostedQuotesChecked = 0;
+const hostedQuoteMaxAge = 35 * 60000;
+
+async function loadHostedQuotes(force = false) {
+  if (hostedQuoteRequest) return hostedQuoteRequest;
+  if (!force && hostedQuotes && Date.now()-hostedQuotesChecked < 60000) return hostedQuotes;
+  const url = "https://raw.githubusercontent.com/nacersoukehal-lgtm/rate-atelier/main/market-quotes.json";
+  hostedQuoteRequest = json(url + "?window=" + Math.floor(Date.now()/60000)).then(data => {
+    hostedQuotes = data;
+    hostedQuotesChecked = Date.now();
+    return data;
+  }).catch(() => hostedQuotes ?? {}).finally(() => { hostedQuoteRequest = undefined; });
+  return hostedQuoteRequest;
+}
+
+function hostedSeries(data,symbol) {
+  const entry = data[symbol];
+  const meta = entry?.series?.meta;
+  const age = Date.now()-Date.parse(entry?.verifiedAt);
+  if (meta?.symbol !== symbol || !isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime) ||
+      !Number.isFinite(age) || age > hostedQuoteMaxAge || age < -60000) return null;
+  return entry.series;
+}
+
 async function yahooQuoteBatch(symbols) {
   const params = new URLSearchParams({symbols:symbols.join(","),range:"5d",interval:"1d"});
   const path = "/v7/finance/spark?" + params;
@@ -1709,12 +1735,17 @@ async function refreshStocks(force = false) {
   stockLoading = true;
   loadStockSnapshot();
   if (visible) renderStocks();
-  const batch = await yahooQuoteBatch(codes.map(code => stockAssets.get(code).symbol));
+  const symbols = codes.map(code => stockAssets.get(code).symbol);
+  const hosted = loadHostedQuotes(force);
+  const batch = await yahooQuoteBatch(symbols);
+  const backup = await hosted;
   for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
       try {
         const asset = stockAssets.get(code);
-        const series = batch.get(asset.symbol);
+        const direct = batch.get(asset.symbol);
+        const mirror = hostedSeries(backup,asset.symbol);
+        const series = (mirror?.meta.regularMarketTime ?? 0) > (direct?.meta.regularMarketTime ?? 0) ? mirror : direct;
         const saved = stockQuotes.get(code);
         if (series && series.meta.regularMarketTime * 1000 >= (saved ? Date.parse(saved.date) : -Infinity)) {
           const data = parseStockQuote(asset,series);
@@ -1960,8 +1991,12 @@ async function refreshDollarIndex() {
 
 async function fetchBenchmark(symbol) {
   const valid = result => isPositive(result?.meta?.regularMarketPrice) && isPositive(result.meta.regularMarketTime);
+  const hosted = loadHostedQuotes();
   const batch = await benchmarkBatch();
-  const series = batch.get(symbol) ?? await yahooChart(symbol,"5d","1d","default",valid)
+  const mirror = hostedSeries(await hosted,symbol);
+  const direct = batch.get(symbol);
+  const latest = (mirror?.meta.regularMarketTime ?? 0) > (direct?.meta.regularMarketTime ?? 0) ? mirror : direct;
+  const series = latest ?? await yahooChart(symbol,"5d","1d","default",valid)
     .catch(() => yahooChart(symbol,"1mo","1d","default",valid));
   return parseBenchmarkQuote(series);
 }
