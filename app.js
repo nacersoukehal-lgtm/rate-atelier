@@ -1556,11 +1556,12 @@ function recentStockPoints(points) {
 let stockSnapshotRequest;
 let stockYearSnapshots = {};
 function loadStockSnapshot() {
-  stockSnapshotRequest ??= json("./stock-quote-snapshot.json?v=restored").then(snapshot => {
+  stockSnapshotRequest ??= json("./stock-quote-snapshot.json?v=batch-quotes").then(snapshot => {
     const copper = snapshot.benchmarks?.copper;
     const dollar = snapshot.benchmarks?.dollar;
     if (!metals.has("HG") && copper) metals.set("HG",{...copper,stale:true});
-    if (!dollarIndex && dollar) dollarIndex = {...dollar,stale:true};
+    if (dollar && (!dollarIndex || Date.parse(dollar.date) > Date.parse(dollarIndex.date))) dollarIndex = {...dollar,stale:true};
+    else if (dollar && dollarIndex?.date === dollar.date && !Number.isFinite(dollarIndex.move)) dollarIndex.move = dollar.move;
     updateQuotes();
     updateMarketSummary();
     stockYearSnapshots = snapshot.yearHistory ?? {};
@@ -1603,8 +1604,25 @@ async function yahooChart(symbol,range,interval = "1d",cache = "default",accept 
   throw new Error("Market data unavailable");
 }
 
+async function yahooQuoteBatch(symbols) {
+  const params = new URLSearchParams({symbols:symbols.join(","),range:"5d",interval:"1d"});
+  const path = "/v7/finance/spark?" + params;
+  for (const host of ["query1.finance.yahoo.com","query2.finance.yahoo.com"]) {
+    try {
+      const payload = await json("https://proxy.cors.dev/https://" + host + path);
+      const rows = payload.spark?.result ?? [];
+      const quotes = new Map(rows.map(row => [row.symbol,row.response?.[0]]).filter(([,series]) =>
+        isPositive(series?.meta?.regularMarketPrice) && isPositive(series.meta.regularMarketTime)));
+      if (quotes.size) return quotes;
+    } catch { /* Try the second host, then individual quote requests. */ }
+  }
+  return new Map();
+}
+
 async function refreshCopper() {
   const quote = await fetchBenchmark("HG=F");
+  const previous = metals.get("HG");
+  if (previous && Date.parse(quote.date) < Date.parse(previous.date)) throw new Error("Older copper quote");
   metals.set("HG",quote);
 }
 
@@ -1636,28 +1654,32 @@ async function fetchStock(code,range = "1mo",force = false) {
         if (range !== "1mo") throw error;
         return yahooChart(asset.symbol,"5d","1d","default",valid);
       });
-    const meta = series?.meta;
-    const candle = series?.indicators?.quote?.[0];
-    if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime)) throw new Error("Quote unavailable");
-    const rows = (series.timestamp ?? []).map((time,index) => ({
-      date:new Date(time * 1000).toISOString(),price:candle?.close?.[index],open:candle?.open?.[index]
-    })).filter(point => isPositive(point.price));
-    const quoteTime = new Date(meta.regularMarketTime * 1000);
-    const day = new Intl.DateTimeFormat("en-CA",{timeZone:meta.exchangeTimezoneName || "UTC",dateStyle:"short"});
-    const last = rows.at(-1);
-    const sameSession = last && Number.isFinite(+quoteTime) && day.format(new Date(last.date)) === day.format(quoteTime);
-    const previous = rows.at(sameSession ? -2 : -1)?.price;
-    return {
-      asset,checkedAt:Date.now(),price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
-      open:sameSession ? last.open : undefined,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,previous,
-      change:isPositive(previous) ? meta.regularMarketPrice-previous : undefined,
-      percent:isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined,
-      volume:meta.regularMarketVolume,yearHigh:meta.fiftyTwoWeekHigh,yearLow:meta.fiftyTwoWeekLow,points:rows
-    };
+    return parseStockQuote(asset,series);
   })();
   stockCache.set(key,{time:Date.now(),request});
   try { return await request; }
   catch (error) { if (stockCache.get(key)?.request === request) stockCache.delete(key); throw error; }
+}
+
+function parseStockQuote(asset,series) {
+  const meta = series?.meta;
+  const candle = series?.indicators?.quote?.[0];
+  if (!isPositive(meta?.regularMarketPrice) || !isPositive(meta.regularMarketTime)) throw new Error("Quote unavailable");
+  const rows = (series.timestamp ?? []).map((time,index) => ({
+    date:new Date(time * 1000).toISOString(),price:candle?.close?.[index],open:candle?.open?.[index]
+  })).filter(point => isPositive(point.price));
+  const quoteTime = new Date(meta.regularMarketTime * 1000);
+  const day = new Intl.DateTimeFormat("en-CA",{timeZone:meta.exchangeTimezoneName || "UTC",dateStyle:"short"});
+  const last = rows.at(-1);
+  const sameSession = last && Number.isFinite(+quoteTime) && day.format(new Date(last.date)) === day.format(quoteTime);
+  const previous = rows.at(sameSession ? -2 : -1)?.price;
+  return {
+    asset,checkedAt:Date.now(),price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
+    open:sameSession ? last.open : undefined,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,previous,
+    change:isPositive(previous) ? meta.regularMarketPrice-previous : undefined,
+    percent:isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined,
+    volume:meta.regularMarketVolume,yearHigh:meta.fiftyTwoWeekHigh,yearLow:meta.fiftyTwoWeekLow,points:rows
+  };
 }
 
 function stockValue(data,value) {
@@ -1687,9 +1709,22 @@ async function refreshStocks(force = false) {
   stockLoading = true;
   loadStockSnapshot();
   if (visible) renderStocks();
+  const batch = await yahooQuoteBatch(codes.map(code => stockAssets.get(code).symbol));
   for (let offset = 0; offset < codes.length && !stockRefreshPending; offset += 6) {
     await Promise.allSettled(codes.slice(offset,offset+6).map(async code => {
-      try { rememberStock(code,await fetchStock(code,"1mo",force)); }
+      try {
+        const asset = stockAssets.get(code);
+        const series = batch.get(asset.symbol);
+        const saved = stockQuotes.get(code);
+        if (series && series.meta.regularMarketTime * 1000 >= (saved ? Date.parse(saved.date) : -Infinity)) {
+          const data = parseStockQuote(asset,series);
+          if (data.date === saved?.date) data.open ??= saved.open;
+          rememberStock(code,data);
+
+        } else {
+          rememberStock(code,await fetchStock(code,"1mo",force));
+        }
+      }
       catch {
         const previous = stockQuotes.get(code);
         if (previous) previous.stale = true;
@@ -1918,15 +1953,36 @@ function chartDate(date) {
 }
 
 async function refreshDollarIndex() {
-  dollarIndex = await fetchBenchmark("DX-Y.NYB");
+  const quote = await fetchBenchmark("DX-Y.NYB");
+  if (dollarIndex && Date.parse(quote.date) < Date.parse(dollarIndex.date)) throw new Error("Older dollar index quote");
+  dollarIndex = quote;
 }
 
 async function fetchBenchmark(symbol) {
   const valid = result => isPositive(result?.meta?.regularMarketPrice) && isPositive(result.meta.regularMarketTime);
-  const {meta} = await yahooChart(symbol,"5d","1d","default",valid)
+  const batch = await benchmarkBatch();
+  const series = batch.get(symbol) ?? await yahooChart(symbol,"5d","1d","default",valid)
     .catch(() => yahooChart(symbol,"1mo","1d","default",valid));
-  return {price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime*1000).toISOString(),
-    move:meta.regularMarketChangePercent};
+  return parseBenchmarkQuote(series);
+}
+
+let benchmarkRequest;
+function benchmarkBatch() {
+  benchmarkRequest ??= yahooQuoteBatch(["HG=F","DX-Y.NYB"]).finally(() => { benchmarkRequest = undefined; });
+  return benchmarkRequest;
+}
+
+function parseBenchmarkQuote(series) {
+  const {meta} = series;
+  const session = new Intl.DateTimeFormat("en-CA",{timeZone:meta.exchangeTimezoneName || "UTC",dateStyle:"short"});
+  const currentDate = session.format(meta.regularMarketTime * 1000);
+  const closes = series.indicators?.quote?.[0]?.close ?? [];
+  const previous = (series.timestamp ?? []).map((time,index) => ({time,price:closes[index]}))
+    .filter(row => isPositive(row.time) && isPositive(row.price) && session.format(row.time * 1000) < currentDate)
+    .sort((a,b) => a.time-b.time).at(-1)?.price;
+  const move = Number.isFinite(meta.regularMarketChangePercent) ? meta.regularMarketChangePercent
+    : isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined;
+  return {price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime*1000).toISOString(),move};
 }
 
 function updateMarketSummary() {
