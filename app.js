@@ -1544,6 +1544,10 @@ function rememberStock(code,data) {
       (data.points.length < 2 || Date.parse(data.points[0].date) > Date.parse(current.points[0].date))) {
     data = {...data,points:current.points};
   }
+  if (current?.date === data.date) {
+    data.high ??= current.high;
+    data.low ??= current.low;
+  }
   const label = stockQuoteDetail(data);
   data.confirmedClose = label.includes("Latest session close");
   stockQuotes.delete(code);
@@ -1707,7 +1711,8 @@ function parseStockQuote(asset,series) {
   return {
     asset,checkedAt:Date.now(),sessionStart:meta.currentTradingPeriod?.regular?.start * 1000,
     sessionEnd:meta.currentTradingPeriod?.regular?.end * 1000,price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
-    open:sameSession ? last.open : undefined,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,previous,
+    open:sameSession ? last.open : undefined,high:isPositive(meta.regularMarketDayHigh) ? meta.regularMarketDayHigh : undefined,
+    low:isPositive(meta.regularMarketDayLow) ? meta.regularMarketDayLow : undefined,previous,
     change:isPositive(previous) ? meta.regularMarketPrice-previous : undefined,
     percent:isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined,
     volume:meta.regularMarketVolume,yearHigh:meta.fiftyTwoWeekHigh,yearLow:meta.fiftyTwoWeekLow,points:rows
@@ -1737,6 +1742,42 @@ function stockValue(data,value) {
 
 function stockHighLow(data,value) {
   return data && isPositive(value) ? stockValue(data,value) : "Unavailable";
+}
+
+async function improveStockQuote(asset,data) {
+  if (!data) return data;
+  const now = Date.now();
+  const open = now >= data.sessionStart && now < data.sessionEnd;
+  const lagging = open && now - Date.parse(data.date) > 10 * 60000;
+  const needsRange = asset.symbol === "^NYA" && (!data.high || !data.low);
+  if (!lagging && !needsRange) return data;
+  const series = await yahooChart(asset.symbol,needsRange ? "5d" : "1d","5m","no-store",
+    result => result?.meta?.symbol === asset.symbol && isPositive(result.meta.regularMarketTime));
+  const latest = parseStockQuote(asset,series);
+  if (Date.parse(latest.date) > Date.parse(data.date)) {
+    const move = series.meta.regularMarketChangePercent;
+    const previous = Number.isFinite(move) ? latest.price/(1+move/100) : undefined;
+    data = {...latest,points:[],open:undefined,previous,
+      change:previous ? latest.price-previous : undefined,percent:Number.isFinite(move) ? move : undefined};
+  }
+  if (!needsRange) return data;
+  const {sessionStart,sessionEnd} = data;
+  const quoteTime = Date.parse(data.date);
+  if (quoteTime < sessionStart || quoteTime > sessionEnd + 30 * 60000) return data;
+  const candle = series.indicators?.quote?.[0];
+  const interval = 5 * 60000;
+  const cutoff = Math.min(sessionEnd-interval,quoteTime);
+  const bars = new Map((series.timestamp ?? []).map((time,index) =>
+    [time*1000,[candle?.high?.[index],candle?.low?.[index]]]));
+  let high = data.price;
+  let low = data.price;
+  for (let time = sessionStart; time <= cutoff; time += interval) {
+    const [barHigh,barLow] = bars.get(time) ?? [];
+    if (!isPositive(barHigh) || !isPositive(barLow) || barHigh < barLow) return data;
+    high = Math.max(high,barHigh);
+    low = Math.min(low,barLow);
+  }
+  return {...data,high:data.high ?? high,low:data.low ?? low};
 }
 
 async function refreshStocks(force = false) {
@@ -1775,7 +1816,11 @@ async function refreshStocks(force = false) {
         let data = series ? parseStockQuote(asset,series) : undefined;
         const live = !!series && (series === direct || mirrorVerified);
         if (data && data.date === saved?.date) data.open ??= saved.open;
-        if (live && rememberStock(code,data)) return;
+        if (data) {
+          const improved = await improveStockQuote(asset,data).catch(() => data);
+          if ((live || Date.parse(improved.date) > Date.parse(data.date)) && rememberStock(code,improved)) return;
+          data = improved;
+        }
 
         // Keep an older hosted batch available while trying the individual feed.
         if (data) rememberStock(code,{...data,checkedAt:series === mirror ? Date.parse(backup[asset.symbol].verifiedAt) : data.checkedAt,
