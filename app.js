@@ -2020,6 +2020,14 @@ function parseBenchmarkQuote(series) {
   return {price:meta.regularMarketPrice,date:new Date(meta.regularMarketTime*1000).toISOString(),move};
 }
 
+function formatDollarIndexChange(value) {
+  const rounded = Number(value.toFixed(2));
+  const display = rounded === 0 ? 0 : rounded;
+  return (display > 0 ? "+" : "") + display.toLocaleString(undefined,{
+    minimumFractionDigits:2,maximumFractionDigits:2
+  }) + "%";
+}
+
 function updateMarketSummary() {
   const gold = metals.get("XAU");
   const silver = metals.get("XAG");
@@ -2027,7 +2035,7 @@ function updateMarketSummary() {
     money(gold.price*22/24/ouncesInGrams,"USD") + " · 18K " + money(gold.price*.75/ouncesInGrams,"USD") + " per gram" : "");
   for (const [key,quote,source] of [["gold",gold,"Standard Bullion"],["silver",silver,"Standard Bullion"],["dollar",dollarIndex,"Yahoo Finance"]]) {
     const change = byId("daily-"+key);
-    change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + (Number.isFinite(quote.move) ? percent(quote.move) : "Daily change unavailable") : unavailable;
+    change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + (Number.isFinite(quote.move) ? (key === "dollar" ? formatDollarIndexChange(quote.move) : percent(quote.move)) : "Daily change unavailable") : unavailable;
     change.className = quote?.move > 0 ? "positive" : quote?.move < 0 ? "negative" : "";
     write("daily-"+key+"-time",quote ? (key === "dollar" ? quoteDetail(quote,source) : metalDetail(key === "gold" ? "XAU" : "XAG",quote)) : source);
   }
