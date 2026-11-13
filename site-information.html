@@ -10,11 +10,41 @@
 </script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contact, Privacy and Terms | Rate Atelier</title><link rel="stylesheet" href="./style.css"><link rel="canonical" href="https://getrateatelier.com/site-information.html">
 <meta name="description" content="Contact Rate Atelier and review its privacy policy, terms, and market data disclaimer.">
+<style>
+.info-layout { display:grid; grid-template-columns:minmax(0, 65ch) minmax(10rem, 1fr); gap:clamp(2rem, 7vw, 7rem); align-items:start; }
+.info-layout section { scroll-margin-top:6rem; }
+.info-nav { grid-column:2; grid-row:1; position:sticky; top:6rem; }
+.info-nav ul { margin-bottom:0; padding-left:1.15rem; }
+.info-nav li + li { margin-top:.45rem; }
+.info-sections { grid-column:1; grid-row:1; }
+@media (max-width:760px) {
+  .info-layout { display:block; }
+  .info-nav { position:static; margin-bottom:1.5rem; }
+}
+</style>
 </head>
 <body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><a href="./#about">About &amp; data sources</a></div></header>
 <main class="wrap"><article class="landing-page"><h1>Site information</h1>
+<div class="info-layout">
+<nav class="panel info-nav" aria-labelledby="info-nav-title">
+  <strong id="info-nav-title">On this page</strong>
+  <ul>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#rates">About our rates</a></li>
+    <li><a href="#privacy">Privacy</a></li>
+    <li><a href="#disclaimer">Disclaimer</a></li>
+    <li><a href="#terms">Terms</a></li>
+  </ul>
+</nav>
+<div class="info-sections">
 <section id="contact"><h2>Contact</h2><p>For feedback, bug reports, or questions about the site, <a href="https://github.com/nacersoukehal-lgtm/rate-atelier/issues/new">open a GitHub issue</a>. Issues in this repository are public.</p></section>
+<section id="rates">
+  <h2>About our rates</h2>
+  <p>Our currency converter uses published reference rates. In one USD-to-EUR comparison, Rate Atelier showed €652.46 for $725 while Google showed €656.02. The two sites used rates from different sources with different update schedules.</p>
+  <p>Your transfer provider may quote a different rate and charge fees. Enter the rate and fees from each provider to see what the recipient would get.</p>
+  <p><a href="./#about">View data sources</a> · <a href="./#compare">Compare your quotes</a></p>
+</section>
 <section id="privacy"><h2>Privacy</h2><p>Rate Atelier stores preferences, watchlists, and alert settings in your browser. You can remove them by clearing the site’s data in your browser settings. Calculations run in your browser. GitHub Pages hosts the site, and your browser requests quotes, news, and other data from the providers listed on the <a href="./#about">data sources page</a>. Those services may receive standard request information, such as your IP address.</p><p>Rate Atelier uses Google Analytics to understand which pages people visit and how they find the site. Google Analytics uses cookies and receives information about your visit. <a href="https://policies.google.com/technologies/partner-sites">Learn how Google uses this data</a> or <a href="https://tools.google.com/dlpage/gaoptout">use the Analytics opt-out add-on</a>.</p></section>
 <section id="disclaimer"><h2>Disclaimer</h2><p>Rates and prices are for general information and may be delayed or incomplete. They should not be considered financial advice. Check the latest quote and fees directly with your provider before making a transaction.</p></section>
 <section id="terms"><h2>Terms</h2><p>Rate Atelier provides reference data and estimates. Availability depends on the hosting and data providers. Transfer, dealer, and trading prices can differ from the figures shown.</p></section>
-</article></main></body></html>
+</div></div></article></main></body></html>
