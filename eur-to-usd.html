@@ -10,9 +10,26 @@
 </script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EUR to USD exchange rate | Rate Atelier</title><meta name="description" content="Check how many U.S. dollars one euro buys at the published reference rate.">
 <link rel="canonical" href="https://getrateatelier.com/eur-to-usd.html">
-<link rel="stylesheet" href="./style.css"><script src="./landing.js" defer></script></head>
+<link rel="stylesheet" href="./style.css"><script src="./landing.js?v=transfer-converter" defer></script></head>
 <body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><a href="./#about">About &amp; data sources</a></div></header>
-<main class="wrap"><article class="landing-page"><h1>EUR to USD exchange rate</h1><p>Check how many U.S. dollars one euro buys at the published reference rate.</p>
-<section class="panel"><div class="landing-quote" id="landing-quote" data-asset="EURUSD" role="status">Loading reference price…</div><small id="landing-source"></small></section>
-<h2>How to use this figure</h2><p>Multiply an amount in euros by the displayed rate to estimate its value in U.S. dollars. Transfer providers may apply their own rate and fees.</p><a class="guide-link" href="./?pair=EURUSD#markets">Open EUR/USD converter →</a></article></main>
+<main class="wrap"><article class="landing-page"><h1>EUR to USD exchange rate</h1>
+<form id="landing-converter" action="./#compare" method="get">
+  <section class="panel" aria-labelledby="converter-heading">
+    <h2 id="converter-heading">Convert EUR to USD</h2>
+    <label>Amount in EUR<input id="landing-amount" name="budget" type="number" min="0" step="any" value="500" required></label>
+    <input type="hidden" name="send" value="EUR">
+    <input type="hidden" name="receive" value="USD">
+    <output class="landing-quote" id="landing-result" for="landing-amount">Loading conversion…</output>
+    <p><span id="landing-quote" data-asset="EURUSD">Loading reference rate…</span><br><small id="landing-source"></small></p>
+    <a class="guide-link" href="./usd-to-eur.html">Swap to USD → EUR</a>
+  </section>
+  <section class="panel finance-history">
+    <h2>How much will the recipient get?</h2>
+    <p>At a reference rate of $1.10 per euro, €500 converts to $550. If a €5 transfer fee comes out of your €500 budget and the provider uses the same rate, the recipient gets $544.50.</p>
+    <p>Your provider’s quoted rate and fees determine what the recipient gets.</p>
+    <button class="primary-action" type="submit">Compare your quotes →</button>
+  </section>
+</form>
+
+</article></main>
 <footer><div class="wrap">Rates may be delayed. <a href="./site-information.html#disclaimer">Disclaimer</a></div></footer></body></html>

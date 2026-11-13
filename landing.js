@@ -4,16 +4,31 @@ const sourceOutput = document.getElementById("landing-source");
 const asset = quoteOutput.dataset.asset;
 const decimal = (value,digits) => new Intl.NumberFormat(undefined,{maximumFractionDigits:digits}).format(value);
 const cacheKey = "rate-atelier-landing-quote:" + asset;
+const landingAmount = document.getElementById("landing-amount");
+const landingResult = document.getElementById("landing-result");
 let lastQuote;
+
+function updateLandingAmount() {
+  if (!landingAmount) return;
+  const amount = landingAmount.valueAsNumber;
+  const rate = lastQuote?.rate;
+  const converted = amount * rate;
+  landingResult.textContent = !landingAmount.validity.valid ? "Enter an amount of zero or more." :
+    Number.isFinite(converted) && rate > 0 ?
+      new Intl.NumberFormat(undefined,{style:"currency",currency:asset === "EURUSD" ? "USD" : "EUR"}).format(converted) :
+      "Reference rate unavailable";
+}
+landingAmount?.addEventListener("input",updateLandingAmount);
 try { lastQuote = JSON.parse(localStorage.getItem(cacheKey)); } catch {}
 function showQuote(text,detail,stale = false) {
+  updateLandingAmount();
   quoteOutput.textContent = text;
   sourceOutput.textContent = (stale ? "Stale · " : "") + detail;
 }
-function rememberQuote(text,detail,date,maxAge = 0) {
+function rememberQuote(text,detail,date,maxAge = 0,rate) {
   const time = Date.parse(date);
   if (!Number.isFinite(time)) throw new Error("Quote timestamp unavailable");
-  lastQuote = {text,detail};
+  lastQuote = {text,detail,rate};
   try { localStorage.setItem(cacheKey,JSON.stringify(lastQuote)); } catch {}
   showQuote(text,detail,maxAge > 0 && Date.now()-time > maxAge);
 }
@@ -40,7 +55,7 @@ async function updateLandingQuote() {
     if (isCurrency) {
       if (!(data.rate > 0)) throw new Error("Rate unavailable");
       rememberQuote("1 " + baseCurrency + " = " + decimal(data.rate,6) + " " + quoteCurrency,
-        "Frankfurter · Reference rate dated " + data.date,data.date);
+        "Frankfurter · Reference rate dated " + data.date,data.date,0,data.rate);
       return;
     }
     const spot = code => {

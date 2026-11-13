@@ -63,6 +63,17 @@ function populateCurrencySelects(converterOnly = false) {
     currencyDirectory ? currencyOptions.length + " currencies available" : "Loading currency list…");
 }
 populateCurrencySelects();
+const comparisonParams = new URLSearchParams(location.search);
+const sendingCurrency = comparisonParams.get("send");
+const receivingCurrency = comparisonParams.get("receive");
+const comparisonBudget = comparisonParams.get("budget");
+if (location.hash === "#compare" &&
+    ["USD","EUR"].includes(sendingCurrency) && ["USD","EUR"].includes(receivingCurrency) &&
+    sendingCurrency !== receivingCurrency && comparisonBudget?.trim() && valid(Number(comparisonBudget))) {
+  byId("send").value = sendingCurrency;
+  byId("receive").value = receivingCurrency;
+  byId("budget").value = String(Number(comparisonBudget));
+}
 byId("currency-search").addEventListener("input",() => populateCurrencySelects(true));
 
 async function refreshRates() {
