@@ -816,7 +816,7 @@ function updateWatchQuotes() {
         quoteDetail({date:data.last_updated,stale:staleCrypto.has("major")},"CoinPaprika",1800000) : unavailable;
     } else if (item.type === "stock") {
       const data = stockQuotes.get(item.code);
-      quote.textContent = data ? stockValue(data,data.price) + " · " + quoteDetail(data,"Yahoo Finance") : unavailable;
+      quote.textContent = data ? stockValue(data,data.price) + " · " + stockQuoteDetail(data,"Yahoo Finance") : unavailable;
     }
   }
 }
@@ -1538,17 +1538,19 @@ const stockQuotes = new Map(readQuotes("stocks",[]).flatMap(([code,quote]) => {
 function rememberStock(code,data) {
   const current = stockQuotes.get(code);
   if (current && Date.parse(current.date) > Date.parse(data.date)) {
-    current.stale = true;
-    return;
+    return false;
   }
   if (current?.points.length >= 2 &&
       (data.points.length < 2 || Date.parse(data.points[0].date) > Date.parse(current.points[0].date))) {
     data = {...data,points:current.points};
   }
+  const label = stockQuoteDetail(data);
+  data.confirmedClose = label.includes("Latest session close");
   stockQuotes.delete(code);
   stockQuotes.set(code,data);
   saveQuotes("stocks",[...stockQuotes].slice(-80).map(([key,{asset,points,...quote}]) =>
     [key,{...quote,points:recentStockPoints(points)}]));
+  return true;
 }
 function recentStockPoints(points) {
   if (!points?.length) return [];
@@ -1624,12 +1626,12 @@ async function loadHostedQuotes(force = false) {
   return hostedQuoteRequest;
 }
 
-function hostedSeries(data,symbol) {
+function hostedSeries(data,symbol,allowSaved = false) {
   const entry = data[symbol];
   const meta = entry?.series?.meta;
   const age = Date.now()-Date.parse(entry?.verifiedAt);
   if (meta?.symbol !== symbol || !isPositive(meta.regularMarketPrice) || !isPositive(meta.regularMarketTime) ||
-      !Number.isFinite(age) || age > hostedQuoteMaxAge || age < -60000) return null;
+      !Number.isFinite(age) || (!allowSaved && age > hostedQuoteMaxAge) || age < -60000) return null;
   return entry.series;
 }
 
@@ -1703,12 +1705,28 @@ function parseStockQuote(asset,series) {
   const sameSession = last && Number.isFinite(+quoteTime) && day.format(new Date(last.date)) === day.format(quoteTime);
   const previous = rows.at(sameSession ? -2 : -1)?.price;
   return {
-    asset,checkedAt:Date.now(),price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
+    asset,checkedAt:Date.now(),sessionStart:meta.currentTradingPeriod?.regular?.start * 1000,
+    sessionEnd:meta.currentTradingPeriod?.regular?.end * 1000,price:meta.regularMarketPrice,currency:meta.currency,date:Number.isFinite(+quoteTime) ? quoteTime.toISOString() : "",
     open:sameSession ? last.open : undefined,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,previous,
     change:isPositive(previous) ? meta.regularMarketPrice-previous : undefined,
     percent:isPositive(previous) ? (meta.regularMarketPrice/previous-1)*100 : undefined,
     volume:meta.regularMarketVolume,yearHigh:meta.fiftyTwoWeekHigh,yearLow:meta.fiftyTwoWeekLow,points:rows
   };
+}
+
+function stockQuoteDetail(data,source = "",checking = false,now = Date.now()) {
+  const time = Date.parse(data.date);
+  const {sessionStart,sessionEnd} = data;
+  const knownSession = Number.isFinite(sessionStart) && sessionEnd > sessionStart;
+  const open = knownSession && now >= sessionStart && now < sessionEnd;
+  const close = knownSession && (now >= sessionEnd && time >= sessionEnd - 15 * 60000 ||
+    now < sessionStart && time < sessionStart && sessionStart - time < 7 * 86400000 &&
+    (!data.stale || data.confirmedClose));
+  const outdated = open && now - time > 35 * 60000 ||
+    knownSession && now >= sessionEnd + 35 * 60000 && !close;
+  const label = close ? "Latest session close" : outdated || data.stale ? "Stale" : "";
+  const refresh = checking ? "Checking for updates" : data.refreshFailed ? "Refresh unconfirmed" : "";
+  return [refresh,checking ? "" : label,quoteDetail({...data,stale:false},source)].filter(Boolean).join(" · ");
 }
 
 function stockValue(data,value) {
@@ -1748,21 +1766,28 @@ async function refreshStocks(force = false) {
       try {
         const asset = stockAssets.get(code);
         const direct = batch.get(asset.symbol);
-        const mirror = hostedSeries(backup,asset.symbol);
-        const series = (mirror?.meta.regularMarketTime ?? 0) > (direct?.meta.regularMarketTime ?? 0) ? mirror : direct;
+        const mirror = hostedSeries(backup,asset.symbol,true);
+        const mirrorTime = mirror?.meta.regularMarketTime ?? 0;
+        const directTime = direct?.meta.regularMarketTime ?? 0;
+        const series = mirrorTime > directTime ? mirror : direct;
         const saved = stockQuotes.get(code);
-        if (series && series.meta.regularMarketTime * 1000 >= (saved ? Date.parse(saved.date) : -Infinity)) {
-          const data = parseStockQuote(asset,series);
-          if (data.date === saved?.date) data.open ??= saved.open;
-          rememberStock(code,data);
+        const mirrorVerified = !!hostedSeries(backup,asset.symbol);
+        let data = series ? parseStockQuote(asset,series) : undefined;
+        const live = !!series && (series === direct || mirrorVerified);
+        if (data && data.date === saved?.date) data.open ??= saved.open;
+        if (live && rememberStock(code,data)) return;
 
-        } else {
-          rememberStock(code,await fetchStock(code,"1mo",force));
-        }
+        // Keep an older hosted batch available while trying the individual feed.
+        if (data) rememberStock(code,{...data,checkedAt:series === mirror ? Date.parse(backup[asset.symbol].verifiedAt) : data.checkedAt,
+          stale:true,refreshFailed:true});
+        if (!rememberStock(code,await fetchStock(code,"1mo",force))) throw new Error("Older quote");
       }
       catch {
         const previous = stockQuotes.get(code);
-        if (previous) previous.stale = true;
+        if (previous) {
+          previous.stale = true;
+          previous.refreshFailed = true;
+        }
       }
       finally { attemptedStockQuotes.add(code); }
     }));
@@ -1826,9 +1851,7 @@ function renderStocks() {
       if (index === 0 && data) {
         const detail = document.createElement("small");
         const checking = checkingStockQuotes.has(asset.code);
-        detail.textContent = checking
-          ? "Checking for updates · " + quoteDetail({...data,stale:false})
-          : quoteDetail(data);
+        detail.textContent = stockQuoteDetail(data,"",checking);
         cell.append(detail);
       }
       if (index === 1 || index === 2) cell.className = data?.change < 0 ? "negative" : "positive";
@@ -1852,7 +1875,7 @@ function renderStockProfile(asset) {
   write("stock-price",data ? stockValue(data,data.price) : unavailable);
   write("stock-change",data ? percent(data.percent) + " · session" : "");
   byId("stock-change").className = data?.change < 0 ? "negative" : "positive";
-  write("stock-time",data ? quoteDetail(data,"Yahoo Finance") : "Yahoo Finance");
+  write("stock-time",data ? stockQuoteDetail(data,"Yahoo Finance",checkingStockQuotes.has(asset.code)) : "Yahoo Finance");
   const fields = [
     ["Open",data?.open],["Day high",data?.high],["Day low",data?.low],["Previous close",data?.previous],
     ["52-week high",data?.yearHigh],["52-week low",data?.yearLow],["Session volume",data?.volume]
@@ -1935,8 +1958,6 @@ async function renderStockHistory(requestedRange, notice = "") {
     }
     await loadStockSnapshot();
     if (!active()) return;
-    const quote = stockQuotes.get(asset.code);
-    if (quote && Date.now() - (quote.checkedAt ?? 0) > 120000) quote.stale = true;
     renderStockProfile(asset);
     if (!showSavedMonth()) host.textContent = "Price history is unavailable.";
   }
