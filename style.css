@@ -384,3 +384,7 @@ footer { padding: 18px 0; margin-top: 32px; }
 @media (min-width: 781px) {
   .footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+.market-shortcuts { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.market-shortcuts a { display:inline-flex; align-items:center; min-height:44px; padding:6px 14px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font-weight:700; text-decoration:none; }
+.market-shortcuts a:hover { text-decoration:underline; }

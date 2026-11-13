@@ -15,11 +15,12 @@
 <meta name="description" content="Convert currencies, compare money transfer fees, and follow gold, silver, stocks, and crypto. Explore historical charts and estimate gold or silver melt value.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=stock-quotes"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=card-decimals" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
+<link rel="stylesheet" href="style.css?v=market-shortcuts"><script src="stock-directory.js" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=card-decimals" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Markets</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel">
+<nav class="market-shortcuts" aria-label="Explore markets"><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a></nav>
 <div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Exchange rates, gold &amp; silver prices.</h1><p>Convert currencies, compare your money transfer quotes, and explore gold and silver price history.</p></div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Currency converter</h2>
 <label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
