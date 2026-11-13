@@ -69,7 +69,7 @@ const receivingCurrency = comparisonParams.get("receive");
 const comparisonBudget = comparisonParams.get("budget");
 if (location.hash === "#compare" &&
     ["USD","EUR"].includes(sendingCurrency) && ["USD","EUR"].includes(receivingCurrency) &&
-    sendingCurrency !== receivingCurrency && comparisonBudget?.trim() && valid(Number(comparisonBudget))) {
+    sendingCurrency !== receivingCurrency && comparisonBudget?.trim() && Number.isFinite(Number(comparisonBudget)) && Number(comparisonBudget) >= 0) {
   byId("send").value = sendingCurrency;
   byId("receive").value = receivingCurrency;
   byId("budget").value = String(Number(comparisonBudget));
