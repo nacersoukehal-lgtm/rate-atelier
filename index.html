@@ -15,7 +15,7 @@
 <meta name="description" content="Convert currencies, compare money transfer fees, and follow gold, silver, stocks, and crypto. Explore historical charts and estimate gold or silver melt value.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=market-snapshot"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=stock-exact-first" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
+<link rel="stylesheet" href="style.css?v=market-snapshot"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=lcai" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
 </head>
 <body>
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
@@ -89,7 +89,7 @@
 <button id="stock-pin" class="secondary-action" type="button">☆ Save to watchlist</button><small id="stock-pin-status" role="status"></small>
 </dialog>
 <section id="crypto" class="tools tab-panel">
-<div class="crypto-head"><div><h2>Crypto markets</h2><p id="crypto-method">Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><div class="crypto-filters"><label>Ranking<select id="crypto-ranking"><option value="major">Top 50 overall</option><option value="micro">Top 50 micro-caps</option><option value="meme">Top 50 meme coins</option></select></label><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div></div>
+<div class="crypto-head"><div><h2>Crypto markets</h2><p id="crypto-method">Top 50 cryptocurrencies by market cap. Select an asset for its profile.</p></div><div class="crypto-filters"><label>List<select id="crypto-ranking"><option value="major">Top 50 overall</option><option value="micro">Top 50 micro-caps</option><option value="meme">Top 50 meme coins</option><option value="tracked">Individually tracked</option></select></label><label>Find an asset<input id="crypto-search" type="search" placeholder="Name or symbol"></label></div></div>
 <section class="movers" id="crypto-movers" aria-label="Crypto market movers" hidden>
 <div><h3>Top gainers</h3><ul id="crypto-gainers"></ul></div>
 <div><h3>Top losers</h3><ul id="crypto-losers"></ul></div>
@@ -275,4 +275,5 @@
 <nav aria-label="About and policies"><strong>About Rate Atelier</strong><a href="#about">Data sources</a><a href="./site-information.html#contact">Contact</a><a href="./site-information.html#privacy">Privacy</a><a href="./site-information.html#disclaimer">Disclaimer</a><a href="./site-information.html#terms">Terms</a></nav>
 </div></footer>
 </body></html>
+
 

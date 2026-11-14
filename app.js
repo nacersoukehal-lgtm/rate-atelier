@@ -568,6 +568,17 @@ document.addEventListener("visibilitychange",() => { if (!document.hidden) refre
 let cryptoAssets = [];
 let microAssets = [];
 let memeAssets = [];
+const lightchainListing = {
+  id:"gecko:lightchain-ai",
+  name:"Lightchain AI",
+  symbol:"LCAI",
+  gecko:{id:"lightchain-ai"},
+  quotes:{USD:{}}
+};
+let trackedAssets = [readQuotes("lightchain-ai",null) ?? lightchainListing];
+let trackedChecked = 0;
+let trackedLoading = false;
+let trackedFailed = false;
 let memeLoading = false;
 let memeChecked = 0;
 const cryptoStatus = {major:"",micro:"",meme:""};
@@ -590,7 +601,7 @@ const cryptoPrice = new Intl.NumberFormat(undefined,{style:"currency",currency:"
 
 function cryptoRanking() {
   const kind = byId("crypto-ranking").value;
-  return kind === "meme" ? memeAssets : kind === "micro" ? microAssets : cryptoAssets;
+  return kind === "tracked" ? trackedAssets : kind === "meme" ? memeAssets : kind === "micro" ? microAssets : cryptoAssets;
 }
 
 function renderCrypto() {
@@ -598,16 +609,18 @@ function renderCrypto() {
   const ranked = cryptoRanking();
   document.dispatchEvent(new Event("crypto-ranking-rendered"));
   const source = byId("crypto-source");
-  source.textContent = kind === "meme" ? "CoinGecko" : "CoinPaprika";
-  source.href = kind === "meme" ? "https://www.coingecko.com/en/categories/meme-token" : "https://coinpaprika.com/";
-  write("crypto-time",cryptoStatus[kind]);
+  source.textContent = kind === "tracked" || kind === "meme" ? "CoinGecko" : "CoinPaprika";
+  source.href = kind === "tracked" ? "https://www.coingecko.com/en/coins/lightchain-ai" : kind === "meme" ? "https://www.coingecko.com/en/categories/meme-token" : "https://coinpaprika.com/";
+  write("crypto-time",kind === "tracked" ? " · Checks every 5 min" : cryptoStatus[kind]);
   write("crypto-method",{
+    tracked:"Individually tracked cryptocurrencies. Select an asset for its price records and profile.",
     major:"Top 50 cryptocurrencies by market cap. Select an asset for its profile.",
     micro:"Ranked by market cap among coins with $1M to under $10M in market cap and at least $100K in reported 24h volume.",
     meme:"CoinGecko meme category ranked by market cap. The list reflects market size and is for research."
   }[kind]);
   const query = byId("crypto-search").value.trim().toLowerCase();
-  const matches = ranked.filter(asset => (asset.name + " " + asset.symbol).toLowerCase().includes(query));
+  const searchable = query && kind !== "tracked" ? ranked.concat(trackedAssets) : ranked;
+  const matches = searchable.filter(asset => (asset.name + " " + asset.symbol).toLowerCase().includes(query));
   cryptoPage = Math.min(cryptoPage,Math.max(0,Math.ceil(matches.length / pageSize)-1));
   const start = cryptoPage * pageSize;
   const rows = matches.slice(start,start+pageSize).map(asset => {
@@ -615,11 +628,11 @@ function renderCrypto() {
     const change = quote.percent_change_24h;
     const row = document.createElement("tr");
     const cells = [
-      String(ranked.indexOf(asset)+1),
+      asset.id === lightchainListing.id ? "—" : String(ranked.indexOf(asset)+1),
       "",
-      cryptoPrice.format(quote.price),
+      isPositive(quote.price) ? cryptoPrice.format(quote.price) : "Quote unavailable",
       Number.isFinite(change) ? (change > 0 ? "+" : "") + num(change) + "%" : "—",
-      compactUSD.format(quote.market_cap),
+      isPositive(quote.market_cap) ? compactUSD.format(quote.market_cap) : "—",
       valid(quote.volume_24h) ? compactUSD.format(quote.volume_24h) : "—"
     ];
     cells.forEach(value => { row.insertCell().textContent = value; });
@@ -635,7 +648,10 @@ function renderCrypto() {
     symbol.textContent = asset.symbol;
     row.cells[1].append(link,symbol);
     const detail = document.createElement("small");
-    detail.textContent = quoteDetail({date:asset.last_updated,stale:staleCrypto.has(kind)},"",1800000);
+    const tracked = asset.id === lightchainListing.id;
+    detail.textContent = isPositive(quote.price) ? quoteDetail({
+      date:asset.last_updated,stale:tracked ? trackedFailed : staleCrypto.has(kind)
+    },tracked ? "CoinGecko" : "",1800000) : "";
     row.cells[2].append(detail);
     return row;
   });
@@ -1322,13 +1338,13 @@ async function coinProject(id) {
 
 function refreshOpenCoinQuote() {
   if (!openCoin || !profileDialog.open) return;
-  openCoin = openCoin.gecko ? memeAssets.find(asset => asset.id === openCoin.id) ?? openCoin : cryptoQuotes.get(openCoin.id) ?? openCoin;
+  openCoin = openCoin.id === lightchainListing.id ? trackedAssets[0] : openCoin.gecko ? memeAssets.find(asset => asset.id === openCoin.id) ?? openCoin : cryptoQuotes.get(openCoin.id) ?? openCoin;
   const quote = openCoin.quotes.USD;
-  write("coin-price",cryptoPrice.format(quote.price));
+  write("coin-price",isPositive(quote.price) ? cryptoPrice.format(quote.price) : "Quote unavailable");
   write("coin-change",percent(quote.percent_change_24h) + " · 24h");
   byId("coin-change").className = quote.percent_change_24h < 0 ? "negative" : "positive";
   const source = openCoin.gecko ? "CoinGecko" : "CoinPaprika";
-  write("coin-quote-time",quoteDetail({date:openCoin.last_updated,stale:staleCrypto.has(openCoin.gecko ? "meme" : "major")},source,1800000));
+  write("coin-quote-time",quoteDetail({date:openCoin.last_updated,stale:openCoin.id === lightchainListing.id ? trackedFailed : staleCrypto.has(openCoin.gecko ? "meme" : "major")},source,1800000));
   renderCoinMetrics();
 }
 
@@ -1453,7 +1469,7 @@ function openCoinProfile(asset) {
   openCoinProject = undefined;
   openCoinDescription = undefined;
   write("coin-title",asset.name);
-  write("coin-symbol",asset.symbol + " · #" + (cryptoRanking().indexOf(asset)+1) + " in this ranking");
+  write("coin-symbol",asset.id === lightchainListing.id ? "LCAI · Individually tracked" : asset.symbol + " · #" + (cryptoRanking().indexOf(asset)+1) + " in this ranking");
   write("coin-credit",asset.gecko ? "Quotes, project data, and price records by CoinGecko." :
     "Market quotes and project data by CoinPaprika. Price records and supplemental metrics by CoinGecko where available.");
   profileDialog.showModal();
@@ -2213,6 +2229,47 @@ async function refreshMemes(force = false) {
   }
 }
 
+async function refreshTrackedCrypto(force = false) {
+  if (byId("crypto").hidden || trackedLoading || (!force && Date.now()-trackedChecked < 300000)) return;
+  trackedLoading = true;
+  trackedChecked = Date.now();
+  const url = coinGeckoApi + "/coins/markets?vs_currency=usd&ids=lightchain-ai&price_change_percentage=7d,30d&sparkline=true";
+  try {
+    const validMarket = async endpoint => {
+      const rows = await json(endpoint);
+      const row = rows.find(item => item.id === lightchainListing.gecko.id);
+      if (!isPositive(row?.current_price) || !Number.isFinite(Date.parse(row.last_updated))) {
+        throw new Error("Lightchain AI quote unavailable");
+      }
+      return row;
+    };
+    const row = await validMarket(url).catch(() => validMarket("https://proxy.cors.dev/" + url));
+    const asset = {...lightchainListing,last_updated:row.last_updated,gecko:row,
+      quotes:{USD:{price:row.current_price,market_cap:row.market_cap,volume_24h:row.total_volume,
+        percent_change_24h:row.price_change_percentage_24h,percent_change_7d:row.price_change_percentage_7d_in_currency,
+        percent_change_30d:row.price_change_percentage_30d_in_currency}}};
+    if (Date.parse(asset.last_updated) < Date.parse(trackedAssets[0].last_updated)) throw new Error("Older quote");
+    trackedAssets = [asset];
+    trackedFailed = false;
+    saveQuotes("lightchain-ai",asset);
+    if (openCoin?.id === asset.id && profileDialog.open) {
+      openCoinRecords = row;
+      renderCoinRecords();
+    }
+  } catch {
+    trackedFailed = true;
+  } finally {
+    trackedLoading = false;
+    if (openCoin?.id === lightchainListing.id) refreshOpenCoinQuote();
+    renderCrypto();
+  }
+}
+
+new MutationObserver(() => refreshTrackedCrypto()).observe(byId("crypto"),{attributes:true,attributeFilter:["hidden"]});
+byId("refresh").addEventListener("click",() => refreshTrackedCrypto(true));
+setInterval(() => { if (!document.hidden) refreshTrackedCrypto(); },300000);
+refreshTrackedCrypto();
+
 byId("crypto-ranking").addEventListener("change",() => {
   cryptoPage = 0;
   renderCrypto();
@@ -2223,3 +2280,4 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
