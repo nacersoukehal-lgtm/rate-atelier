@@ -1711,5 +1711,11 @@ const additionalStockListings = [
   ["NASDAQ:CVGI","CVGI","Commercial Vehicle Group, Inc.","U.S.","Nasdaq"],
   ["NASDAQ:CVLT","CVLT","Commvault Systems, Inc.","U.S.","Nasdaq"],
   ["NASDAQ:CVRX","CVRX","CVRx, Inc.","U.S.","Nasdaq"],
-  ["NASDAQ:CWCO","CWCO","Consolidated Water Co. Ltd.","U.S.","Nasdaq"]
+  ["NASDAQ:CWCO","CWCO","Consolidated Water Co. Ltd.","U.S.","Nasdaq"],
+  ["NASDAQ:EOSE","EOSE","Eos Energy Enterprises","U.S.","Nasdaq","Makes zinc-based batteries for long-duration energy storage."],
+  ["NASDAQ:FLNC","FLNC","Fluence Energy","U.S.","Nasdaq","Provides utility-scale battery storage systems and software."],
+  ["NYSE:NRGV","NRGV","Energy Vault","U.S.","NYSE","Develops and operates grid energy storage projects."],
+  ["NYSE:STEM","STEM","Stem","U.S.","NYSE","Provides software and services for battery storage and solar assets."],
+  ["NASDAQ:ENPH","ENPH","Enphase Energy","U.S.","Nasdaq","Makes residential solar microinverters and battery storage systems."],
+  ["NASDAQ:QS","QS","QuantumScape","U.S.","Nasdaq","Develops solid-state lithium-metal batteries."]
 ];
