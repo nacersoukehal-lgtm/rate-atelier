@@ -1889,8 +1889,10 @@ function matchesStockFilters(asset) {
 
 function matchingStockAssets() {
   const query = byId("stock-search").value.trim().toLowerCase();
-  return stockCatalog.filter(asset => matchesStockFilters(asset) &&
+  const matches = stockCatalog.filter(asset => matchesStockFilters(asset) &&
     (!query || (asset.name + " " + asset.symbol + " " + asset.exchange).toLowerCase().includes(query)));
+  if (!query) return matches;
+  return matches.sort((a,b) => Number(b.symbol.toLowerCase() === query) - Number(a.symbol.toLowerCase() === query));
 }
 
 function currentStockPage(assets = matchingStockAssets()) {
