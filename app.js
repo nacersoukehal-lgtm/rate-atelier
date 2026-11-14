@@ -2054,6 +2054,14 @@ function openStockProfile(asset) {
   renderStockHistory("1mo");
 }
 
+byId("stock-search").addEventListener("input",() => {
+  const query = byId("stock-search").value.trim().toLowerCase();
+  if (!query) return;
+  const exactMatches = stockCatalog.filter(asset => asset.symbol.toLowerCase() === query);
+  if (!exactMatches.length || exactMatches.some(matchesStockFilters)) return;
+  for (const id of ["stock-region","stock-type","stock-exchange"]) byId(id).value = "";
+});
+
 for (const id of ["stock-search","stock-region","stock-type","stock-exchange"]) byId(id).addEventListener("input",() => {
   stockPage = 0;
   renderStocks();
