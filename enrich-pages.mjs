@@ -161,7 +161,7 @@ const stocks = Object.entries(names).flatMap(([symbol,name]) => {
 });
 if (stocks.length) {
   home = home.replace(/(<table class="stock-table">[\s\S]*?<\/thead>)/,header =>
-    header.replace(/<th scope="col">(Change|Open|Previous)<\/th>/g,'<th scope="col" data-stock-live-column hidden>$1</th>'));
+    header.replace("<tr>","<tr data-stock-snapshot-head>").replace(/<th scope="col">(Change|Open|Previous)<\/th>/g,""));
   home = put(home,"stock-rows",stocks.join(""));
   home = put(home,"stock-status","Yahoo Finance snapshot · Quote times shown in UTC.");
 }

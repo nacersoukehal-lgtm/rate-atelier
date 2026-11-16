@@ -1947,7 +1947,16 @@ function renderStocks() {
   stockPage = Math.min(stockPage,Math.max(0,Math.ceil(visible.length/stockPageSize)-1));
   const page = currentStockPage(visible);
   const start = stockPage*stockPageSize;
-  for (const heading of document.querySelectorAll("[data-stock-live-column]")) heading.hidden = false;
+  const headingRow = document.querySelector("[data-stock-snapshot-head]");
+  if (headingRow) {
+    headingRow.removeAttribute("data-stock-snapshot-head");
+    headingRow.replaceChildren(...["Asset","Price / level","Change","Change %","Open","High","Low","Previous"].map(label => {
+      const heading = document.createElement("th");
+      heading.scope = "col";
+      heading.textContent = label;
+      return heading;
+    }));
+  }
   byId("stock-rows").replaceChildren(...page.map(asset => {
     const row = document.createElement("tr");
     const data = stockQuotes.get(asset.code);
@@ -2308,6 +2317,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 
