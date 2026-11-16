@@ -36,14 +36,18 @@ jobs:
             return response.json();
           }
 
-          const [previous,metals,usd,eur] = await Promise.allSettled([
+          const [previous,metals,usd,ecbUSD,ecbEUR] = await Promise.allSettled([
             json('https://getrateatelier.com/published-quote-snapshot.json'),
             json('https://standardbullion.com/spot-prices.json').then(metalQuotes),
-            json('https://api.frankfurter.dev/v2/rates?base=USD&quotes=EUR,AUD,DZD').then(fxQuotes),
-            json('https://api.frankfurter.dev/v2/rate/EUR/USD').then(row => fxQuotes([row]))
+            json('https://api.frankfurter.dev/v2/rates?base=USD&quotes=AUD,DZD').then(fxQuotes),
+            json('https://api.frankfurter.dev/v2/providers/ecb/rate/usd/eur').then(row => fxQuotes([{...row,source:'ECB via Frankfurter'}])),
+            json('https://api.frankfurter.dev/v2/providers/ecb/rate/eur/usd').then(row => fxQuotes([{...row,source:'ECB via Frankfurter'}]))
           ]);
           const quotes = previous.status === 'fulfilled' ? {...previous.value} : {};
-          for (const response of [metals,usd,eur]) {
+          for (const code of ['EUR','EURUSD']) {
+            if (quotes[code]?.source !== 'ECB via Frankfurter') delete quotes[code];
+          }
+          for (const response of [metals,usd,ecbUSD,ecbEUR]) {
             if (response.status === 'rejected') {
               console.warn(String(response.reason));
               continue;
@@ -59,6 +63,8 @@ jobs:
             await writeFile(path,renderSnapshot(await readFile(path,'utf8'),file,quotes));
           }
           await writeFile('_site/published-quote-snapshot.json',JSON.stringify(quotes));
+          const bullionTimes = ['XAU','XAG','XPT','XPD'].map(code => quotes[code]?.date ?? null);
+          await writeFile('_site/snapshot-status.json',JSON.stringify({builtAt:new Date().toISOString(),bullionTimes}));
           JS
           node enrich-pages.mjs
       - uses: actions/upload-pages-artifact@v3
