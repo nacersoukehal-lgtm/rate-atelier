@@ -143,6 +143,7 @@ const cardDecimals = new Intl.NumberFormat(undefined,{minimumFractionDigits:2,ma
 function updateQuotes() {
   for (const {id,code} of metalCatalog) {
     const metal = metals.get(code);
+    if (!metal && byId(id + "-time")?.textContent.startsWith("Published snapshot")) continue;
     write(id, metal ? metalPrice(code,metal.price) : unavailable);
     write(id + "-time", metal ? metalDetail(code,metal) : metalSource(code));
   }
@@ -153,6 +154,7 @@ function updateQuotes() {
     date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
   }) : "Silver ounces per ounce of gold");
   const eur = rates.get("EUR");
+  if (!eur && byId("usd-time").textContent.startsWith("Published snapshot")) return;
   write("usd", eur ? "€" + cardDecimals.format(eur.rate) : unavailable);
   write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
 }
@@ -2280,4 +2282,5 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 

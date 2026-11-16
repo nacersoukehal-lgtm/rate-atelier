@@ -6,7 +6,11 @@ const decimal = (value,digits) => new Intl.NumberFormat(undefined,{maximumFracti
 const cacheKey = "rate-atelier-landing-quote:" + asset;
 const landingAmount = document.getElementById("landing-amount");
 const landingResult = document.getElementById("landing-result");
-let lastQuote;
+const publishedDate = quoteOutput.dataset.snapshotDate;
+let lastQuote = publishedDate ? {
+  text:quoteOutput.textContent,detail:sourceOutput.textContent,
+  date:publishedDate,rate:Number(quoteOutput.dataset.snapshotRate)
+} : undefined;
 
 function updateLandingAmount() {
   if (!landingAmount) return;
@@ -19,7 +23,10 @@ function updateLandingAmount() {
       "Reference rate unavailable";
 }
 landingAmount?.addEventListener("input",updateLandingAmount);
-try { lastQuote = JSON.parse(localStorage.getItem(cacheKey)); } catch {}
+try {
+  const stored = JSON.parse(localStorage.getItem(cacheKey));
+  if (stored?.text && (!lastQuote || Date.parse(stored.date) >= Date.parse(lastQuote.date))) lastQuote = stored;
+} catch {}
 function showQuote(text,detail,stale = false) {
   updateLandingAmount();
   quoteOutput.textContent = text;
@@ -28,7 +35,8 @@ function showQuote(text,detail,stale = false) {
 function rememberQuote(text,detail,date,maxAge = 0,rate) {
   const time = Date.parse(date);
   if (!Number.isFinite(time)) throw new Error("Quote timestamp unavailable");
-  lastQuote = {text,detail,rate};
+  if (time < Date.parse(lastQuote?.date)) throw new Error("Older quote");
+  lastQuote = {text,detail,rate,date};
   try { localStorage.setItem(cacheKey,JSON.stringify(lastQuote)); } catch {}
   showQuote(text,detail,maxAge > 0 && Date.now()-time > maxAge);
 }
@@ -73,6 +81,7 @@ async function updateLandingQuote() {
   }
 }
 try { document.documentElement.dataset.theme = localStorage.getItem("rate-atelier-theme") ?? ""; } catch {}
-if (lastQuote) showQuote(lastQuote.text,lastQuote.detail,true);
+if (lastQuote) showQuote(lastQuote.text,lastQuote.detail,lastQuote.date !== publishedDate);
 updateLandingQuote();
 setInterval(() => { if (!document.hidden) updateLandingQuote(); },60000);
+
