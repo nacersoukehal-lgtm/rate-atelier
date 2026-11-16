@@ -1,0 +1,66 @@
+name: Publish Rate Atelier with quote snapshots
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '13,43 * * * *'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: rate-atelier-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Build static pages with latest available quotes
+        run: |
+          mkdir _site
+          git archive HEAD | tar -x -C _site
+          rm -r _site/.github
+          node --input-type=module <<'JS'
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {pages,metalQuotes,fxQuotes,renderSnapshot} from './render-quote-snapshot.mjs';
+
+          async function json(url) {
+            const response = await fetch(url,{signal:AbortSignal.timeout(10000)});
+            if (!response.ok) throw Error('HTTP ' + response.status + ' from ' + new URL(url).hostname);
+            return response.json();
+          }
+
+          const [previous,metals,usd,eur] = await Promise.allSettled([
+            json('https://getrateatelier.com/published-quote-snapshot.json'),
+            json('https://standardbullion.com/spot-prices.json').then(metalQuotes),
+            json('https://api.frankfurter.dev/v2/rates?base=USD&quotes=EUR,AUD,DZD').then(fxQuotes),
+            json('https://api.frankfurter.dev/v2/rate/EUR/USD').then(row => fxQuotes([row]))
+          ]);
+          const quotes = previous.status === 'fulfilled' ? {...previous.value} : {};
+          for (const response of [metals,usd,eur]) {
+            if (response.status === 'rejected') {
+              console.warn(String(response.reason));
+              continue;
+            }
+            for (const [code,quote] of Object.entries(response.value)) {
+              const time = Date.parse(quote.date);
+              if (Number.isFinite(quote.value) && quote.value > 0 && Number.isFinite(time) &&
+                  !(time < Date.parse(quotes[code]?.date))) quotes[code] = quote;
+            }
+          }
+          for (const file of ['index.html',...Object.keys(pages)]) {
+            const path = '_site/' + file;
+            await writeFile(path,renderSnapshot(await readFile(path,'utf8'),file,quotes));
+          }
+          await writeFile('_site/published-quote-snapshot.json',JSON.stringify(quotes));
+          JS
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
