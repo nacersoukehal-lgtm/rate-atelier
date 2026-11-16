@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 export const pages = {
   "gold-price-today.html": "XAU",
   "silver-price-today.html": "XAG",
@@ -12,10 +14,10 @@ const decimal = new Intl.NumberFormat("en-US", {maximumFractionDigits:6});
 const valid = row => Number.isFinite(row?.value) && row.value > 0 && Number.isFinite(Date.parse(row.date));
 
 export function metalQuotes(data) {
-  return Object.fromEntries(["XAU","XAG"].map(code => {
+  return Object.fromEntries(["XAU","XAG","XPT","XPD"].map(code => {
     const metal = data.metals?.find(row => row.symbol === code);
     const value = metal?.bid > 0 && metal?.ask > 0 ? (metal.bid + metal.ask) / 2 : NaN;
-    return [code,{value,date:data.updated}];
+    return [code,{value,date:data.updated,move:metal?.changeToday?.percent}];
   }));
 }
 
@@ -33,7 +35,7 @@ function replaceContent(html,id,content) {
 
 function detail(row) {
   if (row.base) return "Published snapshot · Frankfurter · " + row.date;
-  return "Published snapshot · Standard Bullion · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
+  return "Published snapshot · " + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
 }
 
 export function renderSnapshot(html,file,quotes) {
@@ -43,6 +45,37 @@ export function renderSnapshot(html,file,quotes) {
       if (!valid(row)) continue;
       html = replaceContent(html,id,code === "EUR" ? "€" + row.value.toFixed(2) : usd.format(row.value));
       html = replaceContent(html,id+"-time",detail(row));
+    }
+    const saved = JSON.parse(readFileSync(new URL("./market-quotes.json",import.meta.url),"utf8"));
+    function benchmark(symbol) {
+      const meta = saved[symbol]?.series?.meta;
+      if (meta?.symbol !== symbol || !(meta.regularMarketTime > 0)) return null;
+      return {value:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString(),
+        move:meta.regularMarketChangePercent,source:"Yahoo Finance"};
+    }
+    const gold = quotes.XAU;
+    const silver = quotes.XAG;
+    const ratio = valid(gold) && valid(silver) && Date.parse(gold.date) === Date.parse(silver.date)
+      ? {value:gold.value/silver.value,date:gold.date} : null;
+    const changes = new Intl.NumberFormat("en-US",{
+      minimumFractionDigits:2,maximumFractionDigits:2,signDisplay:"exceptZero"
+    });
+    const copperPrice = new Intl.NumberFormat("en-US",{
+      style:"currency",currency:"USD",minimumFractionDigits:4,maximumFractionDigits:4
+    });
+    const change = row => Number.isFinite(row.move) ? changes.format(row.move) + "%" : "Daily change unavailable";
+    const rows = [
+      ["ratio",ratio,row => row.value.toFixed(2) + "×"],
+      ["platinum",quotes.XPT,row => usd.format(row.value)],
+      ["palladium",quotes.XPD,row => usd.format(row.value)],
+      ["copper",benchmark("HG=F"),row => copperPrice.format(row.value)],
+      ["daily-gold",gold,row => usd.format(row.value) + " · " + change(row)],
+      ["daily-silver",silver,row => usd.format(row.value) + " · " + change(row)],
+      ["daily-dollar",benchmark("DX-Y.NYB"),row => row.value.toFixed(3) + " · " + change(row)]
+    ];
+    for (const [id,row,format] of rows) {
+      html = replaceContent(html,id,valid(row) ? format(row) : "Quote unavailable");
+      if (valid(row)) html = replaceContent(html,id+"-time",detail(row));
     }
     return html;
   }
@@ -63,3 +96,4 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
+

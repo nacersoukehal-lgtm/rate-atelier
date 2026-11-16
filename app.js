@@ -149,10 +149,12 @@ function updateQuotes() {
   }
   const gold = metals.get("XAU");
   const silver = metals.get("XAG");
-  write("ratio", gold && silver ? cardDecimals.format(gold.price / silver.price) + "×" : unavailable);
-  write("ratio-time",gold && silver ? metalDetail("XAU",{
-    date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
-  }) : "Silver ounces per ounce of gold");
+  if ((gold && silver) || !byId("ratio-time").textContent.startsWith("Published snapshot")) {
+    write("ratio", gold && silver ? cardDecimals.format(gold.price / silver.price) + "×" : unavailable);
+    write("ratio-time",gold && silver ? metalDetail("XAU",{
+      date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
+    }) : "Silver ounces per ounce of gold");
+  }
   const eur = rates.get("EUR");
   if (!eur && byId("usd-time").textContent.startsWith("Published snapshot")) return;
   write("usd", eur ? "€" + cardDecimals.format(eur.rate) : unavailable);
@@ -2181,6 +2183,7 @@ function updateMarketSummary() {
   write("gold-purity-quotes",gold ? "24K " + money(gold.price/ouncesInGrams,"USD") + " · 22K " +
     money(gold.price*22/24/ouncesInGrams,"USD") + " · 18K " + money(gold.price*.75/ouncesInGrams,"USD") + " per gram" : "");
   for (const [key,quote,source] of [["gold",gold,"Standard Bullion"],["silver",silver,"Standard Bullion"],["dollar",dollarIndex,"Yahoo Finance"]]) {
+    if (!quote && byId("daily-"+key+"-time").textContent.startsWith("Published snapshot")) continue;
     const change = byId("daily-"+key);
     change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + (Number.isFinite(quote.move) ? (key === "dollar" ? formatDollarIndexChange(quote.move) : percent(quote.move)) : "Daily change unavailable") : unavailable;
     change.className = quote?.move > 0 ? "positive" : quote?.move < 0 ? "negative" : "";
@@ -2282,5 +2285,6 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
