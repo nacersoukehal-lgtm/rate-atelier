@@ -9,8 +9,14 @@ const escape = value => String(value ?? "—").replace(/[&<>"']/g,char => (
   {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]
 ));
 const positive = value => Number.isFinite(value) && value > 0;
-const date = value => Number.isFinite(Date.parse(value)) ? new Date(value).toISOString().slice(0,16).replace("T"," ") + " UTC" : "";
+function date(value) {
+  const time = typeof value === "number" ? value : Date.parse(value);
+  return Number.isFinite(time) ? new Date(time).toISOString().slice(0,16).replace("T"," ") + " UTC" : "";
+}
 const money = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:8});
+const cents = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+const wholeUSD = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+const referencePrice = new Intl.NumberFormat("en-US",{maximumFractionDigits:2});
 const number = new Intl.NumberFormat("en-US",{maximumFractionDigits:4});
 const pct = new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2,signDisplay:"exceptZero"});
 const change = value => Number.isFinite(value) ? pct.format(value) + "%" : "—";
@@ -65,8 +71,14 @@ for (const file of files) {
       '<meta property="og:url" content="' + escape(url) + '">');
     if (description) tags.push('<meta property="og:description" content="' + description + '">');
   }
+  if (title && !html.includes('property="og:image"')) {
+    tags.push('<meta property="og:image" content="' + origin + 'social-card.png">',
+      '<meta property="og:image:width" content="1200">','<meta property="og:image:height" content="630">',
+      '<meta property="og:image:alt" content="Rate Atelier — Exchange rates, metals and market data">');
+  }
   if (title && !html.includes('name="twitter:card"')) {
-    tags.push('<meta name="twitter:card" content="summary">','<meta name="twitter:title" content="' + title + '">');
+    tags.push('<meta name="twitter:card" content="summary_large_image">','<meta name="twitter:title" content="' + title + '">');
+    tags.push('<meta name="twitter:image" content="' + origin + 'social-card.png">');
     if (description) tags.push('<meta name="twitter:description" content="' + description + '">');
   }
   if (file === "index.html") {
@@ -89,34 +101,69 @@ const latest = Object.values(data).flatMap(item => {
   if (!positive(price) || !Number.isFinite(Date.parse(observed))) return [];
   const source = item.link?.startsWith("https://") ? '<a href="' + escape(item.link) + '">' + escape(item.source) + '</a>' : escape(item.source);
   return ['<tr><th scope="row">' + escape(item.name) + '<small>' + escape(item.grade) + '</small></th><td>' +
-    escape(number.format(price) + " " + item.unit) + '</td><td>' + escape(observed + " · " + item.cadence.toLowerCase()) +
+    escape(referencePrice.format(price) + " " + item.unit) + '</td><td>' + escape(observed + " · " + item.cadence.toLowerCase()) +
     '</td><td>' + source + '</td></tr>'];
 });
 if (latest.length) {
   home = put(home,"metal-reference-rows",latest.join(""));
   home = put(home,"metal-reference-state","");
 }
-for (const id of ["news-gold","news-fx","news-fed"]) {
-  const items = (news[id] ?? []).filter(item => item.href?.startsWith("https://") && item.title).slice(0,5);
-  if (items.length) home = put(home,id,items.map(item => '<li><a href="' + escape(item.href) + '">' +
-    escape(item.title) + '</a><small>' + escape([item.source,date(item.time)].filter(Boolean).join(" · ")) + '</small></li>').join(""));
-  else home = put(home,id,"<li>Headlines unavailable in this snapshot.</li>");
+async function rss(url,source) {
+  let response = await fetch(url,{signal:AbortSignal.timeout(6000)});
+  if (!response.ok) response = await fetch("https://proxy.cors.dev/"+url,{signal:AbortSignal.timeout(6000)});
+  if (!response.ok) throw Error("News feed unavailable: " + source);
+  const xml = await response.text();
+  const field = (item,name) => (item.match(new RegExp("<"+name+"(?:\\s[^>]*)?>([\\s\\S]*?)</"+name+">","i"))?.[1] ?? "")
+    .trim().replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/,"$1")
+    .replace(/&(amp|lt|gt|quot|apos|#39);/g,(_,entity) => ({amp:"&",lt:"<",gt:">",quot:'"',apos:"'","#39":"'"}[entity]));
+  return [...xml.matchAll(/<item(?:\s[^>]*)?>[\s\S]*?<\/item>/gi)].map(([item]) => ({
+    title:field(item,"title"),href:field(item,"link"),time:field(item,"pubDate"),source
+  }));
 }
-const stockSymbols = ["^IXIC","^NYA","^KS11","^TWII","AVGO","COST","GS","DIS","BARC.L","VOD.L","6758.T","9988.HK"];
-const stocks = stockSymbols.flatMap(symbol => {
+const feeds = await Promise.allSettled([
+  rss("https://www.fxstreet.com/rss/news","FXStreet"),
+  rss("https://www.federalreserve.gov/feeds/press_monetary.xml","Federal Reserve")
+]);
+const market = feeds[0].value ?? [];
+const fed = feeds[1].value ?? [];
+const goldHeadline = /\bgold\b|\bXAU\b/i;
+const currencyHeadline = /\b(?:EUR|USD|GBP|JPY|AUD|CAD|forex|dollar|euro|yen|sterling)\b/i;
+const fresh = {
+  "news-gold":market.filter(item => goldHeadline.test(item.title)),
+  "news-fx":market.filter(item => !goldHeadline.test(item.title) && currencyHeadline.test(item.title)),
+  "news-fed":fed
+};
+for (const id of Object.keys(fresh)) {
+  const candidates = [...fresh[id],...(news[id] ?? [])];
+  const items = [...new Map(candidates.filter(item => item.href?.startsWith("https://") && item.title &&
+    Date.parse(item.time) >= Date.now()-3*86400000).map(item => [item.href,item])).values()]
+    .sort((a,b) => Date.parse(b.time)-Date.parse(a.time)).slice(0,5);
+  if (items.length) home = put(home,id,items.map(item => '<li><a href="' + escape(item.href) + '">' +
+    escape(item.title) + '</a><small>' + escape(item.source) + ' · <time datetime="' + new Date(item.time).toISOString() + '">' + escape(date(item.time)) + '</time></small></li>').join(""));
+  else {
+    home = put(home,id,"");
+    home = home.replace(new RegExp('(<article class="panel")(?=><h3>[^<]+</h3><ul id="'+id+'")'),"$1 hidden");
+  }
+}
+const names = {
+  "^IXIC":"Nasdaq Composite","^NYA":"NYSE Composite","^KS11":"KOSPI","^TWII":"Taiwan Weighted Index",
+  AVGO:"Broadcom",COST:"Costco Wholesale",GS:"Goldman Sachs",DIS:"Walt Disney",
+  "BARC.L":"Barclays","VOD.L":"Vodafone","6758.T":"Sony Group","9988.HK":"Alibaba Group"
+};
+const stocks = Object.entries(names).flatMap(([symbol,name]) => {
   const q = quotes[symbol]?.series?.meta;
   if (q?.symbol !== symbol || !positive(q.regularMarketPrice) || !positive(q.regularMarketTime)) return [];
-  const previous = positive(q.regularMarketPreviousClose) ? q.regularMarketPreviousClose : undefined;
-  const marketChange = Number.isFinite(q.regularMarketChange) ? q.regularMarketChange :
-    previous ? q.regularMarketPrice-previous : undefined;
-  const price = value => positive(value) ? number.format(value) : "—";
-  return [td([q.shortName ?? symbol,price(q.regularMarketPrice) + " · " + symbol + " · " + date(q.regularMarketTime*1000),
-    Number.isFinite(marketChange) ? number.format(marketChange) : "—",change(q.regularMarketChangePercent),
-    price(q.regularMarketOpen),price(q.regularMarketDayHigh),price(q.regularMarketDayLow),price(previous)])];
+  const price = value => positive(value) ? number.format(value) + (q.instrumentType === "INDEX" ? "" : " " + (q.currency ?? "")) : "—";
+  return ['<tr><th scope="row">' + escape(name) + '<small>' + escape(symbol) + '</small></th><td>' +
+    escape(price(q.regularMarketPrice)) + '<small>' + escape(date(q.regularMarketTime*1000)) + '</small></td><td>' +
+    escape(change(q.regularMarketChangePercent)) + '</td><td>' + escape(price(q.regularMarketDayHigh)) +
+    '</td><td>' + escape(price(q.regularMarketDayLow)) + '</td></tr>'];
 });
 if (stocks.length) {
+  home = home.replace(/(<table class="stock-table">[\s\S]*?<\/thead>)/,header =>
+    header.replace(/<th scope="col">(Change|Open|Previous)<\/th>/g,'<th scope="col" data-stock-live-column hidden>$1</th>'));
   home = put(home,"stock-rows",stocks.join(""));
-  home = put(home,"stock-status","Published snapshots · Yahoo Finance · see timestamps in the table.");
+  home = put(home,"stock-status","Yahoo Finance snapshot · Quote times shown in UTC.");
 }
 
 const histories = [["gold","XAU"],["silver","XAG"],["platinum","XPT"],["palladium","XPD"]];
@@ -138,10 +185,11 @@ if (Array.isArray(coins)) {
   if (rows.length) {
     home = put(home,"crypto-rows",rows.map((coin,index) => {
       const q = coin.quotes.USD;
-      return td([index+1,coin.name + " (" + coin.symbol + ")",money.format(q.price)+" · "+date(coin.last_updated),
-        change(q.percent_change_24h),money.format(q.market_cap),positive(q.volume_24h) ? money.format(q.volume_24h) : "—"]);
+      return td([index+1,coin.name + " (" + coin.symbol + ")",(q.price >= 1 ? cents : money).format(q.price)+" · "+date(coin.last_updated),
+        change(q.percent_change_24h),wholeUSD.format(q.market_cap),positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"]);
     }).join(""));
-    home = put(home,"crypto-state","Published snapshot · CoinPaprika");
+    home = put(home,"crypto-state","Top 10 snapshot by market cap · CoinPaprika");
+    home = put(home,"crypto-method","Top 10 snapshot by market cap. The interactive ranking expands to 50 when its feed loads.");
   }
 }
 const events = value(1)?.events;
@@ -172,27 +220,32 @@ const silver = new Map(series.get("silver").map(row => [row.time,row.price]));
 series.set("ratio",series.get("gold").filter(row => silver.has(row.time))
   .map(row => ({time:row.time,price:row.price/silver.get(row.time)})));
 
-function spark(rows,label,width,height) {
+function spark(rows,label,width,height,gaps = false) {
   const prices = rows.map(row => row.price);
   const min = Math.min(...prices), max = Math.max(...prices);
-  const line = prices.map((price,index) => (
-    (2+(width-4)*index/(prices.length-1)).toFixed(1) + "," +
-    (max === min ? height/2 : height-2-(height-4)*(price-min)/(max-min)).toFixed(1)
-  )).join(" ");
+  const first = Date.parse(rows[0].time);
+  const duration = Date.parse(rows.at(-1).time)-first || 1;
+  const path = rows.map((row,index) => {
+    const time = Date.parse(row.time);
+    const start = index === 0 || (gaps && time-Date.parse(rows[index-1].time)>1.5*86400000);
+    const x = 2 + (width-4)*(time-first)/duration;
+    const y = max === min ? height/2 : height-2-(height-4)*(row.price-min)/(max-min);
+    return (start ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
+  }).join(" ");
   return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escape(label) +
-    '"><polyline fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" points="' + line + '"/></svg>';
+    '"><path fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" d="' + path + '"/></svg>';
 }
-const gold = series.get("gold");
+const gold = series.get("gold").filter(row => ![0,6].includes(new Date(row.time).getUTCDay()));
 if (gold.length > 1) {
   const first = gold[0], last = gold.at(-1);
-  home = put(home,"published-gold-chart",spark(gold,"Gold price history",600,160) +
+  home = put(home,"published-gold-chart",spark(gold,"Gold price history with weekend gaps",600,160,true) +
     '<p>Gold · Standard Bullion · ' + escape(date(first.time) + " " + money.format(first.price) + " to " +
     date(last.time) + " " + money.format(last.price)) + '</p>');
   home = put(home,"chart-state","");
 }
 for (const [id,history] of series) {
-  const week = history.filter(row => Date.parse(row.time) >= Date.parse(history.at(-1)?.time)-7*86400000).slice(-100);
-  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" recent price history",176,52));
+  const week = (id === "gold" ? gold : history).filter(row => Date.parse(row.time) >= Date.parse(history.at(-1)?.time)-7*86400000).slice(-100);
+  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" recent price history",176,52,id === "gold"));
 }
 const fx = series.get("usd");
 const published = await read("published-quote-snapshot.json").then(JSON.parse).catch(() => ({}));
@@ -201,4 +254,5 @@ if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
   home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100));
 }
 await write("index.html",home);
+
 

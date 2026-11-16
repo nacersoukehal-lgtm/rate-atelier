@@ -6,6 +6,7 @@ export const pages = {
   "platinum-price-today.html": "XPT",
   "palladium-price-today.html": "XPD",
   "gold-silver-ratio.html": "ratio",
+  "copper-price-today.html": "HG",
   "usd-to-eur.html": "EUR",
   "eur-to-usd.html": "EURUSD",
   "usd-to-aud.html": "AUD",
@@ -42,6 +43,14 @@ function detail(row) {
   return "Published snapshot · " + (stale ? "Stale · " : "") + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
 }
 
+function benchmark(symbol) {
+  const saved = JSON.parse(readFileSync(new URL("./market-quotes.json",import.meta.url),"utf8"));
+    const meta = saved[symbol]?.series?.meta;
+    if (meta?.symbol !== symbol || !(meta.regularMarketTime > 0)) return null;
+    return {value:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString(),
+      move:meta.regularMarketChangePercent,source:"Yahoo Finance"};
+}
+
 export function renderSnapshot(html,file,quotes) {
   if (file === "index.html") {
     for (const [code,id] of [["XAU","gold"],["XAG","silver"],["EUR","usd"]]) {
@@ -49,13 +58,6 @@ export function renderSnapshot(html,file,quotes) {
       if (!valid(row)) continue;
       html = replaceContent(html,id,code === "EUR" ? "€" + row.value.toFixed(4) : usd.format(row.value));
       html = replaceContent(html,id+"-time",detail(row));
-    }
-    const saved = JSON.parse(readFileSync(new URL("./market-quotes.json",import.meta.url),"utf8"));
-    function benchmark(symbol) {
-      const meta = saved[symbol]?.series?.meta;
-      if (meta?.symbol !== symbol || !(meta.regularMarketTime > 0)) return null;
-      return {value:meta.regularMarketPrice,date:new Date(meta.regularMarketTime * 1000).toISOString(),
-        move:meta.regularMarketChangePercent,source:"Yahoo Finance"};
     }
     const gold = quotes.XAU;
     const silver = quotes.XAG;
@@ -92,9 +94,10 @@ export function renderSnapshot(html,file,quotes) {
   const gold = quotes.XAU;
   const silver = quotes.XAG;
   const row = pages[file] === "ratio" && valid(gold) && valid(silver) && gold.date === silver.date
-    ? {value:gold.value/silver.value,date:gold.date} : quotes[pages[file]];
+    ? {value:gold.value/silver.value,date:gold.date} : pages[file] === "HG" ? benchmark("HG=F") : quotes[pages[file]];
   if (!valid(row)) return html;
   const price = row.base ? "1 " + row.base + " = " + decimal.format(row.value) + " " + row.quote
+    : pages[file] === "HG" ? "$" + row.value.toFixed(4) + " per lb"
     : pages[file] === "ratio" ? row.value.toFixed(2) + " ounces of silver per ounce of gold"
     : usd.format(row.value) + " per troy oz · " + usd.format(row.value/31.1034768) + " per gram";
   html = replaceContent(html,"landing-quote",price);
@@ -110,5 +113,6 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
+
 
 

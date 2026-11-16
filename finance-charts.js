@@ -46,7 +46,7 @@ const financeHistory = (() => {
   return {fx,metal,bitcoin,ratio};
 })();
 
-function drawFinanceChart(host,points,format,label) {
+function drawFinanceChart(host,points,format,label,gaps = false) {
   const projected = typeof points[0].date === "number";
   const dates = points.map(point => projected ? point.date : Date.parse(point.date));
   const first = points[0];
@@ -79,8 +79,11 @@ function drawFinanceChart(host,points,format,label) {
     if (anchor === "middle" && dates.length < 4) continue;
     add("text",{x:anchor === "middle" ? x(index) : position,y:171,"text-anchor":anchor,"font-size":13,fill:"currentColor"},dateLabel(dates[index]));
   }
-  add("polyline",{points:points.map((point,index) => x(index)+","+y(point.value)).join(" "),
-    fill:"none",stroke:"currentColor","stroke-width":2,"vector-effect":"non-scaling-stroke"});
+  const path = points.map((point,index) => {
+    const start = index === 0 || (gaps && dates[index]-dates[index-1] > 1.5*86400000);
+    return (start ? "M" : "L") + x(index) + "," + y(point.value);
+  }).join(" ");
+  add("path",{d:path,fill:"none",stroke:"currentColor","stroke-width":2,"vector-effect":"non-scaling-stroke"});
   const selection = add("circle",{r:4,fill:"currentColor",visibility:"hidden"});
   const caption = document.createElement("p");
   const change = first.value ? " · Change " + new Intl.NumberFormat(undefined,{style:"percent",signDisplay:"exceptZero",maximumFractionDigits:2}).format(last.value/first.value-1) : "";
@@ -152,10 +155,10 @@ function mountFinanceHistory(host,read) {
     const request = ++revision;
     host.textContent = "Loading history…";
     try {
-      const {points,format,label} = await read();
+      const {points,format,label,gaps} = await read();
       if (request !== revision) return;
       if (points.length < 2) throw new Error("Insufficient history");
-      drawFinanceChart(host,points,format,label);
+      drawFinanceChart(host,points,format,label,gaps);
     } catch {
       if (request === revision) host.textContent = "History is unavailable for this selection.";
     }
@@ -179,14 +182,17 @@ if (assetHistory) {
   assetHistory.removeAttribute("role");
   const update = mountFinanceHistory(assetHistory,async () => {
     const days = Number(range.value);
-    const points = await (asset === "BTC" ? financeHistory.bitcoin(days) :
+    let points = await (asset === "BTC" ? financeHistory.bitcoin(days) :
       currency ? financeHistory.fx("USD",asset,days) : asset === "ratio" ? financeHistory.ratio(days) : financeHistory.metal(asset,days));
+    const gaps = asset === "XAU";
+    if (gaps) points = points.filter(point => ![0,6].includes(new Date(point.date).getUTCDay()));
     if (days === 365 && Date.parse(points.at(-1)?.date)-Date.parse(points[0]?.date) < 300*86400000) {
-      return {points,format,label:label + " · Partial one-year coverage"};
+      return {points,format,label:label + " · Partial one-year coverage",gaps};
     }
-    return {points,format,label};
+    return {points,format,label,gaps};
   });
   range.addEventListener("change",update);
   update();
 }
+
 

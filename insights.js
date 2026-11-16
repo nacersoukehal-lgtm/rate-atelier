@@ -63,9 +63,9 @@ function showHeadlines(id,items) {
   const list = byId(id);
   const unique = new Map();
   for (const item of Array.isArray(items) ? items : []) {
-    if (typeof item?.title === "string" && item.href?.startsWith("https://") && !unique.has(item.title)) unique.set(item.title,item);
+    if (typeof item?.title === "string" && item.href?.startsWith("https://") && Date.parse(item.time) >= Date.now()-3*86400000 && !unique.has(item.title)) unique.set(item.title,item);
   }
-  const rows = [...unique.values()].slice(0,5).map(item => {
+  const rows = [...unique.values()].sort((a,b) => Date.parse(b.time)-Date.parse(a.time)).slice(0,5).map(item => {
     const row = document.createElement("li");
     const link = document.createElement("a");
     link.href = item.href;
@@ -78,6 +78,7 @@ function showHeadlines(id,items) {
     return row;
   });
   if (!rows.length) return false;
+  list.closest("article").hidden = false;
   list.replaceChildren(...rows);
   return true;
 }
@@ -110,9 +111,14 @@ async function refreshNews(force = false) {
     fallback ||= live.length < Math.min(5,previous.length || backup.length || 1);
     if (live.length) savedNews[id] = [...new Map([...live,...previous].map(item => [item.href,item])).values()].slice(0,10);
     if (showHeadlines(id,[...live,...previous,...backup])) continue;
-    const message = document.createElement("li");
-    message.textContent = "Headlines unavailable. Use Refresh to retry.";
-    byId(id).replaceChildren(message);
+    const list = byId(id);
+    const recent = [...list.querySelectorAll("time[datetime]")].some(
+      time => Date.parse(time.dateTime) >= Date.now()-3*86400000
+    );
+    if (!recent) {
+      list.replaceChildren();
+      list.closest("article").hidden = true;
+    }
   }
   try { localStorage.setItem(newsStorageKey,JSON.stringify(savedNews)); } catch {}
   newsChecked = Date.now();
@@ -307,4 +313,5 @@ for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMo
   new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
   render();
 }
+
 

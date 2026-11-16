@@ -44,6 +44,21 @@ const usd = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
 
 async function updateLandingQuote() {
   try {
+    if (asset === "HG") {
+      const url = "https://query1.finance.yahoo.com/v8/finance/chart/HG%3DF?range=5d&interval=1d";
+      const readCopper = async endpoint => {
+        const response = await fetch(endpoint,{signal:AbortSignal.timeout(6000)});
+        if (!response.ok) throw Error("Copper feed unavailable");
+        const result = (await response.json()).chart?.result?.[0]?.meta;
+        if (result?.symbol !== "HG=F" || !(result.regularMarketPrice > 0) || !(result.regularMarketTime > 0)) throw Error("Copper quote unavailable");
+        return result;
+      };
+      const quote = await readCopper(url).catch(() => readCopper("https://proxy.cors.dev/" + url));
+      const date = new Date(quote.regularMarketTime*1000).toISOString();
+      rememberQuote("$" + quote.regularMarketPrice.toFixed(4) + " per lb",
+        "Yahoo Finance · " + new Date(date).toLocaleString(),date,36*3600000);
+      return;
+    }
     const isCurrency = ["EUR","AUD","DZD","EURUSD"].includes(asset);
     const baseCurrency = asset === "EURUSD" ? "EUR" : "USD";
     const quoteCurrency = asset === "EURUSD" ? "USD" : asset;
@@ -84,4 +99,5 @@ try { document.documentElement.dataset.theme = localStorage.getItem("rate-atelie
 if (lastQuote) showQuote(lastQuote.text,lastQuote.detail,lastQuote.date !== publishedDate);
 updateLandingQuote();
 setInterval(() => { if (!document.hidden) updateLandingQuote(); },60000);
+
 

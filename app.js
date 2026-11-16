@@ -343,6 +343,8 @@ async function loadMarketHistory(force = false) {
   const key = asset + selectedRange;
   const state = byId("chart-state");
   const cached = seriesCache.get(key);
+  const fallback = byId("published-gold-chart");
+  if (fallback) fallback.hidden = asset !== "XAU" || selectedRange !== "1m" || (force && points.length > 1);
   if (!force || !points.length) {
     state.hidden = false;
     state.textContent = "Loading historical prices…";
@@ -374,6 +376,7 @@ async function loadMarketHistory(force = false) {
       }
       next = next.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)));
       next.sort((a,b) => Date.parse(a.date) - Date.parse(b.date));
+      if (asset === "XAU") next = next.filter(point => ![0,6].includes(new Date(point.date).getUTCDay()));
       const days = marketRangeDays[selectedRange] ?? (selectedRange === "24h" ? 1 : 0);
       if (days && next.length) {
         const cutoff = Date.parse(next.at(-1).date) - days * 86400000;
@@ -384,7 +387,6 @@ async function loadMarketHistory(force = false) {
     }
     if (request !== chartRequest) return;
     points = next;
-    if (points.length > 1 && byId("published-gold-chart")) byId("published-gold-chart").hidden = true;
     state.hidden = true;
   } catch {
     if (request !== chartRequest) return;
@@ -457,19 +459,33 @@ function draw() {
       ? {year:"numeric",timeZone:"UTC"} : {month:"short",day:"numeric",timeZone:"UTC"});
     ctx.fillText(label,position,height-9);
   }
+  const goldChart = byId("series").value === "XAU";
+  const day = 86400000;
+  const segments = [[]];
+  for (const point of points) {
+    const previous = segments.at(-1).at(-1);
+    if (goldChart && previous && Date.parse(point.date) - Date.parse(previous.date) > 1.5*day) {
+      segments.push([]);
+    }
+    segments.at(-1).push(point);
+  }
   const gradient = ctx.createLinearGradient(0,top,0,bottom);
   gradient.addColorStop(0,"#d8b76a55");
   gradient.addColorStop(1,"#d8b76a02");
-  ctx.beginPath();
-  points.forEach((point,index) => index ? ctx.lineTo(x(point.date),y(point.price)) : ctx.moveTo(x(point.date),y(point.price)));
-  ctx.strokeStyle = "#e9ca86";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.lineTo(x(points.at(-1).date),bottom);
-  ctx.lineTo(left,bottom);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
+  for (const segment of segments) {
+    ctx.beginPath();
+    segment.forEach((point,index) => index ? ctx.lineTo(x(point.date),y(point.price)) : ctx.moveTo(x(point.date),y(point.price)));
+    ctx.strokeStyle = "#e9ca86";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineTo(x(segment.at(-1).date),bottom);
+    ctx.lineTo(x(segment[0].date),bottom);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+  const fallback = byId("published-gold-chart");
+  if (fallback) fallback.hidden = true;
   chartPosition = {x,left,right,first,last};
   const selected = points[chartInspection];
   if (selected) {
@@ -1928,6 +1944,7 @@ function renderStocks() {
   stockPage = Math.min(stockPage,Math.max(0,Math.ceil(visible.length/stockPageSize)-1));
   const page = currentStockPage(visible);
   const start = stockPage*stockPageSize;
+  for (const heading of document.querySelectorAll("[data-stock-live-column]")) heading.hidden = false;
   byId("stock-rows").replaceChildren(...page.map(asset => {
     const row = document.createElement("tr");
     const data = stockQuotes.get(asset.code);
@@ -2288,6 +2305,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 
