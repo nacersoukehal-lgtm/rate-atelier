@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '13,43 * * * *'
+    - cron: '3/5 * * * *'
 permissions:
   contents: read
   pages: write
@@ -60,6 +60,7 @@ jobs:
           }
           await writeFile('_site/published-quote-snapshot.json',JSON.stringify(quotes));
           JS
+          node enrich-pages.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
