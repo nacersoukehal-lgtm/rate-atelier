@@ -3,7 +3,7 @@ const quoteOutput = document.getElementById("landing-quote");
 const sourceOutput = document.getElementById("landing-source");
 const asset = quoteOutput.dataset.asset;
 const decimal = (value,digits) => new Intl.NumberFormat(undefined,{maximumFractionDigits:digits}).format(value);
-const cacheKey = "rate-atelier-landing-quote:" + asset;
+const cacheKey = "rate-atelier-landing-quote:" + asset + (asset === "EUR" || asset === "EURUSD" ? ":ecb" : "");
 const landingAmount = document.getElementById("landing-amount");
 const landingResult = document.getElementById("landing-result");
 const publishedDate = quoteOutput.dataset.snapshotDate;
@@ -62,7 +62,8 @@ async function updateLandingQuote() {
     const isCurrency = ["EUR","AUD","DZD","EURUSD"].includes(asset);
     const baseCurrency = asset === "EURUSD" ? "EUR" : "USD";
     const quoteCurrency = asset === "EURUSD" ? "USD" : asset;
-    const endpoint = asset === "BTC" ? "https://api.coinpaprika.com/v1/tickers/btc-bitcoin" : isCurrency ? "https://api.frankfurter.dev/v2/rate/" + baseCurrency + "/" + quoteCurrency
+    const ecbPair = asset === "EUR" || asset === "EURUSD";
+    const endpoint = asset === "BTC" ? "https://api.coinpaprika.com/v1/tickers/btc-bitcoin" : isCurrency ? "https://api.frankfurter.dev/v2/" + (ecbPair ? "providers/ecb/" : "") + "rate/" + baseCurrency + "/" + quoteCurrency
       : "https://standardbullion.com/spot-prices.json";
     const response = await fetch(endpoint,{signal:AbortSignal.timeout(10000)});
     if (!response.ok) throw new Error("Feed unavailable");
@@ -78,7 +79,7 @@ async function updateLandingQuote() {
     if (isCurrency) {
       if (!(data.rate > 0)) throw new Error("Rate unavailable");
       rememberQuote("1 " + baseCurrency + " = " + decimal(data.rate,6) + " " + quoteCurrency,
-        "Frankfurter · Reference rate dated " + data.date,data.date,0,data.rate);
+        (ecbPair ? "ECB via Frankfurter" : "Frankfurter") + " · Reference rate dated " + data.date,data.date,0,data.rate);
       return;
     }
     const spot = code => {
@@ -99,5 +100,6 @@ try { document.documentElement.dataset.theme = localStorage.getItem("rate-atelie
 if (lastQuote) showQuote(lastQuote.text,lastQuote.detail,lastQuote.date !== publishedDate);
 updateLandingQuote();
 setInterval(() => { if (!document.hidden) updateLandingQuote(); },60000);
+
 
 

@@ -426,3 +426,6 @@ footer { padding: 18px 0; margin-top: 32px; }
 .analytics-choice button { margin: 6px 8px 0 0; padding: .4rem .8rem; }
 .analytics-settings { margin: 12px 0 0; }
 
+
+.market-quotes-group { grid-area: snapshot; }
+

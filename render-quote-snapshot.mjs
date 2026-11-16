@@ -26,8 +26,8 @@ export function metalQuotes(data) {
 }
 
 export function fxQuotes(rows) {
-  return Object.fromEntries(rows.map(({base,quote,rate,date}) => [
-    base === "EUR" ? "EURUSD" : quote,{base,quote,value:rate,date}
+  return Object.fromEntries(rows.map(({base,quote,rate,date,source}) => [
+    base === "EUR" ? "EURUSD" : quote,{base,quote,value:rate,date,source}
   ]));
 }
 
@@ -38,7 +38,7 @@ function replaceContent(html,id,content) {
 }
 
 function detail(row) {
-  if (row.base) return "Published snapshot · Frankfurter · " + row.date;
+  if (row.base) return "Published snapshot · " + (row.source ?? "Frankfurter") + " · " + row.date;
   const stale = !row.source && Date.now() - Date.parse(row.date) > 3600000;
   return "Published snapshot · " + (stale ? "Stale · " : "") + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
 }
@@ -113,6 +113,7 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
+
 
 
 

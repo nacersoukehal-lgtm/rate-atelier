@@ -15,6 +15,7 @@ function date(value) {
 }
 const money = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:8});
 const cents = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+const smallUSD = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:4,maximumFractionDigits:4});
 const wholeUSD = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
 const referencePrice = new Intl.NumberFormat("en-US",{maximumFractionDigits:2});
 const number = new Intl.NumberFormat("en-US",{maximumFractionDigits:4});
@@ -163,14 +164,14 @@ if (stocks.length) {
   home = home.replace(/(<table class="stock-table">[\s\S]*?<\/thead>)/,header =>
     header.replace("<tr>","<tr data-stock-snapshot-head>").replace(/<th scope="col">(Change|Open|Previous)<\/th>/g,""));
   home = put(home,"stock-rows",stocks.join(""));
-  home = put(home,"stock-status","Yahoo Finance snapshot · Quote times shown in UTC.");
+  home = put(home,"stock-status","Yahoo Finance snapshot · Sample of " + stocks.length + " assets · Quote times shown in UTC.");
 }
 
 const histories = [["gold","XAU"],["silver","XAG"],["platinum","XPT"],["palladium","XPD"]];
 const results = await Promise.allSettled([
   json("https://api.coinpaprika.com/v1/tickers"),
   json("https://showmytrades.com/api/public/calendar/v1?impact=high,medium&days=14"),
-  json("https://api.frankfurter.dev/v2/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-10*86400000).toISOString().slice(0,10)),
+  json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-10*86400000).toISOString().slice(0,10)),
   ...histories.map(([,code]) => json("https://standardbullion.com/api/v1/market/history?range=1m&metal=" + code))
 ]);
 const value = index => {
@@ -185,7 +186,7 @@ if (Array.isArray(coins)) {
   if (rows.length) {
     home = put(home,"crypto-rows",rows.map((coin,index) => {
       const q = coin.quotes.USD;
-      return td([index+1,coin.name + " (" + coin.symbol + ")",(q.price >= 1 ? cents : money).format(q.price)+" · "+date(coin.last_updated),
+      return td([index+1,coin.name + " (" + coin.symbol + ")",(q.price < .0001 ? "<$0.0001" : (q.price >= 1 ? cents : smallUSD).format(q.price))+" · "+date(coin.last_updated),
         change(q.percent_change_24h),wholeUSD.format(q.market_cap),positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"]);
     }).join(""));
     home = put(home,"crypto-state","Top 10 snapshot by market cap · CoinPaprika");
@@ -235,17 +236,19 @@ function spark(rows,label,width,height,gaps = false) {
   return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escape(label) +
     '"><path fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" d="' + path + '"/></svg>';
 }
-const gold = series.get("gold").filter(row => ![0,6].includes(new Date(row.time).getUTCDay()));
+const bullionSparks = new Set(["gold","silver","ratio","platinum","palladium"]);
+const weekdays = rows => rows.filter(row => ![0,6].includes(new Date(row.time).getUTCDay()));
+const gold = weekdays(series.get("gold"));
 if (gold.length > 1) {
   const first = gold[0], last = gold.at(-1);
   home = put(home,"published-gold-chart",spark(gold,"Gold price history with weekend gaps",600,160,true) +
     '<p>Gold · Standard Bullion · ' + escape(date(first.time) + " " + money.format(first.price) + " to " +
-    date(last.time) + " " + money.format(last.price)) + '</p>');
+    date(last.time) + " " + money.format(last.price) + (/T00:00:00/.test(last.time) ? " · Last historical observation: daily 00:00 UTC" : " · Historical observation")) + '</p>');
   home = put(home,"chart-state","");
 }
 for (const [id,history] of series) {
-  const week = (id === "gold" ? gold : history).filter(row => Date.parse(row.time) >= Date.parse(history.at(-1)?.time)-7*86400000).slice(-100);
-  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" recent price history",176,52,id === "gold"));
+  const week = (bullionSparks.has(id) ? weekdays(history) : history).filter(row => Date.parse(row.time) >= Date.parse(history.at(-1)?.time)-7*86400000).slice(-100);
+  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" recent price history",176,52,bullionSparks.has(id)));
 }
 const fx = series.get("usd");
 const published = await read("published-quote-snapshot.json").then(JSON.parse).catch(() => ({}));
@@ -254,5 +257,6 @@ if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
   home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100));
 }
 await write("index.html",home);
+
 
 

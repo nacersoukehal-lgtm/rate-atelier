@@ -122,7 +122,9 @@ async function refreshNews(force = false) {
   }
   try { localStorage.setItem(newsStorageKey,JSON.stringify(savedNews)); } catch {}
   newsChecked = Date.now();
-  write("news-updated",fallback ? "Some live feeds are unavailable. Saved headlines show their original publication dates." : "News checked " + timestamp(new Date()));
+  const hasHeadlines = newsIds.some(id => !byId(id).closest("article").hidden);
+  write("news-updated",!hasHeadlines ? "No recent headlines are available. Use Refresh to check again." :
+    fallback ? "Saved headlines show their original publication dates." : "News checked " + timestamp(new Date()));
   newsBusy = false;
 }
 const newsPanel = byId("news");
@@ -184,6 +186,11 @@ function drawOverviewSparkline(item,series,holder = byId(item.id+"-spark"),perio
   canvas.height = 52;
   canvas.setAttribute("role","img");
   canvas.setAttribute("aria-label",item.label + " price history for the " + period);
+  const weekendGaps = ["gold","silver","ratio","platinum","palladium"].includes(item.id);
+  if (weekendGaps) series = series.filter(point => ![0,6].includes(new Date(point.date).getUTCDay()));
+  if (series.length < 2) return;
+  const firstTime = Date.parse(series[0].date);
+  const elapsed = Date.parse(series.at(-1).date) - firstTime || 1;
   const prices = series.map(point => point.price);
   const min = Math.min(...prices);
   const spread = Math.max(...prices)-min;
@@ -193,9 +200,10 @@ function drawOverviewSparkline(item,series,holder = byId(item.id+"-spark"),perio
   ctx.lineJoin = "round";
   ctx.beginPath();
   prices.forEach((price,index) => {
-    const x = 3 + 170*index/(prices.length-1);
+    const time = Date.parse(series[index].date);
+    const x = 3 + 170*(weekendGaps ? (time-firstTime)/elapsed : index/(prices.length-1));
     const y = spread ? 47-42*(price-min)/spread : 26;
-    if (index === 0) ctx.moveTo(x,y);
+    if (index === 0 || (weekendGaps && time-Date.parse(series[index-1].date) > 1.5*86400000)) ctx.moveTo(x,y);
     else ctx.lineTo(x,y);
   });
   ctx.stroke();
@@ -313,5 +321,6 @@ for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMo
   new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
   render();
 }
+
 
 

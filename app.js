@@ -86,7 +86,7 @@ async function refreshRates() {
     currencyDirectory = new Map([...(currencyDirectory ?? saved?.names ?? []),...result.names]);
     rates.clear();
     for (const [code,row] of prior) rates.set(code,{...row,stale:true});
-    for (const [code,row] of result.rates) rates.set(code,{...row,source:result.source});
+    for (const [code,row] of result.rates) rates.set(code,{...row,source:row.source ?? result.source});
     currencyOptions = [...currencyDirectory].sort(([a],[b]) => a.localeCompare(b)).map(([code,name]) => [code+" — "+name,code]);
     saveQuotes("fx",{source:currentFxSource,names:[...currencyDirectory],rates:[...rates]});
     populateCurrencySelects();
@@ -362,7 +362,8 @@ async function loadMarketHistory(force = false) {
         const start = range === "max" ? "1999-01-01" : new Date(Date.now() - marketRangeDays[range] * 86400000).toISOString().slice(0,10);
         const params = new URLSearchParams({base:pair[0],quotes:pair[1],from:start});
         if (range === "max") params.set("group","month");
-        const rows = await json(fxApi + "?" + params);
+        const isEcbPair = [pair[0],pair[1]].sort().join("/") === "EUR/USD";
+        const rows = await json((isEcbPair ? "https://api.frankfurter.dev/v2/providers/ecb/rates" : fxApi) + "?" + params);
         next = rows.map(row => ({date:row.date,price:row.rate}));
       } else if (code) {
         const latest = Date.parse(benchmark.points.at(-1)[0]);
@@ -411,7 +412,11 @@ function updateChartSummary(asset) {
   write("chart-value",marketChartValue(asset,latest.price));
   const cadence = referenceData?.[referenceCode(asset)]?.cadence;
   const label = point => cadence ? referenceDate(point.date,cadence) : chartDate(point.date);
-  write("chart-date",label(first) + " – " + label(latest));
+  const end = new Date(latest.date).toISOString();
+  const daily = /^\d{4}-\d{2}-\d{2}T00:00:00/.test(end) && ["XAU","XAG","XPT","XPD"].includes(asset);
+  write("chart-date",label(first) + " – " + label(latest) +
+    (daily ? " · Last historical observation: daily 00:00 UTC" :
+      ["XAU","XAG","XPT","XPD"].includes(asset) ? " · Last historical observation: " + end.slice(11,16) + " UTC" : ""));
 }
 
 function draw() {
@@ -626,6 +631,7 @@ function cryptoRanking() {
 }
 
 const usdCryptoCents = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
+const usdCryptoSmall = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",minimumFractionDigits:4,maximumFractionDigits:4});
 const usdCryptoWhole = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});
 
 function renderCrypto() {
@@ -654,7 +660,7 @@ function renderCrypto() {
     const cells = [
       asset.id === lightchainListing.id ? "—" : String(ranked.indexOf(asset)+1),
       "",
-      isPositive(quote.price) ? (quote.price >= 1 ? usdCryptoCents : cryptoPrice).format(quote.price) : "Quote unavailable",
+      isPositive(quote.price) ? (quote.price < .0001 ? "<" + usdCryptoSmall.format(.0001) : (quote.price >= 1 ? usdCryptoCents : usdCryptoSmall).format(quote.price)) : "Quote unavailable",
       Number.isFinite(change) ? (change > 0 ? "+" : "") + num(change) + "%" : "—",
       isPositive(quote.market_cap) ? usdCryptoWhole.format(quote.market_cap) : "—",
       valid(quote.volume_24h) ? usdCryptoWhole.format(quote.volume_24h) : "—"
@@ -2317,6 +2323,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 

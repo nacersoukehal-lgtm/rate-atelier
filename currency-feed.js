@@ -13,16 +13,20 @@ const currencyFeed = (() => {
   }
 
   async function primary() {
-    const [rows,names] = await Promise.all([
+    const [rows,names,euro] = await Promise.all([
       read(frankfurter+"rates?base=USD","json"),
       directory ?? read(frankfurter+"currencies","json").then(entries =>
-        new Map(entries.filter(entry => entry.type === "currency").map(entry => [entry.iso_code,entry.name])))
+        new Map(entries.filter(entry => entry.type === "currency").map(entry => [entry.iso_code,entry.name]))),
+      read(frankfurter+"providers/ecb/rate/usd/eur","json").catch(() => null)
     ]);
     const available = rows.filter(row => names.has(row.quote) && Number.isFinite(row.rate) && row.rate > 0 &&
       /^\d{4}-\d{2}-\d{2}$/.test(row.date));
     if (!available.length) throw new Error("Frankfurter returned no rates");
     directory = names;
     const rates = new Map([["USD",{rate:1}],...available.map(row => [row.quote,row])]);
+    if (euro?.quote === "EUR" && Number.isFinite(euro.rate) && euro.rate > 0 && /^\d{4}-\d{2}-\d{2}$/.test(euro.date)) {
+      rates.set("EUR",{...euro,source:"ECB via Frankfurter"});
+    }
     return {rates,names:new Map([...rates.keys()].map(code => [code,names.get(code) ?? displayNames.of(code)])),source:"Frankfurter"};
   }
 
@@ -46,3 +50,4 @@ const currencyFeed = (() => {
   }
   return {latest};
 })();
+
