@@ -625,6 +625,9 @@ function cryptoRanking() {
   return kind === "tracked" ? trackedAssets : kind === "meme" ? memeAssets : kind === "micro" ? microAssets : cryptoAssets;
 }
 
+const usdCryptoCents = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
+const usdCryptoWhole = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});
+
 function renderCrypto() {
   const kind = byId("crypto-ranking").value || "major";
   const ranked = cryptoRanking();
@@ -651,10 +654,10 @@ function renderCrypto() {
     const cells = [
       asset.id === lightchainListing.id ? "—" : String(ranked.indexOf(asset)+1),
       "",
-      isPositive(quote.price) ? cryptoPrice.format(quote.price) : "Quote unavailable",
+      isPositive(quote.price) ? (quote.price >= 1 ? usdCryptoCents : cryptoPrice).format(quote.price) : "Quote unavailable",
       Number.isFinite(change) ? (change > 0 ? "+" : "") + num(change) + "%" : "—",
-      isPositive(quote.market_cap) ? compactUSD.format(quote.market_cap) : "—",
-      valid(quote.volume_24h) ? compactUSD.format(quote.volume_24h) : "—"
+      isPositive(quote.market_cap) ? usdCryptoWhole.format(quote.market_cap) : "—",
+      valid(quote.volume_24h) ? usdCryptoWhole.format(quote.volume_24h) : "—"
     ];
     cells.forEach(value => { row.insertCell().textContent = value; });
     row.cells[3].className = change > 0 ? "positive" : change < 0 ? "negative" : "";
