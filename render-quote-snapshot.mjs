@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 export const pages = {
   "gold-price-today.html": "XAU",
   "silver-price-today.html": "XAG",
+  "platinum-price-today.html": "XPT",
+  "palladium-price-today.html": "XPD",
+  "gold-silver-ratio.html": "ratio",
   "usd-to-eur.html": "EUR",
   "eur-to-usd.html": "EURUSD",
   "usd-to-aud.html": "AUD",
@@ -35,7 +38,8 @@ function replaceContent(html,id,content) {
 
 function detail(row) {
   if (row.base) return "Published snapshot · Frankfurter · " + row.date;
-  return "Published snapshot · " + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
+  const stale = !row.source && Date.now() - Date.parse(row.date) > 3600000;
+  return "Published snapshot · " + (stale ? "Stale · " : "") + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
 }
 
 export function renderSnapshot(html,file,quotes) {
@@ -43,7 +47,7 @@ export function renderSnapshot(html,file,quotes) {
     for (const [code,id] of [["XAU","gold"],["XAG","silver"],["EUR","usd"]]) {
       const row = quotes[code];
       if (!valid(row)) continue;
-      html = replaceContent(html,id,code === "EUR" ? "€" + row.value.toFixed(2) : usd.format(row.value));
+      html = replaceContent(html,id,code === "EUR" ? "€" + row.value.toFixed(4) : usd.format(row.value));
       html = replaceContent(html,id+"-time",detail(row));
     }
     const saved = JSON.parse(readFileSync(new URL("./market-quotes.json",import.meta.url),"utf8"));
@@ -77,11 +81,21 @@ export function renderSnapshot(html,file,quotes) {
       html = replaceContent(html,id,valid(row) ? format(row) : "Quote unavailable");
       if (valid(row)) html = replaceContent(html,id+"-time",detail(row));
     }
+    const ratioMove = Number.isFinite(gold?.move) && Number.isFinite(silver?.move) && silver.move > -100
+      ? ((1+gold.move/100)/(1+silver.move/100)-1)*100 : undefined;
+    for (const [id,move] of [["gold",gold?.move],["silver",silver?.move],["platinum",quotes.XPT?.move],
+        ["palladium",quotes.XPD?.move],["copper",benchmark("HG=F")?.move],["ratio",ratio?.value ? ratioMove : undefined]]) {
+      html = replaceContent(html,id+"-move",Number.isFinite(move) ? change({move}) : "");
+    }
     return html;
   }
-  const row = quotes[pages[file]];
+  const gold = quotes.XAU;
+  const silver = quotes.XAG;
+  const row = pages[file] === "ratio" && valid(gold) && valid(silver) && gold.date === silver.date
+    ? {value:gold.value/silver.value,date:gold.date} : quotes[pages[file]];
   if (!valid(row)) return html;
   const price = row.base ? "1 " + row.base + " = " + decimal.format(row.value) + " " + row.quote
+    : pages[file] === "ratio" ? row.value.toFixed(2) + " ounces of silver per ounce of gold"
     : usd.format(row.value) + " per troy oz · " + usd.format(row.value/31.1034768) + " per gram";
   html = replaceContent(html,"landing-quote",price);
   html = replaceContent(html,"landing-source",detail(row));
@@ -96,4 +110,5 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
+
 

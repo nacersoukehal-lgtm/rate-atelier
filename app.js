@@ -157,7 +157,7 @@ function updateQuotes() {
   }
   const eur = rates.get("EUR");
   if (!eur && byId("usd-time").textContent.startsWith("Published snapshot")) return;
-  write("usd", eur ? "€" + cardDecimals.format(eur.rate) : unavailable);
+  write("usd", eur ? "€" + eur.rate.toFixed(4) : unavailable);
   write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
 }
 
@@ -307,7 +307,7 @@ async function renderMetalReferences() {
     byId("metal-reference-rows").replaceChildren(...rows);
     status.hidden = true;
   } catch {
-    status.textContent = "Published metal prices are temporarily unavailable.";
+    if (!byId("metal-reference-rows").children.length) status.textContent = "Published metal prices are temporarily unavailable.";
   }
 }
 
@@ -384,6 +384,7 @@ async function loadMarketHistory(force = false) {
     }
     if (request !== chartRequest) return;
     points = next;
+    if (points.length > 1 && byId("published-gold-chart")) byId("published-gold-chart").hidden = true;
     state.hidden = true;
   } catch {
     if (request !== chartRequest) return;
@@ -1044,6 +1045,8 @@ function renderCalendar() {
     for (const value of [event.actual,event.forecast,event.previous]) row.insertCell().textContent = eventValue(value);
     return row;
   });
+  const calendarHeading = byId("calendar-time-heading");
+  if (calendarHeading) calendarHeading.textContent = "Local time";
   byId("calendar-rows").replaceChildren(...rows);
   byId("calendar-prev").disabled = calendarPage === 0;
   byId("calendar-next").disabled = start+calendarPageSize >= events.length;
@@ -2285,6 +2288,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 

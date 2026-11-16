@@ -163,6 +163,7 @@ function showOverviewTrends() {
   for (const item of overviewTrends) {
     const move = sessionMove(item);
     const value = byId(item.id+"-move");
+    if (!Number.isFinite(move) && value.textContent) continue;
     value.textContent = Number.isFinite(move)
       ? (move > 0 ? "▲ " : move < 0 ? "▼ " : "— ") + percent(move) : "";
     value.className = "quote-move " + (move > 0 ? "positive" : move < 0 ? "negative" : "");
@@ -306,3 +307,4 @@ for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMo
   new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
   render();
 }
+

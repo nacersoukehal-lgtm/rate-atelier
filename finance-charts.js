@@ -37,7 +37,13 @@ const financeHistory = (() => {
       rows => rows.map(row => ({date:row.timestamp,value:row.price})));
   }
 
-  return {fx,metal,bitcoin};
+  async function ratio(days) {
+    const [gold,silver] = await Promise.all([metal("XAU",days),metal("XAG",days)]);
+    const byTime = new Map(silver.map(point => [point.date,point.value]));
+    return gold.filter(point => byTime.has(point.date))
+      .map(point => ({date:point.date,value:point.value/byTime.get(point.date)}));
+  }
+  return {fx,metal,bitcoin,ratio};
 })();
 
 function drawFinanceChart(host,points,format,label) {
@@ -161,8 +167,8 @@ if (assetHistory) {
   const asset = assetHistory.dataset.assetHistory;
   const usdFormat = new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"});
   const currency = ["EUR","DZD"].includes(asset);
-  const format = currency ? new Intl.NumberFormat(undefined,{style:"currency",currency:asset,maximumFractionDigits:5}).format : usdFormat.format;
-  const label = currency ? asset + " per US dollar" : asset === "BTC" ? "Bitcoin price in USD" : "USD per troy ounce";
+  const format = currency ? new Intl.NumberFormat(undefined,{style:"currency",currency:asset,maximumFractionDigits:5}).format : asset === "ratio" ? value => value.toFixed(2)+"×" : usdFormat.format;
+  const label = currency ? asset + " per US dollar" : asset === "BTC" ? "Bitcoin price in USD" : asset === "ratio" ? "Silver ounces per ounce of gold" : "USD per troy ounce";
   const rangeLabel = document.createElement("label");
   rangeLabel.textContent = "History range ";
   const range = document.createElement("select");
@@ -174,7 +180,7 @@ if (assetHistory) {
   const update = mountFinanceHistory(assetHistory,async () => {
     const days = Number(range.value);
     const points = await (asset === "BTC" ? financeHistory.bitcoin(days) :
-      currency ? financeHistory.fx("USD",asset,days) : financeHistory.metal(asset,days));
+      currency ? financeHistory.fx("USD",asset,days) : asset === "ratio" ? financeHistory.ratio(days) : financeHistory.metal(asset,days));
     if (days === 365 && Date.parse(points.at(-1)?.date)-Date.parse(points[0]?.date) < 300*86400000) {
       return {points,format,label:label + " · Partial one-year coverage"};
     }
@@ -183,3 +189,4 @@ if (assetHistory) {
   range.addEventListener("change",update);
   update();
 }
+

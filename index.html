@@ -15,12 +15,12 @@
 <meta name="description" content="Convert currencies, compare money transfer fees, and follow gold, silver, stocks, and crypto. Explore historical charts and estimate gold or silver melt value.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=market-snapshot"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=expanded-snapshot" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script><script src="nfts.js?v=pudgy" defer></script>
+<link rel="stylesheet" href="style.css?v=market-snapshot"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="app.js?v=expanded-snapshot" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script>
 </head>
 <body>
-<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
+<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel">
-<nav class="market-shortcuts" aria-label="Explore markets"><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#nfts">NFTs</a><a href="#news">News</a></nav>
+<nav class="market-shortcuts" aria-label="Explore markets"><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#news">News</a></nav>
 <div class="market-hero"><section class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1>Exchange rates, gold &amp; silver prices.</h1><p>Convert currencies, compare your money transfer quotes, and explore gold and silver price history.</p></div></section><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Currency converter</h2>
 <label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
@@ -30,23 +30,23 @@
 <a class="guide-link" href="./converter-widget.html">Open or embed the converter</a><div class="quick-pairs" aria-label="Popular USD pairs"><button type="button" data-pair="EUR">USD/EUR</button><button type="button" data-pair="GBP">USD/GBP</button><button type="button" data-pair="CAD">USD/CAD</button><button type="button" data-pair="AUD">USD/AUD</button><button type="button" data-pair="DZD">USD/DZD</button></div>
 <a class="guide-link" href="./usd-to-dzd.html">USD to DZD rate &amp; chart →</a>
 </aside>
-<section class="quotes market-snapshot" aria-label="Market snapshot">
-<article><div class="quote-head"><span class="icon gold">Au</span><div><h2><a href="./gold-price-today.html">Gold</a></h2><small>XAU · USD / troy oz</small></div></div><strong id="gold">$3,866.63</strong><div class="quote-trend"><span id="gold-move" class="quote-move"></span><span id="gold-spark" class="quote-spark"></span></div><small id="gold-time">Published snapshot · Standard Bullion · 2026-11-16 01:03 UTC</small><small id="gold-purity-quotes"></small></article>
-<article><div class="quote-head"><span class="icon silver">Ag</span><div><h2><a href="./silver-price-today.html">Silver</a></h2><small>XAG · USD / troy oz</small></div></div><strong id="silver">$48.26</strong><div class="quote-trend"><span id="silver-move" class="quote-move"></span><span id="silver-spark" class="quote-spark"></span></div><small id="silver-time">Published snapshot · Standard Bullion · 2026-11-16 01:03 UTC</small></article>
-<article><div class="quote-head"><span class="icon fx">$</span><div><h2><a href="./usd-to-eur.html">USD/EUR</a></h2><small>Euro per US dollar</small></div></div><strong id="usd">€0.90</strong><div class="quote-trend"><span id="usd-move" class="quote-move"></span><span id="usd-spark" class="quote-spark"></span></div><small id="usd-time">Published snapshot · Frankfurter · 2026-11-16</small></article>
+<section aria-labelledby="market-quotes-title"><h2 id="market-quotes-title">Market quotes</h2><div class="quotes market-snapshot">
+<article><div class="quote-head"><span class="icon gold">Au</span><div><h3><a href="./gold-price-today.html">Gold</a></h3><small>XAU · USD / troy oz</small></div></div><strong id="gold">$3,866.63</strong><div class="quote-trend"><span id="gold-move" class="quote-move"></span><span id="gold-spark" class="quote-spark"></span></div><small id="gold-time">Published snapshot · Standard Bullion · 2026-11-16 01:03 UTC</small><small id="gold-purity-quotes"></small></article>
+<article><div class="quote-head"><span class="icon silver">Ag</span><div><h3><a href="./silver-price-today.html">Silver</a></h3><small>XAG · USD / troy oz</small></div></div><strong id="silver">$48.26</strong><div class="quote-trend"><span id="silver-move" class="quote-move"></span><span id="silver-spark" class="quote-spark"></span></div><small id="silver-time">Published snapshot · Standard Bullion · 2026-11-16 01:03 UTC</small></article>
+<article><div class="quote-head"><span class="icon fx">$</span><div><h3><a href="./usd-to-eur.html">USD/EUR</a></h3><small>Euro per US dollar</small></div></div><strong id="usd">€0.9031</strong><div class="quote-trend"><span id="usd-move" class="quote-move"></span><span id="usd-spark" class="quote-spark"></span></div><small id="usd-time">Published snapshot · Frankfurter · 2026-11-16</small></article>
 </section>
 </div>
 
 <section class="quotes more-metals additional-quotes" aria-label="More metal quotes">
-<article><div class="quote-head"><span class="icon ratio">÷</span><div><h2>Gold / Silver</h2><small>Troy ounce ratio</small></div></div><strong id="ratio">Loading quote…</strong><div class="quote-trend"><span id="ratio-move" class="quote-move"></span><span id="ratio-spark" class="quote-spark"></span></div><small id="ratio-time">Silver ounces per ounce of gold</small></article>
-<article><div class="quote-head"><span class="icon silver">Pt</span><div><h2>Platinum</h2><small>XPT · USD / troy oz</small></div></div><strong id="platinum">Loading quote…</strong><div class="quote-trend"><span id="platinum-move" class="quote-move"></span><span id="platinum-spark" class="quote-spark"></span></div><small id="platinum-time">Standard Bullion</small></article>
-<article><div class="quote-head"><span class="icon silver">Pd</span><div><h2>Palladium</h2><small>XPD · USD / troy oz</small></div></div><strong id="palladium">Loading quote…</strong><div class="quote-trend"><span id="palladium-move" class="quote-move"></span><span id="palladium-spark" class="quote-spark"></span></div><small id="palladium-time">Standard Bullion</small></article>
-<article><div class="quote-head"><span class="icon copper">Cu</span><div><h2>Copper futures</h2><small>COMEX HG · USD / lb</small></div></div><strong id="copper">Loading quote…</strong><div class="quote-trend"><span id="copper-move" class="quote-move"></span><span id="copper-spark" class="quote-spark"></span></div><small id="copper-time">Yahoo Finance</small></article>
-</section>
+<article><div class="quote-head"><span class="icon ratio">÷</span><div><h3><a href="./gold-silver-ratio.html">Gold / Silver</a></h3><small>Troy ounce ratio</small></div></div><strong id="ratio">Loading quote…</strong><div class="quote-trend"><span id="ratio-move" class="quote-move"></span><span id="ratio-spark" class="quote-spark"></span></div><small id="ratio-time">Silver ounces per ounce of gold</small></article>
+<article><div class="quote-head"><span class="icon silver">Pt</span><div><h3><a href="./platinum-price-today.html">Platinum</a></h3><small>XPT · USD / troy oz</small></div></div><strong id="platinum">Loading quote…</strong><div class="quote-trend"><span id="platinum-move" class="quote-move"></span><span id="platinum-spark" class="quote-spark"></span></div><small id="platinum-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon silver">Pd</span><div><h3><a href="./palladium-price-today.html">Palladium</a></h3><small>XPD · USD / troy oz</small></div></div><strong id="palladium">Loading quote…</strong><div class="quote-trend"><span id="palladium-move" class="quote-move"></span><span id="palladium-spark" class="quote-spark"></span></div><small id="palladium-time">Standard Bullion</small></article>
+<article><div class="quote-head"><span class="icon copper">Cu</span><div><h3>Copper futures</h3><small>COMEX HG · USD / lb</small></div></div><strong id="copper">Loading quote…</strong><div class="quote-trend"><span id="copper-move" class="quote-move"></span><span id="copper-spark" class="quote-spark"></span></div><small id="copper-time">Yahoo Finance</small></article>
+</div></section>
 <div class="market-workspace market-history"><section class="chart" aria-labelledby="chart-title">
 <div class="chart-head"><div><div class="eyebrow">HISTORICAL PRICES</div><h2 id="chart-title">Market performance</h2></div><div class="chart-controls"><label class="sr" for="series">Asset</label><select id="series"><option value="XAU">Gold · XAU</option><option value="XAG">Silver · XAG</option><option value="XPT">Platinum · XPT</option><option value="XPD">Palladium · XPD</option><option value="HG">Copper futures · HG</option><optgroup label="Forex reference rates"><option value="FX">USD / EUR</option><option value="FX:EUR/USD">EUR / USD</option><option value="FX:GBP/USD">GBP / USD</option><option value="FX:USD/JPY">USD / JPY</option><option value="FX:USD/CAD">USD / CAD</option><option value="FX:AUD/USD">AUD / USD</option><option value="FX:USD/CHF">USD / CHF</option><option value="FX:EUR/GBP">EUR / GBP</option><option value="FX:USD/DZD">USD / DZD</option></optgroup><optgroup label="Metal benchmarks"><option value="REF:RH">Rhodium</option><option value="REF:RU">Ruthenium</option><option value="REF:IR">Iridium</option><option value="REF:OS">Osmium</option><option value="REF:NI">Nickel</option><option value="REF:ZN">Zinc</option><option value="REF:AL">Aluminum</option><option value="REF:SN">Tin</option><option value="REF:PB">Lead</option><option value="REF:CO">Cobalt</option><option value="REF:LI">Lithium</option><option value="REF:MO">Molybdenum</option><option value="REF:W">Tungsten</option></optgroup></select><div class="period" aria-label="Chart range"><button data-range="24h" aria-pressed="false">1D</button><button data-range="7d" aria-pressed="false">1W</button><button data-range="1m" aria-pressed="true">1M</button><button data-range="1y" aria-pressed="false">1Y</button><button data-range="max" aria-pressed="false">All</button></div></div></div>
 <div class="chart-shortcuts" aria-label="Featured markets"><button type="button" data-chart-asset="XAU">Gold</button><button type="button" data-chart-asset="XAG">Silver</button><button type="button" data-chart-asset="FX:EUR/USD">Forex</button><a href="#metal-benchmarks">More metals ↓</a></div>
-<div id="chart-summary" class="chart-summary" hidden><strong id="chart-value"></strong><span id="chart-change"></span><small id="chart-date"></small></div><div class="plot"><canvas id="chart" tabindex="0" role="img" aria-label="Historical chart. Use the left and right arrow keys to inspect values."></canvas><span id="chart-point" class="chart-point" hidden></span><p id="chart-state" role="status">Loading historical prices…</p></div><div id="chart-source" class="chart-source"></div>
+<div id="chart-summary" class="chart-summary" hidden><strong id="chart-value"></strong><span id="chart-change"></span><small id="chart-date"></small></div><div class="plot"><canvas id="chart" tabindex="0" role="img" aria-label="Historical chart. Use the left and right arrow keys to inspect values."></canvas><span id="chart-point" class="chart-point" hidden></span><p id="chart-state" role="status">Loading historical prices…</p></div><div id="chart-source" class="chart-source"></div><div id="published-gold-chart"></div>
 </section>
 </div>
 <section id="metal-benchmarks" class="panel metal-benchmarks" aria-labelledby="metal-benchmarks-title">
@@ -100,63 +100,6 @@
 <p id="crypto-state" class="crypto-state" role="status">Loading crypto markets…</p>
 <div class="table-foot"><small><a id="crypto-source" href="https://coinpaprika.com/">CoinPaprika</a><span id="crypto-time"></span></small><div class="pager"><button id="crypto-prev" disabled aria-label="Previous crypto page">‹</button><span id="crypto-page">—</span><button id="crypto-next" disabled aria-label="Next crypto page">›</button></div></div>
 </div></section>
-<section id="nfts" class="tools tab-panel" hidden>
-<h2>NFT collections</h2>
-<p class="stocks-intro">Browse up to 100 Solana NFT collections ranked by seven-day trading volume on Magic Eden.</p>
-<section class="panel" aria-labelledby="nft-discovery-title">
-<h3 id="nft-discovery-title">Explore more NFT collections</h3>
-<p>Browse collections by category. Market prices and trading activity are shown in the tables with supported feeds.</p>
-<details>
-<summary>Sports</summary>
-<ul>
-<li><strong>NBA and WNBA Top Shot</strong><p>Officially licensed basketball highlights sold as numbered Moments on Flow. <a href="https://about.nbatopshot.com/" target="_blank" rel="noopener noreferrer" aria-label="Collection source for NBA and WNBA Top Shot">Collection source</a></p></li>
-<li><strong>NFL ALL DAY</strong><p>Digital collectibles featuring NFL game highlights. <a href="https://www.meetdapper.com/sports" target="_blank" rel="noopener noreferrer" aria-label="Collection source for NFL ALL DAY">Collection source</a></p></li>
-<li><strong>UFC Strike</strong><p>Digital collectibles built around UFC fight highlights. <a href="https://www.meetdapper.com/sports" target="_blank" rel="noopener noreferrer" aria-label="Collection source for UFC Strike">Collection source</a></p></li>
-<li><strong>LaLiga Golazos</strong><p>Digital football collectibles featuring moments from Spain’s LaLiga. <a href="https://www.meetdapper.com/sports" target="_blank" rel="noopener noreferrer" aria-label="Collection source for LaLiga Golazos">Collection source</a></p></li>
-<li><strong>Sorare Football, NBA and MLB</strong><p>Digital player cards that collectors can use in Sorare competitions. <a href="https://sorare.com/help/a/4402780446097/what-is-a-sorare-card" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Sorare Football, NBA and MLB">Collection source</a></p></li>
-</ul>
-</details>
-<details>
-<summary>Famous people</summary>
-<ul>
-<li><strong>Cristiano Ronaldo · The CR7 NFT Collection</strong><p>The 2022 release depicts moments from Ronaldo’s career as animated statues. <a href="https://www.binance.com/en/support/announcement/detail/b38a53e88a1f45b9b448215bef28471b" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Cristiano Ronaldo · The CR7 NFT Collection">Collection source</a></p></li>
-<li><strong>Cristiano Ronaldo · ForeverCR7</strong><p>A 2023 release featuring milestones from Ronaldo’s goal-scoring career. <a href="https://www.binance.com/en/support/announcement/detail/03abd1030f0e4fc1b325b94c81f4d14e" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Cristiano Ronaldo · ForeverCR7">Collection source</a></p></li>
-<li><strong>Snoop Dogg · A Journey with the Dogg</strong><p>Snoop Dogg’s first NFT collection, announced by Crypto.com in 2021. <a href="https://www.prnewswire.com/news-releases/snoop-dogg-announces-the-release-of-his-first-nft-collection-a-journey-with-the-dogg-301259014.html" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Snoop Dogg · A Journey with the Dogg">Collection source</a></p></li>
-</ul>
-</details>
-<details>
-<summary>Politics and history</summary>
-<ul>
-<li><strong>Trump Digital Trading Cards</strong><p>A series of digital trading cards featuring Donald Trump. <a href="https://www.collecttrumpcards.com/" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Trump Digital Trading Cards">Collection source</a></p></li>
-<li><strong>Meta History · Warline</strong><p>An Ethereum art collection documenting events in Ukraine through news reports and artists’ interpretations. <a href="https://www.kmu.gov.ua/en/news/mincifri-zapustili-pershij-v-ukrayini-nft-muzej-vijni" target="_blank" rel="noopener noreferrer" aria-label="Collection source for Meta History · Warline">Collection source</a></p></li>
-</ul>
-</details>
-</section>
-
-<div class="calendar-filters stock-filters">
-<label>Find a collection<input id="nft-search" type="search" placeholder="Collection name"></label>
-<label>Sort by<select id="nft-sort"><option value="volume7d">7-day volume</option><option value="floorPrice">Floor price</option><option value="listedCount">Listed items</option><option value="name">Collection name</option></select></label>
-<button id="nft-refresh" class="secondary-action" type="button">Refresh NFT data</button>
-</div>
-<article id="pudgy-feature" class="panel" hidden>
-<div class="nft-identity"><img id="pudgy-art" class="nft-artwork" width="62" height="62" alt="">
-<div><button id="pudgy-open" type="button" class="coin-open" aria-haspopup="dialog">Pudgy Penguins</button>
-<small>Ethereum NFT collection</small><strong id="pudgy-floor"></strong><small id="pudgy-time"></small></div></div>
-</article>
-<div class="nft-table" role="region" aria-label="NFT collection quotes" tabindex="0"><table>
-<thead><tr><th scope="col">Collection</th><th scope="col">Floor price</th><th scope="col">Listed items</th><th scope="col">7-day transactions</th><th scope="col">7-day volume</th><th scope="col">Fetched</th></tr></thead>
-<tbody id="nft-rows"></tbody></table></div>
-<div class="table-foot"><div class="pager"><button id="nft-prev" aria-label="Previous NFT collections" disabled>‹</button><span id="nft-page" aria-live="polite">—</span><button id="nft-next" aria-label="Next NFT collections" disabled>›</button></div></div>
-<p id="nft-empty" class="crypto-state" hidden>No Solana collections match your search.</p>
-<p id="nft-status" class="crypto-state" role="status">Loading NFT collections…</p>
-<small>Floor price is the lowest listed asking price. A dash indicates unavailable data.</small>
-</section>
-<dialog id="nft-profile" class="coin-profile" aria-labelledby="nft-profile-title">
-<form method="dialog" class="nft-dialog-close"><button class="secondary-action" aria-label="Close NFT profile">Close</button></form>
-<div id="nft-profile-artwork"></div><h2 id="nft-profile-title"></h2><p id="nft-profile-description"></p>
-<dl id="nft-profile-metrics" class="coin-records"></dl>
-<small id="nft-profile-time"></small>
-</dialog>
 <section id="calendar" class="tools tab-panel">
 <h2>Economic calendar</h2>
 <p class="stocks-intro">Follow central bank decisions, inflation releases, and jobs reports. Times are shown in your local time zone.</p>
@@ -275,6 +218,7 @@
 <nav aria-label="About and policies"><strong>About Rate Atelier</strong><a href="#about">Data sources</a><a href="./site-information.html#contact">Contact</a><a href="./site-information.html#privacy">Privacy</a><a href="./site-information.html#disclaimer">Disclaimer</a><a href="./site-information.html#terms">Terms</a></nav>
 </div></footer>
 </body></html>
+
 
 
 
