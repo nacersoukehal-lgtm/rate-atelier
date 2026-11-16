@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compare money transfer quotes | Rate Atelier</title>
+<meta name="description" content="Compare two international money transfer quotes by the amount your recipient gets after fees.">
+<link rel="canonical" href="https://getrateatelier.com/compare-transfer-quotes.html">
+<link rel="stylesheet" href="./style.css">
+<script src="./shared-calculations.js" defer></script>
+<script src="./tool-pages.js" defer></script>
+</head><body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><nav aria-label="Site navigation"><a href="./">Home</a><a href="./melt-value-calculator.html">Melt calculator</a><a href="./compare-transfer-quotes.html">Compare quotes</a></nav></div></header>
+<main class="wrap"><article class="landing-page">
+<h1>Compare money transfer quotes</h1>
+<p>Enter the exchange rate and fees from each provider’s quote. The calculator compares what the recipient gets when you spend the same total amount.</p>
+<section class="panel" id="standalone-transfer" aria-label="Transfer quote calculator"><div class="fields"><label>Total budget<input id="budget" type="number" min="0" step="any" value="500"></label><label>Sending<select id="send"><option>USD</option></select></label><label>Receiving<select id="receive"><option>EUR</option></select></label></div>
+<div class="tool-grid offers"><fieldset><legend>Offer A</legend><div class="fields"><label>Provider<select id="provider-a"><option value="">Offer A</option><option>Wise</option><option>Remitly</option><option>Western Union</option><option>Bank</option><option>Other provider</option></select></label><label>Quoted rate<input id="rate-a" type="number" min="0" step="any" placeholder="e.g. 0.88"></label><label>Fee<input id="fee-a" type="number" min="0" step="any" value="0"></label></div><output id="offer-a">—</output><small id="effective-a"></small></fieldset><fieldset><legend>Offer B</legend><div class="fields"><label>Provider<select id="provider-b"><option value="">Offer B</option><option>Wise</option><option>Remitly</option><option>Western Union</option><option>Bank</option><option>Other provider</option></select></label><label>Quoted rate<input id="rate-b" type="number" min="0" step="any" placeholder="e.g. 0.90"></label><label>Fee<input id="fee-b" type="number" min="0" step="any" value="0"></label></div><output id="offer-b">—</output><small id="effective-b"></small></fieldset></div><small id="offer-units"></small><p class="verdict" id="verdict" role="status"></p></section>
+<h2>Compare the same transfer</h2>
+<p>Use the same currencies, payment method, and delivery method for both quotes. Enter only fees deducted from your total budget. If a charge is paid separately, include it in the total budget first. Check the provider’s final payout for any recipient-side charges.</p>
+<p><a href="./wise-vs-remitly.html">Compare Wise and Remitly</a> · <a href="./wise-vs-remitly-us-to-mexico.html">Wise vs Remitly for the U.S. to Mexico</a></p></article></main>
+<footer><div class="wrap"><a href="./site-information.html#privacy">Privacy</a> · <a href="./#blog">Rate Atelier guides</a></div></footer></body></html>

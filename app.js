@@ -35,7 +35,7 @@ function saveQuotes(key,value) {
 const metals = new Map(readQuotes("metals",[]).map(([code,quote]) => [code,{...quote,stale:true}]));
 let dollarIndex = readQuotes("dollar",null);
 if (dollarIndex) dollarIndex.stale = true;
-const seriesCache = new Map();
+const seriesCache = new Map(readQuotes("chart-history-v1",[]));
 const goldPurities = [["18K", .75], ["24K", 1], ["22K", 22/24], ["21K", 21/24], ["14K", 14/24], ["10K", 10/24], ["9K", 9/24]];
 const silverPurities = [["Sterling · 92.5%", .925], ["Fine · 99.9%", .999], ["Coin silver · 90%", .9], ["Pure · 100%", 1]];
 let points = [];
@@ -178,7 +178,7 @@ function calculateMetal() {
   const unit = +byId("weight-unit").value;
   const purity = +byId("purity").value;
   const unitPrice = quote?.price * rate(currency) * unit / ouncesInGrams;
-  write("melt", format(valid(weight) ? unitPrice * weight * purity : NaN,currency));
+  write("melt", format(rateAtelierMath.meltValue(quote?.price * rate(currency),weight,unit,purity),currency));
   const unitName = {"1":"g","31.1034768":"troy oz","1000":"kg"}[unit];
   write("metal-detail", isPositive(unitPrice) ? money(unitPrice,currency) + " / " + unitName + " pure · " + metalDetail(byId("metal").value,quote) : "Price or exchange rate unavailable.");
 }
@@ -190,7 +190,7 @@ function compare() {
   const amounts = ["a","b"].map(offer => {
     const fee = input("fee-" + offer);
     const quoted = input("rate-" + offer);
-    const received = valid(budget) && valid(fee) && fee <= budget && isPositive(quoted) ? (budget - fee) * quoted : NaN;
+    const received = rateAtelierMath.transferPayout(budget,fee,quoted);
     write("offer-" + offer,format(received,receive));
     write("effective-" + offer,Number.isFinite(received) && budget > 0 ? "Effective rate: " + num(received/budget,6) + " " + receive + " per " + send : "");
     return received;
@@ -342,13 +342,15 @@ async function loadMarketHistory(force = false) {
   const selectedRange = range;
   const key = asset + selectedRange;
   const state = byId("chart-state");
+  const retry = byId("chart-retry");
+  retry.hidden = true;
   const cached = seriesCache.get(key);
   const fallback = byId("published-gold-chart");
   if (fallback) fallback.hidden = asset !== "XAU" || selectedRange !== "1m" || (force && points.length > 1);
   if (!force || !points.length) {
-    state.hidden = false;
+    points = cached?.points ?? [];
+    state.hidden = points.length > 1 || !!fallback?.querySelector("svg") && !fallback.hidden;
     state.textContent = "Loading historical prices…";
-    points = [];
     updateChartSummary(asset);
     draw();
   }
@@ -384,7 +386,10 @@ async function loadMarketHistory(force = false) {
         next = next.filter(point => Date.parse(point.date) >= cutoff);
       }
       if (next.length < 2) throw new Error("Insufficient historical data");
+      seriesCache.delete(key);
       seriesCache.set(key,{points:next,saved:Date.now()});
+      if (seriesCache.size > 8) seriesCache.delete(seriesCache.keys().next().value);
+      saveQuotes("chart-history-v1",[...seriesCache].map(([id,data]) => [id,{...data,points:data.points.length <= 450 ? data.points : data.points.filter((_,index) => index % Math.ceil(data.points.length/450) === 0 || index === data.points.length-1)}]));
     }
     if (request !== chartRequest) return;
     points = next;
@@ -392,9 +397,13 @@ async function loadMarketHistory(force = false) {
   } catch {
     if (request !== chartRequest) return;
     points = cached?.points ?? [];
-    state.hidden = !!points.length;
+    if (!points.length && fallback?.querySelector("svg") && asset === "XAU" && selectedRange === "1m") fallback.hidden = false;
+    const published = !!fallback?.querySelector("svg") && !fallback.hidden;
+    state.hidden = !!points.length || published;
     state.textContent = "Historical prices are temporarily unavailable.";
-    if (points.length) byId("chart-source").append(" · Showing saved history");
+    if (points.length) byId("chart-source").append(" · Refresh failed. Saved history through " + dateOnly(points.at(-1).date) + ".");
+    else if (published) byId("chart-source").append(" · Refresh failed. Showing the published chart below.");
+    retry.hidden = false;
   }
   updateChartSummary(asset);
   draw();
@@ -526,6 +535,7 @@ function clearChartInspection() {
   byId("chart-point").hidden = true;
   draw();
 }
+byId("chart-retry").addEventListener("click",() => loadMarketHistory(true));
 byId("chart").addEventListener("pointermove",event => {
   if (!chartPosition) return;
   const {first,last,left,right} = chartPosition;
@@ -2323,6 +2333,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 

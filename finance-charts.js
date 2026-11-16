@@ -149,20 +149,48 @@ function drawFinanceChart(host,points,format,label,gaps = false) {
   host.replaceChildren(svg,inspection,caption,details);
 }
 
-function mountFinanceHistory(host,read) {
+function mountFinanceHistory(host,read,selection = () => "") {
   let revision = 0;
-  return async () => {
+  let shownKey;
+  const recent = new Map();
+  const status = document.createElement("p");
+  status.setAttribute("role","status");
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "secondary-action";
+  retry.textContent = "Retry chart";
+  retry.hidden = true;
+  host.after(status,retry);
+  async function update() {
     const request = ++revision;
-    host.textContent = "Loading history…";
-    try {
-      const {points,format,label,gaps} = await read();
-      if (request !== revision) return;
-      if (points.length < 2) throw new Error("Insufficient history");
-      drawFinanceChart(host,points,format,label,gaps);
-    } catch {
-      if (request === revision) host.textContent = "History is unavailable for this selection.";
+    const key = selection();
+    const saved = recent.get(key);
+    if (key !== shownKey) {
+      if (saved) drawFinanceChart(host,saved.points,saved.format,saved.label,saved.gaps);
+      else host.replaceChildren();
+      shownKey = key;
     }
-  };
+    status.textContent = saved ? "Checking for newer history…" : "Loading history…";
+    retry.hidden = true;
+    try {
+      const data = await read();
+      if (request !== revision) return;
+      if (data.points.length < 2) throw Error("Insufficient history");
+      drawFinanceChart(host,data.points,data.format,data.label,data.gaps);
+      recent.delete(key);
+      recent.set(key,data);
+      if (recent.size > 8) recent.delete(recent.keys().next().value);
+      status.textContent = "";
+    } catch {
+      if (request !== revision) return;
+      status.textContent = saved ? "Refresh failed. Showing saved history through " +
+        new Date(saved.points.at(-1).date).toISOString().slice(0,10) + " (UTC)." :
+        "History is temporarily unavailable for this selection.";
+      retry.hidden = false;
+    }
+  }
+  retry.addEventListener("click",update);
+  return update;
 }
 
 const assetHistory = document.querySelector("[data-asset-history]");
@@ -190,9 +218,10 @@ if (assetHistory) {
       return {points,format,label:label + " · Partial one-year coverage",gaps};
     }
     return {points,format,label,gaps};
-  });
+  },() => range.value);
   range.addEventListener("change",update);
   update();
 }
+
 
 

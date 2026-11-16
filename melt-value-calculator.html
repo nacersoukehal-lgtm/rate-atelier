@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold and silver melt value calculator | Rate Atelier</title>
+<meta name="description" content="Estimate gold, silver, platinum, or palladium melt value from weight, purity, and the latest available reference price.">
+<link rel="canonical" href="https://getrateatelier.com/melt-value-calculator.html">
+<link rel="stylesheet" href="./style.css">
+<script src="./shared-calculations.js" defer></script>
+<script src="./finance-charts.js" defer></script>
+<script src="./tool-pages.js" defer></script>
+</head><body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><nav aria-label="Site navigation"><a href="./">Home</a><a href="./melt-value-calculator.html">Melt calculator</a><a href="./compare-transfer-quotes.html">Compare quotes</a></nav></div></header>
+<main class="wrap"><article class="landing-page">
+<h1>Gold and silver melt value calculator</h1>
+<p>Estimate the value of the metal in jewelry, coins, and bars. Use the weight of the metal itself and select its purity.</p>
+<section class="panel" id="standalone-melt" aria-label="Precious metals melt calculator">
+<div class="fields">
+<label>Metal<select id="melt-metal"><option value="XAU">Gold</option><option value="XAG">Silver</option><option value="XPT">Platinum</option><option value="XPD">Palladium</option></select></label>
+<label>Purity<select id="melt-purity"><option value="0.75">18K</option></select></label>
+<label>Weight<input id="melt-weight" type="number" inputmode="decimal" min="0" step="any" value="10"></label>
+<label>Weight unit<select id="melt-unit"><option value="1">Grams</option><option value="31.1034768">Troy ounces</option><option value="1000">Kilograms</option></select></label>
+</div>
+<label>Reference price override in USD per troy ounce (optional)<input id="melt-price" type="number" inputmode="decimal" min="0" step="any" placeholder="Use the published quote"></label>
+<output id="melt-answer" aria-live="polite">—</output><small id="melt-source" role="status">Checking the reference price…</small>
+<details class="finance-history"><summary>30-day reference price history</summary><div id="melt-history" class="finance-chart"></div></details>
+</section>
+<h2>How melt value is calculated</h2>
+<p>Weight × purity × price per unit gives the estimated value of the metal. A 10-gram 18K gold item contains about 7.5 grams of gold. Stones and other materials should be excluded from the weight. Dealer payouts may include deductions for testing, refining, or resale.</p>
+<p><a href="./gold-price-today.html">Gold price today</a> · <a href="./silver-price-today.html">Silver price today</a></p></article></main>
+<footer><div class="wrap"><a href="./site-information.html#privacy">Privacy</a> · <a href="./#blog">Rate Atelier guides</a></div></footer></body></html>

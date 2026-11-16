@@ -39,7 +39,7 @@ const fxChart = mountFinanceHistory(calc("fx-tool-chart"),async () => {
   if (!Number.isFinite(amount) || amount < 0) throw new Error("Invalid amount");
   const points = (await financeHistory.fx(from,to)).map(row => ({...row,value:row.value*amount}));
   return {points,format:value => money(value,to),label:"Historical value of " + money(amount,from) + " in " + to};
-});
+},() => JSON.stringify(["from","to","amount"].map(id => calc(id).value)));
 const meltChart = mountFinanceHistory(calc("melt-tool-chart"),async () => {
   const metal = calc("metal").value;
   const currency = calc("metal-currency").value;
@@ -53,7 +53,7 @@ const meltChart = mountFinanceHistory(calc("melt-tool-chart"),async () => {
     if (index >= 0) points.push({date:row.date,value:row.value*fx[index].value*ounces});
   }
   return {points,format:value => money(value,currency),label:"Estimated historical melt value in " + currency};
-});
+},() => JSON.stringify(["metal","metal-currency","weight","weight-unit","purity"].map(id => calc(id).value)));
 
 for (const [panel,refreshChart,ids,buttons] of [
   [fxPanel,fxChart,["from","to","amount"],["swap","quick-aud"]],
@@ -64,3 +64,4 @@ for (const [panel,refreshChart,ids,buttons] of [
   for (const id of ids) calc(id).addEventListener("input",refresh);
   for (const id of buttons) calc(id).addEventListener("click",refresh);
 }
+
