@@ -32,15 +32,21 @@ export function fxQuotes(rows) {
 }
 
 function replaceContent(html,id,content) {
-  const pattern = new RegExp('(<[\\w-]+\\b[^>]*\\bid="' + id + '"[^>]*>)[\\s\\S]*?(</[\\w-]+>)');
+  const pattern = new RegExp('(<([\\w-]+)\\b[^>]*\\bid="' + id + '"[^>]*>)[\\s\\S]*?(</\\2>)');
   if (!pattern.test(html)) throw new Error("Missing element " + id);
-  return html.replace(pattern,(_,open,close) => open + content + close);
+  return html.replace(pattern,(_,open,tag,close) => open + content + close);
 }
 
 function detail(row) {
-  if (row.base) return "Published snapshot · " + (row.source ?? "Frankfurter") + " · " + row.date;
-  const stale = !row.source && Date.now() - Date.parse(row.date) > 3600000;
-  return "Published snapshot · " + (stale ? "Stale · " : "") + (row.source ?? "Standard Bullion") + " · " + new Date(row.date).toISOString().slice(0,16).replace("T"," ") + " UTC";
+  const date = new Date(row.date).toISOString();
+  const isDay = /^\d{4}-\d{2}-\d{2}$/.test(row.date);
+  const datetime = isDay ? row.date : date;
+  const observation = isDay ? row.date : date.slice(0,16).replace("T"," ") + " UTC";
+  const stale = !row.base && !row.source && Date.now() - Date.parse(row.date) > 3600000;
+  const source = (row.source ?? (row.base ? "Frankfurter" : "Standard Bullion")).replace(/[&<>]/g,
+    char => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[char]));
+  return "Published snapshot · " + (stale ? "Stale · " : "") + source + ' · <time datetime="' +
+    datetime + '">' + observation + "</time>";
 }
 
 function benchmark(symbol) {
@@ -113,6 +119,7 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
+
 
 
 

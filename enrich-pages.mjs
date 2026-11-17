@@ -13,6 +13,10 @@ function date(value) {
   const time = typeof value === "number" ? value : Date.parse(value);
   return Number.isFinite(time) ? new Date(time).toISOString().slice(0,16).replace("T"," ") + " UTC" : "";
 }
+function observation(value) {
+  const text = date(value);
+  return text ? '<time datetime="' + new Date(value).toISOString() + '">' + escape(text) + "</time>" : "";
+}
 const money = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:8});
 const cents = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
 const smallUSD = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:4,maximumFractionDigits:4});
@@ -156,7 +160,7 @@ const stocks = Object.entries(names).flatMap(([symbol,name]) => {
   if (q?.symbol !== symbol || !positive(q.regularMarketPrice) || !positive(q.regularMarketTime)) return [];
   const price = value => positive(value) ? number.format(value) + (q.instrumentType === "INDEX" ? "" : " " + (q.currency ?? "")) : "—";
   return ['<tr><th scope="row">' + escape(name) + '<small>' + escape(symbol) + '</small></th><td>' +
-    escape(price(q.regularMarketPrice)) + '<small>' + escape(date(q.regularMarketTime*1000)) + '</small></td><td>' +
+    escape(price(q.regularMarketPrice)) + '<small>' + observation(q.regularMarketTime*1000) + '</small></td><td>' +
     escape(change(q.regularMarketChangePercent)) + '</td><td>' + escape(price(q.regularMarketDayHigh)) +
     '</td><td>' + escape(price(q.regularMarketDayLow)) + '</td></tr>'];
 });
@@ -187,7 +191,8 @@ if (Array.isArray(coins)) {
     home = put(home,"crypto-rows",rows.map((coin,index) => {
       const q = coin.quotes.USD;
       return td([index+1,coin.name + " (" + coin.symbol + ")",(q.price < .0001 ? "<$0.0001" : (q.price >= 1 ? cents : smallUSD).format(q.price))+" · "+date(coin.last_updated),
-        change(q.percent_change_24h),wholeUSD.format(q.market_cap),positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"]);
+        change(q.percent_change_24h),wholeUSD.format(q.market_cap),positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"])
+        .replace(escape(date(coin.last_updated)),observation(coin.last_updated));
     }).join(""));
     home = put(home,"crypto-state","Top 10 snapshot by market cap · CoinPaprika");
     home = put(home,"crypto-method","Top 10 snapshot by market cap. The interactive ranking expands to 50 when its feed loads.");
@@ -200,9 +205,11 @@ if (Array.isArray(events)) {
   if (rows.length) {
     home = put(home,"calendar-rows",rows.map(event => td([
       date(event.time),event.title+" · "+event.currency,event.actual || "—",event.forecast || "—",event.previous || "—"
-    ])).join(""));
+    ]).replace("<td>"+escape(date(event.time))+"</td>","<td>"+observation(event.time)+"</td>")).join(""));
     home = home.replace("<th scope=\"col\">Local time</th>","<th scope=\"col\" id=\"calendar-time-heading\">Time (UTC in snapshot)</th>");
     home = put(home,"calendar-status","Published schedule · ShowMyTrades");
+    home = put(home,"calendar-source","ShowMyTrades · " + rows.length + " displayed · " +
+      observation(rows[0].time) + " to " + observation(rows.at(-1).time));
   }
 }
 
@@ -233,8 +240,10 @@ function spark(rows,label,width,height,gaps = false) {
     const y = max === min ? height/2 : height-2-(height-4)*(row.price-min)/(max-min);
     return (start ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
   }).join(" ");
-  return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escape(label) +
-    '"><path fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" d="' + path + '"/></svg>';
+  const display = label + " · " + rows[0].time.slice(0,10) + " to " + rows.at(-1).time.slice(0,10) +
+    " · Change " + change((prices.at(-1)/prices[0]-1)*100);
+  return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + escape(display) +
+    '"><title>' + escape(display) + '</title><path fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" d="' + path + '"/></svg>';
 }
 const bullionSparks = new Set(["gold","silver","ratio","platinum","palladium"]);
 const weekdays = rows => rows.filter(row => ![0,6].includes(new Date(row.time).getUTCDay()));
@@ -257,6 +266,7 @@ if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
   home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100));
 }
 await write("index.html",home);
+
 
 
 

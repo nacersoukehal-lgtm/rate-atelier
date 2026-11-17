@@ -120,6 +120,21 @@ const num = (value, digits = 2) => new Intl.NumberFormat(undefined, { maximumFra
 const money = (value, currency) => new Intl.NumberFormat(undefined, { style:"currency", currency, currencyDisplay:"code" }).format(value);
 const dateOnly = date => new Date(date.slice(0,10) + "T00:00:00Z").toLocaleDateString(undefined, {month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});
 const timestamp = date => new Date(date).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"});
+function stampObservation(element,detail,observation) {
+  const time = Date.parse(observation);
+  const isDay = /^\d{4}-\d{2}-\d{2}$/.test(observation ?? "");
+  const label = Number.isFinite(time) ? (isDay ? dateOnly(observation) : timestamp(time)) : "";
+  const position = label ? detail.lastIndexOf(label) : -1;
+  if (position < 0) {
+    element.textContent = detail;
+    return;
+  }
+  const stamp = document.createElement("time");
+  stamp.dateTime = isDay ? observation : new Date(time).toISOString();
+  stamp.textContent = label;
+  element.replaceChildren(detail.slice(0,position),stamp,detail.slice(position+label.length));
+}
+
 function quoteDetail(quote,source = "",maxAge = 0) {
   const time = Date.parse(quote?.date);
   const stale = quote?.stale || (maxAge && Number.isFinite(time) && Date.now()-time > maxAge);
@@ -145,20 +160,20 @@ function updateQuotes() {
     const metal = metals.get(code);
     if (!metal && byId(id + "-time")?.textContent.startsWith("Published snapshot")) continue;
     write(id, metal ? metalPrice(code,metal.price) : unavailable);
-    write(id + "-time", metal ? metalDetail(code,metal) : metalSource(code));
+    stampObservation(byId(id + "-time"),metal ? metalDetail(code,metal) : metalSource(code),metal?.date);
   }
   const gold = metals.get("XAU");
   const silver = metals.get("XAG");
   if ((gold && silver) || !byId("ratio-time").textContent.startsWith("Published snapshot")) {
     write("ratio", gold && silver ? cardDecimals.format(gold.price / silver.price) + "×" : unavailable);
-    write("ratio-time",gold && silver ? metalDetail("XAU",{
+    stampObservation(byId("ratio-time"),gold && silver ? metalDetail("XAU",{
       date:[gold.date,silver.date].sort()[0],stale:gold.stale || silver.stale
-    }) : "Silver ounces per ounce of gold");
+    }) : "Silver ounces per ounce of gold",gold && silver ? [gold.date,silver.date].sort()[0] : undefined);
   }
   const eur = rates.get("EUR");
   if (!eur && byId("usd-time").textContent.startsWith("Published snapshot")) return;
   write("usd", eur ? "€" + eur.rate.toFixed(4) : unavailable);
-  write("usd-time", eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable");
+  stampObservation(byId("usd-time"),eur ? fxRateDetail("USD","EUR") : "Reference rate unavailable",eur?.date);
 }
 
 function convert() {
@@ -755,7 +770,7 @@ refreshCrypto();
 
 const sectionNav = byId("section-nav");
 const sectionTabs = Array.from(sectionNav.querySelectorAll("a[href^='#']"));
-const secondarySections = Array.from(byId("secondary-sections").querySelectorAll("a"));
+const secondarySections = Array.from(byId("secondary-sections").querySelectorAll("a:not([href='#news'])"));
 const sectionLinks = [...sectionTabs,...secondarySections];
 sectionNav.setAttribute("role","tablist");
 
@@ -780,6 +795,7 @@ function activateTab(tab, updateUrl = false) {
 
 function syncTabs() {
   activateTab(sectionLinks.find(tab => tab.hash === window.location.hash) ?? sectionTabs[0]);
+  if (window.location.hash === "#news") byId("news").scrollIntoView();
 }
 
 for (const [index, tab] of sectionTabs.entries()) {
@@ -1061,9 +1077,10 @@ function renderCalendar() {
     const time = new Date(event.time);
     const timeCell = row.insertCell();
     const date = document.createElement("strong");
-    const clock = document.createElement("small");
+    const clock = document.createElement("time");
+    clock.dateTime = time.toISOString();
     date.textContent = calendarDate.format(time);
-    clock.textContent = calendarTime.format(time);
+    clock.textContent = " · " + calendarTime.format(time);
     timeCell.append(date,clock);
     const eventCell = row.insertCell();
     const button = document.createElement("button");
@@ -1080,6 +1097,10 @@ function renderCalendar() {
     for (const value of [event.actual,event.forecast,event.previous]) row.insertCell().textContent = eventValue(value);
     return row;
   });
+  const shown = events.slice(start,start+calendarPageSize);
+  const span = shown.length ? " · " + calendarFullTime.format(new Date(shown[0].time)) +
+    (shown.length > 1 ? " to " + calendarFullTime.format(new Date(shown.at(-1).time)) : "") : "";
+  write("calendar-source","ShowMyTrades · " + shown.length + " displayed" + span);
   const calendarHeading = byId("calendar-time-heading");
   if (calendarHeading) calendarHeading.textContent = "Local time";
   byId("calendar-rows").replaceChildren(...rows);
@@ -1103,7 +1124,6 @@ async function loadCalendar(force = false) {
       .sort((a,b) => Date.parse(a.time)-Date.parse(b.time));
     calendarLastFetch = Date.now();
     calendarFailed = false;
-    write("calendar-source","ShowMyTrades · Next 14 days · Checked " + calendarTime.format(new Date()));
   } catch {
     calendarFailed = true;
   } finally {
@@ -1996,7 +2016,7 @@ function renderStocks() {
       if (index === 0 && data) {
         const detail = document.createElement("small");
         const checking = checkingStockQuotes.has(asset.code);
-        detail.textContent = stockQuoteDetail(data,"",checking);
+        stampObservation(detail,stockQuoteDetail(data,"",checking),data.date);
         cell.append(detail);
       }
       if (index === 1 || index === 2) cell.className = data?.change < 0 ? "negative" : "positive";
@@ -2235,7 +2255,7 @@ function updateMarketSummary() {
     const change = byId("daily-"+key);
     change.textContent = quote ? (key === "dollar" ? num(quote.price,3) + " · " : "") + (Number.isFinite(quote.move) ? (key === "dollar" ? formatDollarIndexChange(quote.move) : percent(quote.move)) : "Daily change unavailable") : unavailable;
     change.className = quote?.move > 0 ? "positive" : quote?.move < 0 ? "negative" : "";
-    write("daily-"+key+"-time",quote ? (key === "dollar" ? quoteDetail(quote,source) : metalDetail(key === "gold" ? "XAU" : "XAG",quote)) : source);
+    stampObservation(byId("daily-"+key+"-time"),quote ? (key === "dollar" ? quoteDetail(quote,source) : metalDetail(key === "gold" ? "XAU" : "XAG",quote)) : source,quote?.date);
   }
 }
 
@@ -2333,6 +2353,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 
