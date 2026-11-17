@@ -290,12 +290,20 @@ if (fx.length) {
   const low = Math.min(...fx.map(row => row.price));
   const high = Math.max(...fx.map(row => row.price));
   html = put(html,"historical-snapshot-summary","ECB via Frankfurter · " + fx.length +
-    " published observations · " + first.time + " at " + format(first.price) + " EUR per USD to " +
-    last.time + " at " + format(last.price) + " · Change " + change((last.price/first.price-1)*100) +
-    " · Low " + format(low) + " · High " + format(high));
-  html = put(html,"historical-snapshot-rows",[...fx].reverse().map(row =>
-    "<tr><td><time datetime=\"" + escape(row.time) + "\">" + escape(row.time) + "</time></td><td>" +
-    format(row.price) + "</td></tr>").join(""));
+    " published observations · Latest published rate: " + last.time + ".");
+  const stats = [
+    ["First",format(first.price),first.time],["Last",format(last.price),last.time],
+    ["Change",fx.length > 1 ? change((last.price/first.price-1)*100) : "—"],["Low",format(low)],["High",format(high)]
+  ];
+  html = put(html,"historical-snapshot-stats",stats.map(([label,value,observed]) =>
+    "<div><dt>" + label + "</dt><dd>" + value + (observed
+      ? '<time datetime="' + escape(observed) + '">' + escape(observed) + '</time>' : "") + "</dd></div>").join(""));
+  const euros = new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR"});
+  html = put(html,"historical-snapshot-rows",fx.map((row,index) => {
+    const daily = index ? change((row.price/fx[index-1].price-1)*100) : "—";
+    return '<tr><td><time datetime="' + escape(row.time) + '">' + escape(row.time) + "</time></td><td>" +
+      format(row.price) + "</td><td>" + daily + "</td><td>" + euros.format(1000 * row.price) + "</td></tr>";
+  }).reverse().join(""));
   if (fx.length > 1) html = put(html,"historical-snapshot-chart",spark(fx,"USD to EUR published history",600,200));
   await write(file,html);
 }

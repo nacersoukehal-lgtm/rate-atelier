@@ -14,7 +14,15 @@
   const rate = new Intl.NumberFormat(undefined,{maximumSignificantDigits:8});
   const axis = new Intl.NumberFormat(undefined,{minimumFractionDigits:4,maximumFractionDigits:4});
   const percent = new Intl.NumberFormat(undefined,{style:"percent",signDisplay:"exceptZero",maximumFractionDigits:2});
-  const currency = (value,code) => new Intl.NumberFormat(undefined,{style:"currency",currency:code,currencyDisplay:"code"}).format(value);
+  const currency = (value,code,precise = false) => {
+    const options = {style:"currency",currency:code,currencyDisplay:"code"};
+    if (precise || (value > 0 && value < 1)) {
+      const digits = value > 0 && value < .01 ? Math.min(12,2 - Math.floor(Math.log10(value))) : 4;
+      options.minimumFractionDigits = options.maximumFractionDigits = digits;
+    }
+    return new Intl.NumberFormat(undefined,options).format(value);
+  };
+  const dailyMove = (rows,index) => index > 0 ? rows[index].value / rows[index-1].value - 1 : null;
   let result;
   let page = 0;
   let sequence = 0;
@@ -23,6 +31,27 @@
   startInput.value = date(Date.parse(today) - 29 * day);
   endInput.value = today;
 
+  const presets = [...get("shortcuts").querySelectorAll("button[data-range]")];
+  function presetStart(preset) {
+    const end = Date.parse(today);
+    const first = new Date(end);
+    if (preset === "year") {
+      first.setUTCDate(1);
+      first.setUTCFullYear(todayLocal.getFullYear() - 1);
+      const lastDay = new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();
+      first.setUTCDate(Math.min(todayLocal.getDate(),lastDay));
+    } else if (preset === "ytd") first.setUTCMonth(0,1);
+    else first.setTime(end - (Number(preset) - 1) * day);
+    return date(first);
+  }
+
+  function markPreset() {
+    for (const button of presets) {
+      const active = mode.value === "range" && endInput.value === today && startInput.value === presetStart(button.dataset.range);
+      button.setAttribute("aria-pressed",String(active));
+    }
+  }
+
   function updateMode() {
     const isRange = mode.value === "range";
     get("end-field").hidden = !isRange;
@@ -30,20 +59,25 @@
     get("shortcuts").hidden = !isRange;
     get("date-label").textContent = isRange ? "Start date" : "Date";
     form.querySelector('[type="submit"]').textContent = isRange ? "Look up range" : "Look up rate";
+    markPreset();
   }
 
   function renderPage() {
-    const rows = result.rows;
+    const {rows,target,quantity} = result;
     const last = rows.length - page * pageSize;
     const first = Math.max(0,last - pageSize);
     body.replaceChildren();
-    for (const point of rows.slice(first,last).reverse()) {
+    for (let index = last - 1; index >= first; index--) {
+      const point = rows[index];
       const row = body.insertRow();
       const time = document.createElement("time");
       time.setAttribute("datetime",point.date);
       time.textContent = point.date;
       row.insertCell().append(time);
       row.insertCell().textContent = rate.format(point.value);
+      const move = dailyMove(rows,index);
+      row.insertCell().textContent = move === null ? "—" : percent.format(move);
+      row.insertCell().textContent = currency(quantity * point.value,target,quantity <= 1);
     }
     get("prev").disabled = page === 0;
     get("next").disabled = first === 0;
@@ -58,6 +92,7 @@
     get("table").open = false;
     get("csv").hidden = true;
     get("share").hidden = true;
+    get("summary").hidden = true;
     for (const id of ["summary","conversion"]) get(id).textContent = "";
     get("results").hidden = false;
   }
@@ -71,6 +106,7 @@
   }
 
   async function lookup() {
+    markPreset();
     const request = ++sequence;
     const base = from.value, target = to.value, quantity = amount.valueAsNumber;
     const isRange = mode.value === "range";
@@ -110,28 +146,50 @@
       }
       const first = rows[0];
       const source = [base,target].includes("USD") && [base,target].includes("EUR") ? "ECB via Frankfurter" : "Frankfurter";
+      const publicationNote = end === today && last.date < end && source.startsWith("ECB")
+        ? " The ECB usually publishes around 16:00 Central European time on publication days." : "";
       status.textContent = isRange ? source + " · " + rows.length + " published " +
-        (rows.length === 1 ? "rate" : "rates") + " from " + start + " through " + end + "."
+        (rows.length === 1 ? "rate" : "rates") + " · Latest published rate: " + last.date + "." + publicationNote
         : source + " · " + (last.date === end ? "Observation on " + end + "."
-          : "No observation on " + end + ". Latest prior rate: " + last.date + ".");
+          : "No observation on " + end + ". Latest prior rate: " + last.date + ".") + publicationNote;
       if (isRange) {
         const low = rows.reduce((value,point) => Math.min(value,point.value),Infinity);
         const high = rows.reduce((value,point) => Math.max(value,point.value),0);
-        get("summary").textContent = target + " per " + base + " · First " + rate.format(first.value) +
-          " (" + first.date + ") · Last " + rate.format(last.value) + " (" + last.date + ") · Change " +
-          percent.format(last.value/first.value-1) + " · Low " + rate.format(low) + " · High " + rate.format(high);
+        const stats = get("summary");
+        stats.setAttribute("aria-label",target + " per " + base + " range statistics");
+        for (const [label,value,observed] of [
+          ["First",rate.format(first.value),first.date],["Last",rate.format(last.value),last.date],
+          ["Change",rows.length > 1 ? percent.format(last.value/first.value-1) : "—"],
+          ["Low",rate.format(low)],["High",rate.format(high)]
+        ]) {
+          const tile = document.createElement("div");
+          const term = document.createElement("dt");
+          const definition = document.createElement("dd");
+          term.textContent = label;
+          definition.textContent = value;
+          tile.append(term,definition);
+          if (observed) {
+            const time = document.createElement("time");
+            time.dateTime = observed;
+            time.textContent = observed;
+            definition.append(time);
+          }
+          stats.append(tile);
+        }
+        stats.hidden = false;
       }
       get("conversion").textContent = currency(quantity,base) + " was worth " +
-        (isRange && rows.length > 1 ? currency(quantity*first.value,target) + " on " + first.date + " and " : "") +
-        currency(quantity*last.value,target) + " on " + last.date + " at the published reference rate.";
+        (isRange && rows.length > 1 ? currency(quantity*first.value,target,quantity <= 1) + " on " + first.date + " and " : "") +
+        currency(quantity*last.value,target,quantity <= 1) + " on " + last.date + " at the published reference rate.";
       if (isRange && rows.length > 1) {
         chart.hidden = false;
         drawFinanceChart(chart,rows,rate.format,base + " to " + target + " reference rates",false,
           {tall:true,axisFormat:axis.format,showHistory:false});
       }
-      result = {rows,base,target};
+      result = {rows,base,target,quantity};
       page = 0;
       get("unit").textContent = target + " per " + base;
+      get("converted").textContent = "Amount in " + target;
       get("caption").textContent = isRange ? "Published rates within the selected dates" : "Published rates through " + end;
       get("table").querySelector("summary").textContent = "View rate history (" + rows.length + ")";
       get("table").hidden = get("csv").hidden = false;
@@ -142,6 +200,7 @@
   }
 
   mode.addEventListener("change",updateMode);
+  for (const input of [startInput,endInput]) input.addEventListener("input",markPreset);
   from.addEventListener("change",() => { get("base").textContent = from.value; });
   get("swap").addEventListener("click",() => {
     [from.value,to.value] = [to.value,from.value];
@@ -151,16 +210,7 @@
   get("shortcuts").addEventListener("click",event => {
     const preset = event.target.dataset.range;
     if (!preset) return;
-    const end = Date.parse(today);
-    const first = new Date(end);
-    if (preset === "year") {
-      first.setUTCDate(1);
-      first.setUTCFullYear(todayLocal.getFullYear() - 1);
-      const lastDay = new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();
-      first.setUTCDate(Math.min(todayLocal.getDate(),lastDay));
-    } else if (preset === "ytd") first.setUTCMonth(0,1);
-    else first.setTime(end - (Number(preset) - 1) * day);
-    startInput.value = date(first);
+    startInput.value = presetStart(preset);
     endInput.value = today;
     lookup();
   });
@@ -173,8 +223,12 @@
     renderPage();
   });
   get("csv").addEventListener("click",() => {
-    const {rows,base,target} = result;
-    const data = ["date," + target + "_per_" + base,...[...rows].reverse().map(point => point.date + "," + point.value)];
+    const {rows,base,target,quantity} = result;
+    const entries = rows.map((point,index) => {
+      const move = dailyMove(rows,index);
+      return [point.date,point.value,move === null ? "" : move * 100,quantity * point.value].join(",");
+    }).reverse();
+    const data = ["date," + target + "_per_" + base + ",daily_change_percent,amount_in_" + target,...entries];
     const url = URL.createObjectURL(new Blob([data.join("\r\n") + "\r\n"],{type:"text/csv;charset=utf-8"}));
     const link = document.createElement("a");
     link.href = url;

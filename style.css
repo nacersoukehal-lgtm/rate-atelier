@@ -461,3 +461,21 @@ footer { padding: 18px 0; margin-top: 32px; }
 .historical-page summary { cursor:pointer; font-weight:700; }
 .historical-page [hidden] { display:none !important; }
 @media(max-width:420px) { .historical-page .panel { padding:14px; } .historical-page input[type=date] { padding-inline:4px; font-size:14px; } }
+
+.header .historical-nav { gap:1rem; }
+.historical-settings label { display:grid; grid-template-rows:auto 1fr; gap:.25rem; }
+.historical-settings label > :is(input,select) { height:2.75rem; margin:0; }
+.historical-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 8rem),1fr)); gap:.65rem; margin:1rem 0; }
+.historical-stats > div { border:1px solid var(--line); border-radius:10px; padding:.7rem .85rem; }
+.historical-stats dt, .historical-stats time { color:var(--muted); font-size:14px; }
+.historical-stats dd { margin:0; font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; }
+.historical-stats time { display:block; font-weight:400; }
+.historical-page button[aria-pressed="true"] { background:var(--green); border-color:var(--green); color:#fff; }
+.historical-page .stock-table :is(th,td) { width:25%; font-size:15px; }
+.historical-page .stock-table :is(th,td):not(:first-child) { text-align:right; }
+.historical-page .historical-method > p { max-width:none; font-size:16px; }
+.historical-table-note { font-size:14px; margin-top:.75rem; }
+@media(max-width:550px) {
+  .header .historical-nav { display:flex; gap:.65rem; }
+  .historical-page .stock-table :is(th,td) { font-size:14px; }
+}
