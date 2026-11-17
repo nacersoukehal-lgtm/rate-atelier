@@ -5,10 +5,11 @@ const financeHistory = (() => {
   const day = 86400000;
   const date = time => new Date(time).toISOString().slice(0,10);
 
-  function load(url, parse) {
+  function load(url, parse, allowMissing = false) {
     const saved = cache.get(url);
     if (saved && Date.now() - saved.time < 300000) return saved.request;
     const request = fetch(url,{signal:AbortSignal.timeout(10000)}).then(async response => {
+      if (allowMissing && response.status === 404) return [];
       if (!response.ok) throw new Error("History unavailable");
       const rows = parse(await response.json());
       return rows.filter(row => Number.isFinite(Date.parse(row.date)) && row.value > 0 && Number.isFinite(row.value))
@@ -24,7 +25,7 @@ const financeHistory = (() => {
     const params = new URLSearchParams({base:from,quotes:to,from:date(end-days*day),to:date(end)});
     if ([from,to].includes("EUR") && [from,to].includes("USD")) params.set("providers","ecb");
     return load("https://api.frankfurter.dev/v2/rates?" + params,
-      rows => rows.map(row => ({date:row.date,value:row.rate})));
+      rows => rows.map(row => ({date:row.date,value:row.rate})),true);
   }
 
   function metal(code,days = 30) {
@@ -47,7 +48,7 @@ const financeHistory = (() => {
   return {fx,metal,bitcoin,ratio};
 })();
 
-function drawFinanceChart(host,points,format,label,gaps = false) {
+function drawFinanceChart(host,points,format,label,gaps = false,{tall = false,axisFormat = format,showHistory = true} = {}) {
   const projected = typeof points[0].date === "number";
   const dates = points.map(point => projected ? point.date : Date.parse(point.date));
   const first = points[0];
@@ -57,10 +58,13 @@ function drawFinanceChart(host,points,format,label,gaps = false) {
   const elapsed = dates.at(-1)-dates[0] || 1;
   const dateLabel = time => projected ? "Year " + Math.round(time) :
     new Date(time).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"});
-  const x = index => 96+484*(dates[index]-dates[0])/elapsed;
-  const y = value => max === min ? 82 : 148-132*(value-min)/(max-min);
+  const height = tall ? 252 : 180;
+  const bottom = height - 32;
+  const left = tall ? 76 : 96;
+  const x = index => left+(580-left)*(dates[index]-dates[0])/elapsed;
+  const y = value => max === min ? bottom/2 : bottom-(bottom-16)*(value-min)/(max-min);
   const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 600 180");
+  svg.setAttribute("viewBox","0 0 600 " + height);
   svg.setAttribute("role","img");
   svg.setAttribute("aria-label",label + ". Range " + format(min) + " to " + format(max));
   const add = (tag,attributes,content) => {
@@ -73,12 +77,12 @@ function drawFinanceChart(host,points,format,label,gaps = false) {
   const ticks = max === min ? [min] : [min,min+(max-min)/3,min+2*(max-min)/3,max];
   for (const value of ticks) {
     const position = y(value);
-    add("line",{x1:96,x2:580,y1:position,y2:position,stroke:"currentColor",opacity:".2"});
-    add("text",{x:88,y:position+4,"text-anchor":"end","font-size":13,fill:"currentColor"},format(value));
+    add("line",{x1:left,x2:580,y1:position,y2:position,stroke:"currentColor",opacity:".2"});
+    add("text",{x:left-8,y:position+4,"text-anchor":"end","font-size":13,fill:"currentColor"},axisFormat(value));
   }
-  for (const [index,position,anchor] of [[0,96,"start"],[Math.floor(dates.length/2),338,"middle"],[dates.length-1,580,"end"]]) {
+  for (const [index,position,anchor] of [[0,left,"start"],[Math.floor(dates.length/2),338,"middle"],[dates.length-1,580,"end"]]) {
     if (anchor === "middle" && dates.length < 4) continue;
-    add("text",{x:anchor === "middle" ? x(index) : position,y:171,"text-anchor":anchor,"font-size":13,fill:"currentColor"},dateLabel(dates[index]));
+    add("text",{x:anchor === "middle" ? x(index) : position,y:height-9,"text-anchor":anchor,"font-size":13,fill:"currentColor"},dateLabel(dates[index]));
   }
   const path = points.map((point,index) => {
     const start = index === 0 || (gaps && dates[index]-dates[index-1] > 1.5*86400000);
@@ -104,7 +108,7 @@ function drawFinanceChart(host,points,format,label,gaps = false) {
   svg.setAttribute("tabindex","0");
   function inspectPointer(event) {
     const box = svg.getBoundingClientRect();
-    const scale = Math.min(box.width/600,box.height/180);
+    const scale = Math.min(box.width/600,box.height/height);
     const position = (event.clientX-box.left-(box.width-600*scale)/2)/scale;
     let nearest = 0;
     for (let index=1; index<dates.length; index++) {
@@ -121,6 +125,10 @@ function drawFinanceChart(host,points,format,label,gaps = false) {
     inspect(Math.max(0,Math.min(dates.length-1,selected+(event.key === "ArrowLeft" ? -1 : 1))));
   });
 
+  if (!showHistory) {
+    host.replaceChildren(svg,inspection);
+    return;
+  }
   const details = document.createElement("details");
   const summary = document.createElement("summary");
   summary.textContent = "View history (" + points.length + " observations)";

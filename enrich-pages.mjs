@@ -179,7 +179,7 @@ const histories = [["gold","XAU"],["silver","XAG"],["platinum","XPT"],["palladiu
 const results = await Promise.allSettled([
   json("https://api.coinpaprika.com/v1/tickers"),
   json("https://showmytrades.com/api/public/calendar/v1?impact=high,medium&days=14"),
-  json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-10*86400000).toISOString().slice(0,10)),
+  json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-29*86400000).toISOString().slice(0,10)),
   ...histories.map(([,code]) => json("https://standardbullion.com/api/v1/market/history?range=1m&metal=" + code)),
   json(origin + "crypto-volume-basis.json?minute=" + Math.floor(Date.now()/60000)).catch(() => null)
 ]);
@@ -281,3 +281,21 @@ if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
   home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100) + " · Daily");
 }
 await write("index.html",home);
+
+if (fx.length) {
+  const file = "historical-exchange-rates.html";
+  let html = await read(file);
+  const first = fx[0], last = fx.at(-1);
+  const format = value => value.toFixed(4);
+  const low = Math.min(...fx.map(row => row.price));
+  const high = Math.max(...fx.map(row => row.price));
+  html = put(html,"historical-snapshot-summary","ECB via Frankfurter · " + fx.length +
+    " published observations · " + first.time + " at " + format(first.price) + " EUR per USD to " +
+    last.time + " at " + format(last.price) + " · Change " + change((last.price/first.price-1)*100) +
+    " · Low " + format(low) + " · High " + format(high));
+  html = put(html,"historical-snapshot-rows",[...fx].reverse().map(row =>
+    "<tr><td><time datetime=\"" + escape(row.time) + "\">" + escape(row.time) + "</time></td><td>" +
+    format(row.price) + "</td></tr>").join(""));
+  if (fx.length > 1) html = put(html,"historical-snapshot-chart",spark(fx,"USD to EUR published history",600,200));
+  await write(file,html);
+}

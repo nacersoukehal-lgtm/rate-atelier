@@ -444,3 +444,20 @@ footer { padding: 18px 0; margin-top: 32px; }
 .tool-inputs button { width:fit-content; }
 .landing-page table caption { text-align:left; padding:.6rem 0; font-weight:600; }
 .landing-page .stock-table { min-width:0; }
+
+.historical-page { font-size:16px; }
+.historical-page h1 { font-size:clamp(38px, 6vw, 68px); }
+.historical-page label, .historical-page th, .historical-page td { font-size:14px; }
+.historical-page select, .historical-page input { min-width:0; font-size:16px; }
+.historical-pair, .historical-settings, .historical-dates { display:grid; gap:.7rem; align-items:end; margin-bottom:.85rem; }
+.historical-pair { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); }
+.historical-settings, .historical-dates { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.historical-dates input { display:block; width:100%; }
+.historical-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem; margin:.75rem 0; }
+.historical-page button { border:1px solid var(--line); border-radius:8px; padding:.48rem .72rem; background:var(--surface); color:var(--ink); }
+.historical-page button.primary-action { background:var(--green); color:#fff; border-color:var(--green); font-weight:700; padding:.65rem 1rem; }
+.historical-page button:disabled { opacity:.55; }
+.historical-page .finance-chart svg { max-height:none; height:auto; width:100%; }
+.historical-page summary { cursor:pointer; font-weight:700; }
+.historical-page [hidden] { display:none !important; }
+@media(max-width:420px) { .historical-page .panel { padding:14px; } .historical-page input[type=date] { padding-inline:4px; font-size:14px; } }
