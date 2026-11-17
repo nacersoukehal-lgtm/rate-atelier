@@ -93,7 +93,7 @@ export function renderSnapshot(html,file,quotes) {
       ? ((1+gold.move/100)/(1+silver.move/100)-1)*100 : undefined;
     for (const [id,move] of [["gold",gold?.move],["silver",silver?.move],["platinum",quotes.XPT?.move],
         ["palladium",quotes.XPD?.move],["copper",benchmark("HG=F")?.move],["ratio",ratio?.value ? ratioMove : undefined]]) {
-      html = replaceContent(html,id+"-move",Number.isFinite(move) ? change({move}) : "");
+      html = replaceContent(html,id+"-move",Number.isFinite(move) ? change({move}) + " · Session" : "");
     }
     return html;
   }
@@ -119,8 +119,3 @@ export function renderSnapshot(html,file,quotes) {
   }
   return html;
 }
-
-
-
-
-

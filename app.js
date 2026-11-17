@@ -32,6 +32,7 @@ function readQuotes(key,fallback) {
 function saveQuotes(key,value) {
   try { localStorage.setItem(quoteKey(key),JSON.stringify(value)); } catch {}
 }
+let usdtVolumeBaseline = readQuotes("usdt-volume-baseline",null);
 const metals = new Map(readQuotes("metals",[]).map(([code,quote]) => [code,{...quote,stale:true}]));
 let dollarIndex = readQuotes("dollar",null);
 if (dollarIndex) dollarIndex.stale = true;
@@ -688,7 +689,8 @@ function renderCrypto() {
       isPositive(quote.price) ? (quote.price < .0001 ? "<" + usdCryptoSmall.format(.0001) : (quote.price >= 1 ? usdCryptoCents : usdCryptoSmall).format(quote.price)) : "Quote unavailable",
       Number.isFinite(change) ? (change > 0 ? "+" : "") + num(change) + "%" : "—",
       isPositive(quote.market_cap) ? usdCryptoWhole.format(quote.market_cap) : "—",
-      valid(quote.volume_24h) ? usdCryptoWhole.format(quote.volume_24h) : "—"
+      rateAtelierVolumeFlag(asset.symbol,quote,usdtVolumeBaseline?.volume) ? "Volume under review"
+        : valid(quote.volume_24h) ? usdCryptoWhole.format(quote.volume_24h) : "—"
     ];
     cells.forEach(value => { row.insertCell().textContent = value; });
     row.cells[3].className = change > 0 ? "positive" : change < 0 ? "negative" : "";
@@ -729,6 +731,14 @@ async function refreshCrypto(force = false) {
     const ranked = assets.filter(asset => isPositive(asset.quotes?.USD?.price) && isPositive(asset.quotes.USD.market_cap))
       .sort((a,b) => b.quotes.USD.market_cap - a.quotes.USD.market_cap).slice(0,50);
     if (ranked.length < 50) throw new Error("Incomplete crypto rankings");
+    const tether = ranked.find(asset => asset.symbol === "USDT");
+    const tetherQuote = tether?.quotes.USD;
+    const observed = Date.parse(tether?.last_updated);
+    if (isPositive(tetherQuote?.volume_24h) && tetherQuote.volume_24h <= tetherQuote.market_cap &&
+        Number.isFinite(observed) && observed > (usdtVolumeBaseline?.observed ?? 0)) {
+      usdtVolumeBaseline = {volume:tetherQuote.volume_24h,observed};
+      saveQuotes("usdt-volume-baseline",usdtVolumeBaseline);
+    }
     cryptoAssets = ranked;
     microAssets = assets.filter(asset => {
       const quote = asset.quotes?.USD;
@@ -1418,7 +1428,8 @@ function renderCoinMetrics() {
     cryptoPrice.format(market.low_24h) + " – " + cryptoPrice.format(market.high_24h) : "—";
   const metrics = [
     ["Market cap",positiveFormat(quote.market_cap,compactUSD.format)],
-    ["24h volume",positiveFormat(quote.volume_24h,compactUSD.format)],
+    ["24h volume",rateAtelierVolumeFlag(asset.symbol,quote,usdtVolumeBaseline?.volume) ? "Volume under review"
+      : positiveFormat(quote.volume_24h,compactUSD.format)],
     ["24h low–high",range],
     ["7d change",percent(quote.percent_change_7d)],
     ["30d change",percent(quote.percent_change_30d)],
@@ -2010,8 +2021,15 @@ function renderStocks() {
       Number.isFinite(data.change) ? (data.change > 0 ? "+" : "") + num(data.change) : "—",percent(data.percent),
       stockValue(data,data.open),stockHighLow(data,data.high),stockHighLow(data,data.low),stockValue(data,data.previous)]
       : [attemptedStockQuotes.has(asset.code) ? unavailable : "Loading quote…","—","—","—","Unavailable","Unavailable","—"];
+    const missingKospiRange = asset.symbol === "^KS11" && !isPositive(data?.high) && !isPositive(data?.low);
     values.forEach((value,index) => {
+      if (missingKospiRange && index === 5) return;
       const cell = row.insertCell();
+      if (missingKospiRange && index === 4) {
+        cell.colSpan = 2;
+        cell.textContent = "Session range unavailable";
+        return;
+      }
       cell.textContent = value;
       if (index === 0 && data) {
         const detail = document.createElement("small");
@@ -2353,12 +2371,3 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
-
-
-
-
-
-
-
-
-

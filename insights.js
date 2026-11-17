@@ -71,7 +71,7 @@ function showHeadlines(id,items) {
     link.href = item.href;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = item.title;
+    link.textContent = item.title.trim();
     const detail = document.createElement("small");
     detail.textContent = item.source + (Number.isFinite(Date.parse(item.time)) ? " · " + timestamp(item.time) : "");
     row.append(link,detail);
@@ -173,7 +173,7 @@ function showOverviewTrends() {
     const value = byId(item.id+"-move");
     if (!Number.isFinite(move) && value.textContent) continue;
     value.textContent = Number.isFinite(move)
-      ? (move > 0 ? "▲ " : move < 0 ? "▼ " : "— ") + percent(move) : "";
+      ? (move > 0 ? "▲ " : move < 0 ? "▼ " : "— ") + percent(move) + (item.type === "fx" ? " · Daily" : " · Session") : "";
     value.className = "quote-move " + (move > 0 ? "positive" : move < 0 ? "negative" : "");
     value.title = item.type === "fx" ? "Change from previous daily reference rate" : "Session change";
   }
@@ -321,6 +321,3 @@ for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMo
   new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
   render();
 }
-
-
-

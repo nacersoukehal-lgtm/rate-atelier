@@ -1,6 +1,8 @@
 import {createHash} from "node:crypto";
 import {readdir,readFile,writeFile} from "node:fs/promises";
 
+import "./quote-volume-check.js";
+
 const site = new URL("./_site/",import.meta.url);
 const read = name => readFile(new URL(name,site),"utf8");
 const write = (name,contents) => writeFile(new URL(name,site),contents);
@@ -144,7 +146,7 @@ for (const id of Object.keys(fresh)) {
     Date.parse(item.time) >= Date.now()-3*86400000).map(item => [item.href,item])).values()]
     .sort((a,b) => Date.parse(b.time)-Date.parse(a.time)).slice(0,5);
   if (items.length) home = put(home,id,items.map(item => '<li><a href="' + escape(item.href) + '">' +
-    escape(item.title) + '</a><small>' + escape(item.source) + ' · <time datetime="' + new Date(item.time).toISOString() + '">' + escape(date(item.time)) + '</time></small></li>').join(""));
+    escape(item.title.trim()) + '</a><small>' + escape(item.source) + ' · <time datetime="' + new Date(item.time).toISOString() + '">' + escape(date(item.time)) + '</time></small></li>').join(""));
   else {
     home = put(home,id,"");
     home = home.replace(new RegExp('(<article class="panel")(?=><h3>[^<]+</h3><ul id="'+id+'")'),"$1 hidden");
@@ -161,8 +163,10 @@ const stocks = Object.entries(names).flatMap(([symbol,name]) => {
   const price = value => positive(value) ? number.format(value) + (q.instrumentType === "INDEX" ? "" : " " + (q.currency ?? "")) : "—";
   return ['<tr><th scope="row">' + escape(name) + '<small>' + escape(symbol) + '</small></th><td>' +
     escape(price(q.regularMarketPrice)) + '<small>' + observation(q.regularMarketTime*1000) + '</small></td><td>' +
-    escape(change(q.regularMarketChangePercent)) + '</td><td>' + escape(price(q.regularMarketDayHigh)) +
-    '</td><td>' + escape(price(q.regularMarketDayLow)) + '</td></tr>'];
+    escape(change(q.regularMarketChangePercent)) + "</td>" +
+    (symbol === "^KS11" && !positive(q.regularMarketDayHigh) && !positive(q.regularMarketDayLow)
+      ? '<td colspan="2">Session range unavailable</td>'
+      : "<td>" + escape(price(q.regularMarketDayHigh)) + "</td><td>" + escape(price(q.regularMarketDayLow)) + "</td>") + "</tr>"];
 });
 if (stocks.length) {
   home = home.replace(/(<table class="stock-table">[\s\S]*?<\/thead>)/,header =>
@@ -176,7 +180,8 @@ const results = await Promise.allSettled([
   json("https://api.coinpaprika.com/v1/tickers"),
   json("https://showmytrades.com/api/public/calendar/v1?impact=high,medium&days=14"),
   json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-10*86400000).toISOString().slice(0,10)),
-  ...histories.map(([,code]) => json("https://standardbullion.com/api/v1/market/history?range=1m&metal=" + code))
+  ...histories.map(([,code]) => json("https://standardbullion.com/api/v1/market/history?range=1m&metal=" + code)),
+  json(origin + "crypto-volume-basis.json?minute=" + Math.floor(Date.now()/60000)).catch(() => null)
 ]);
 const value = index => {
   const result = results[index];
@@ -184,6 +189,15 @@ const value = index => {
   return result.value;
 };
 const coins = value(0);
+const previousBasis = results.at(-1).value;
+const previousVolume = previousBasis?.volume;
+const tether = Array.isArray(coins) ? coins.find(coin => coin.symbol === "USDT") : null;
+const tetherQuote = tether?.quotes?.USD;
+const observed = Date.parse(tether?.last_updated);
+const basis = positive(tetherQuote?.volume_24h) && tetherQuote.volume_24h <= tetherQuote.market_cap &&
+  Number.isFinite(observed) && observed > (previousBasis?.observed ?? 0)
+  ? {volume:tetherQuote.volume_24h,observed} : previousBasis;
+if (basis) await write("crypto-volume-basis.json",JSON.stringify(basis));
 if (Array.isArray(coins)) {
   const rows = coins.filter(coin => positive(coin.quotes?.USD?.price) && positive(coin.quotes.USD.market_cap) &&
     date(coin.last_updated)).sort((a,b) => b.quotes.USD.market_cap-a.quotes.USD.market_cap).slice(0,10);
@@ -191,7 +205,8 @@ if (Array.isArray(coins)) {
     home = put(home,"crypto-rows",rows.map((coin,index) => {
       const q = coin.quotes.USD;
       return td([index+1,coin.name + " (" + coin.symbol + ")",(q.price < .0001 ? "<$0.0001" : (q.price >= 1 ? cents : smallUSD).format(q.price))+" · "+date(coin.last_updated),
-        change(q.percent_change_24h),wholeUSD.format(q.market_cap),positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"])
+        change(q.percent_change_24h),wholeUSD.format(q.market_cap),globalThis.rateAtelierVolumeFlag(coin.symbol,q,previousVolume) ? "Volume under review"
+          : positive(q.volume_24h) ? wholeUSD.format(q.volume_24h) : "—"])
         .replace(escape(date(coin.last_updated)),observation(coin.last_updated));
     }).join(""));
     home = put(home,"crypto-state","Top 10 snapshot by market cap · CoinPaprika");
@@ -257,16 +272,12 @@ if (gold.length > 1) {
 }
 for (const [id,history] of series) {
   const week = (bullionSparks.has(id) ? weekdays(history) : history).filter(row => Date.parse(row.time) >= Date.parse(history.at(-1)?.time)-7*86400000).slice(-100);
-  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" recent price history",176,52,bullionSparks.has(id)));
+  if (week.length > 1) home = put(home,id+"-spark",spark(week,id+" 7-day price history",176,52,bullionSparks.has(id)));
 }
 const fx = series.get("usd");
 const published = await read("published-quote-snapshot.json").then(JSON.parse).catch(() => ({}));
 if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
     Math.abs(fx.at(-1).price-published.EUR.value) < 1e-9) {
-  home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100));
+  home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100) + " · Daily");
 }
 await write("index.html",home);
-
-
-
-

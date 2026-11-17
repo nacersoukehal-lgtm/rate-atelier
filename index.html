@@ -15,13 +15,13 @@
 <meta name="description" content="Convert currencies, compare money transfer fees, and follow gold, silver, stocks, and crypto. Explore historical charts and estimate gold or silver melt value.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=market-snapshot"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="shared-calculations.js" defer></script><script src="app.js?v=expanded-snapshot" defer></script><script src="insights.js?v=stock-directory" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script>
+<link rel="stylesheet" href="style.css?v=quote-review"><script src="stock-directory.js?v=middle-east" defer></script><script src="currency-feed.js" defer></script><script src="shared-calculations.js" defer></script><script src="quote-volume-check.js" defer></script><script src="app.js?v=quote-review" defer></script><script src="insights.js?v=quote-review" defer></script><script src="finance-charts.js?v=history-data" defer></script><script src="finance-calculators.js" defer></script>
 </head>
 <body>
-<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
+<header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><nav aria-label="Standalone tools" class="header-tools"><a href="./melt-value-calculator.html">Melt value</a><a href="./compare-transfer-quotes.html">Compare transfer quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel" aria-labelledby="market-home-title">
 <nav class="market-shortcuts" aria-label="Explore markets"><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#news">News</a></nav>
-<div class="market-hero"><div class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1 id="market-home-title">Exchange rates, gold &amp; silver prices.</h1><p>Convert currencies, compare your money transfer quotes, and explore gold and silver price history.</p></div></div><aside class="panel home-converter" aria-labelledby="home-converter-title">
+<div class="market-hero"><div class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1 id="market-home-title">Exchange rates, gold &amp; silver prices.</h1><p>Convert currencies, compare your money transfer quotes, and explore gold and silver price history.</p><p class="hero-newsletter"><a href="https://preview.mailerlite.io/forms/2799760/204290917471881058/share">Email updates</a> when we publish new guides or tools.</p></div></div><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Quick currency conversion</h2>
 <label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
 <div class="fields pair"><label>From<select id="home-from"></select></label><button id="home-swap" class="swap" type="button" aria-label="Swap homepage currencies">⇄</button><label>To<select id="home-to"></select></label></div>
@@ -149,7 +149,9 @@
 <section id="blog" class="tools tab-panel">
 <h2>Rate Atelier Blog</h2>
 <p class="blog-intro">Practical guides to exchange rates, precious metals, and global markets.</p>
-<section class="panel newsletter-signup" aria-label="Newsletter signup">
+<section id="newsletter" class="panel newsletter-signup" aria-labelledby="newsletter-heading">
+<h3 id="newsletter-heading">Rate Atelier Newsletter</h3>
+<p>Get occasional emails when we publish new currency and metals guides, market explanations, or tools. Unsubscribe anytime.</p>
 <iframe title="Rate Atelier newsletter signup" src="https://preview.mailerlite.io/forms/2799760/204290917471881058/share" loading="lazy" width="520" height="285" style="width:100%;max-width:520px;border:0"></iframe>
 <p><a class="guide-link" href="https://preview.mailerlite.io/forms/2799760/204290917471881058/share">Open the Rate Atelier newsletter signup →</a></p>
 </section>
@@ -163,32 +165,17 @@
 <p class="eyebrow">MONEY TRANSFERS</p>
 <h3>How to compare two money transfer quotes</h3>
 <p>Compare what the recipient actually gets when both providers start with the same budget.</p>
-<details><summary>Read the guide</summary>
-<p>Ask each provider for the total amount you’ll pay, the exchange rate, and the amount the recipient will receive. Check whether the fee comes out of your budget, is charged on top, or is deducted by an intermediary.</p>
-<p>Suppose you have 500 USD. Offer A charges 5 USD and quotes 0.88 EUR per USD. It delivers 435.60 EUR. Offer B charges 10 USD and quotes 0.90 EUR per USD. It delivers 441.00 EUR. The higher fee still leaves the recipient with 5.40 EUR more.</p>
-<p>Check delivery time and any recipient-side charges before choosing. Quotes can expire, so compare offers close together.</p>
-<a class="guide-link" href="#compare">Compare your two quotes →</a>
-</details></article>
+<a class="guide-link" href="./how-to-compare-transfer-quotes.html">Read the guide →</a></article>
 <article class="panel blog-card">
 <p class="eyebrow">PRECIOUS METALS</p>
 <h3>How much gold is in an 18K ring?</h3>
 <p>Use the ring’s weight and karat to estimate the value of its gold content.</p>
-<details><summary>Read the guide</summary>
-<p>Karat expresses gold purity in parts out of 24. An 18K alloy is 18 ÷ 24, or 75% gold by weight. A 10-gram ring made entirely of 18K alloy therefore contains about 7.5 grams of pure gold.</p>
-<p>Multiply the pure gold weight by the current price per gram. If your quote is per troy ounce, divide it by about 31.1035 to get the price per gram.</p>
-<p>Weigh the metal separately if the item has stones or non-gold parts. A dealer’s offer can differ from the estimated metal value because of testing, refining, and resale costs. A finished piece can also carry value for its design or maker.</p>
-<a class="guide-link" href="#calculators">Estimate metal value →</a>
-</details></article>
+<a class="guide-link" href="./how-much-gold-in-18k-ring.html">Read the guide →</a></article>
 <article class="panel blog-card">
 <p class="eyebrow">GLOBAL MARKETS</p>
 <h3>How to read a stock index quote</h3>
 <p>Understand the index level, point change, and percentage move at a glance.</p>
-<details><summary>Read the guide</summary>
-<p>An index level summarizes the performance of a group of securities using that index’s methodology. Its level is measured in points. Comparing the levels of two different indices tells you little because each uses its own starting value and weighting.</p>
-<p>If an index moves from 5,000 to 5,050, it has risen 50 points, or 1%. Percentage moves are more useful for comparing benchmarks. Check the session and quote time, especially when comparing markets in different time zones.</p>
-<p>Some rows use cash CFDs that track a benchmark. These are labeled in the quote table and can differ from the underlying index level. Exchange quotes can also be delayed or reflect the last close.</p>
-<a class="guide-link" href="#stocks">Explore stocks and indices →</a>
-</details></article>
+<a class="guide-link" href="./how-to-read-stock-index-quote.html">Read the guide →</a></article>
 <article class="panel blog-card"><h3>What affects gold prices?</h3><p>Gold trades globally, usually in U.S. dollars. Real interest rates influence the opportunity cost of holding it, and shifts in the dollar can change what it costs in other currencies. Central bank purchases, investment demand, jewelry buying, and mine supply can also affect prices. These forces can pull in different directions, so compare moves over several time periods.</p><a class="guide-link" href="./gold-price-today.html">See gold prices →</a></article>
 <article class="panel blog-card"><h3>Why do exchange rates change?</h3><p>Currency prices respond to relative interest rates, economic data, trade flows, and changes in investor demand. A release can move a pair when it differs from what markets expected. The reference rate gives you a comparison point for a bank or transfer quote, which may include its own spread and fees.</p><a class="guide-link" href="./usd-to-eur.html">See USD to EUR →</a></article>
 <article class="panel blog-card"><h3>Why gold and silver prices move differently</h3><p>Gold and silver serve different markets. Silver has substantial industrial demand, while gold demand also comes from central banks, jewelry, and investment. The gold-to-silver ratio compares their prices in the same units. A higher ratio means an ounce of gold costs more ounces of silver.</p><a class="guide-link" href="./gold-silver-ratio.html">Compare gold and silver →</a></article>
@@ -221,15 +208,3 @@
 <nav aria-label="About and policies"><strong>About Rate Atelier</strong><a href="#about">Data sources</a><a href="./site-information.html#contact">Contact</a><a href="./site-information.html#privacy">Privacy</a><a href="./site-information.html#disclaimer">Disclaimer</a><a href="./site-information.html#terms">Terms</a></nav>
 </div></footer>
 </body></html>
-
-
-
-
-
-
-
-
-
-
-
-
