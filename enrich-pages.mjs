@@ -179,7 +179,7 @@ const histories = [["gold","XAU"],["silver","XAG"],["platinum","XPT"],["palladiu
 const results = await Promise.allSettled([
   json("https://api.coinpaprika.com/v1/tickers"),
   json("https://showmytrades.com/api/public/calendar/v1?impact=high,medium&days=14"),
-  json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-29*86400000).toISOString().slice(0,10)),
+  json("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR&from=" + new Date(Date.now()-365*86400000).toISOString().slice(0,10)),
   ...histories.map(([,code]) => json("https://standardbullion.com/api/v1/market/history?range=1m&metal=" + code)),
   json(origin + "crypto-volume-basis.json?minute=" + Math.floor(Date.now()/60000)).catch(() => null)
 ]);
@@ -282,28 +282,79 @@ if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
 }
 await write("index.html",home);
 
+// Use the same ECB observations for all three published ranges.
 if (fx.length) {
   const file = "historical-exchange-rates.html";
   let html = await read(file);
-  const first = fx[0], last = fx.at(-1);
-  const format = value => value.toFixed(4);
-  const low = Math.min(...fx.map(row => row.price));
-  const high = Math.max(...fx.map(row => row.price));
-  html = put(html,"historical-snapshot-summary","ECB via Frankfurter · " + fx.length +
-    " published observations · Latest published rate: " + last.time + ".");
-  const stats = [
-    ["First",format(first.price),first.time],["Last",format(last.price),last.time],
-    ["Change",fx.length > 1 ? change((last.price/first.price-1)*100) : "—"],["Low",format(low)],["High",format(high)]
-  ];
-  html = put(html,"historical-snapshot-stats",stats.map(([label,value,observed]) =>
-    "<div><dt>" + label + "</dt><dd>" + value + (observed
-      ? '<time datetime="' + escape(observed) + '">' + escape(observed) + '</time>' : "") + "</dd></div>").join(""));
+  const today = new Date().toISOString().slice(0,10);
+  const start = days => new Date(Date.parse(today)-(days-1)*86400000).toISOString().slice(0,10);
+  const range = days => fx.filter(row => row.time >= start(days) && row.time <= today);
+  const fourDigits = new Intl.NumberFormat("en-US",{minimumFractionDigits:4,maximumFractionDigits:4,useGrouping:false});
   const euros = new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR"});
-  html = put(html,"historical-snapshot-rows",fx.map((row,index) => {
-    const daily = index ? change((row.price/fx[index-1].price-1)*100) : "—";
-    return '<tr><td><time datetime="' + escape(row.time) + '">' + escape(row.time) + "</time></td><td>" +
-      format(row.price) + "</td><td>" + daily + "</td><td>" + euros.format(1000 * row.price) + "</td></tr>";
-  }).reverse().join(""));
-  if (fx.length > 1) html = put(html,"historical-snapshot-chart",spark(fx,"USD to EUR published history",600,200));
+  const format = fourDigits.format;
+  const movement = (first,last) => change((last.price/first.price-1)*100);
+  const extremes = rows => {
+    const prices = rows.map(row => row.price);
+    return [Math.min(...prices),Math.max(...prices)];
+  };
+  function lookupLink(from,to,days,label) {
+    return '<a href="./historical-exchange-rates.html?from=' + from + '&amp;to=' + to +
+      '&amp;start=' + start(days) + '&amp;end=' + today + '">' + label + "</a>";
+  }
+  function axisChart(rows) {
+    const [low,high] = extremes(rows);
+    const first = Date.parse(rows[0].time);
+    const elapsed = Date.parse(rows.at(-1).time)-first || 1;
+    const x = row => 76 + 504*(Date.parse(row.time)-first)/elapsed;
+    const y = price => high === low ? 114 : 214 - 194*(price-low)/(high-low);
+    const ticks = high === low ? [low] : [low,low+(high-low)/3,high-(high-low)/3,high];
+    const grid = ticks.map(price =>
+      '<line x1="76" x2="580" y1="' + y(price) + '" y2="' + y(price) +
+      '" stroke="currentColor" opacity=".2"/><text x="67" y="' + (y(price)+4) +
+      '" text-anchor="end" fill="currentColor">' + format(price) + "</text>").join("");
+    const dates = [[rows[0],"start"],[rows.at(-1),"end"]].map(([row,anchor]) =>
+      '<text x="' + x(row) + '" y="243" text-anchor="' + anchor +
+      '" fill="currentColor">' + escape(row.time) + '</text>').join("");
+    const line = rows.map((row,i) => (i ? "L" : "M") + x(row).toFixed(1) + "," + y(row.price).toFixed(1)).join(" ");
+    return '<svg viewBox="0 0 600 252" font-size="14" role="img" aria-label="USD to EUR history, euros per US dollar">' +
+      '<title>USD to EUR history</title>' + grid + dates +
+      '<path fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" d="' + line + '"/></svg>';
+  }
+  const recent = range(30);
+  if (recent.length) {
+    const first = recent[0], last = recent.at(-1);
+    const [low,high] = extremes(recent);
+    html = put(html,"historical-snapshot-summary","ECB via Frankfurter · " + recent.length +
+      " published observations · Latest published rate: " + last.time + ".");
+    const stats = [
+      ["First",format(first.price),first.time],["Last",format(last.price),last.time],
+      ["Change",recent.length > 1 ? movement(first,last) : "—"],["Low",format(low)],["High",format(high)]
+    ];
+    html = put(html,"historical-snapshot-stats",stats.map(([label,value,observed]) =>
+      "<div><dt>" + label + "</dt><dd>" + value + (observed
+        ? '<time datetime="' + escape(observed) + '">' + escape(observed) + '</time>' : "") + "</dd></div>").join(""));
+    html = put(html,"historical-snapshot-rows",recent.map((row,index) => {
+      const daily = index ? movement(recent[index-1],row) : "—";
+      const extreme = low < high && (row.price === low ? "low" : row.price === high ? "high" : "");
+      const badge = extreme ? '<span class="historical-extreme">' + (extreme === "low" ? "Low" : "High") + "</span>" : "";
+      return (extreme ? '<tr data-extreme="' + extreme + '">' : "<tr>") + '<td><time datetime="' + escape(row.time) +
+        '">' + escape(row.time) + "</time>" + badge + "</td><td>" + format(row.price) +
+        "</td><td>" + daily + "</td><td>" + euros.format(1000 * row.price) + "</td></tr>";
+    }).reverse().join(""));
+    if (recent.length > 1) html = put(html,"historical-snapshot-chart",axisChart(recent));
+    html = put(html,"historical-snapshot-toggle","View published USD/EUR rates (" + recent.length + ")");
+    html = put(html,"historical-snapshot-reverse",lookupLink("EUR","USD",30,"EUR to USD over the same period"));
+  }
+  const longer = [[90,"Last 90 days"],[365,"Last year"]].flatMap(([days,label]) => {
+    const rows = range(days);
+    if (rows.length < 2) return [];
+    const first = rows[0], last = rows.at(-1);
+    const [low,high] = extremes(rows);
+    return '<section><h3>' + label + '</h3><p>' + escape(first.time) + ' to ' + escape(last.time) +
+      '</p><p>' + format(first.price) + ' → ' + format(last.price) + ' EUR per USD · ' + movement(first,last) +
+      '</p><p>Low ' + format(low) + ' · High ' + format(high) + '</p><p>' +
+      lookupLink("USD","EUR",days,"View range and history") + '</p></section>';
+  });
+  if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }

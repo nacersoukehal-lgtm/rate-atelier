@@ -479,3 +479,15 @@ footer { padding: 18px 0; margin-top: 32px; }
   .header .historical-nav { display:flex; gap:.65rem; }
   .historical-page .stock-table :is(th,td) { font-size:14px; }
 }
+
+.historical-page > :is(form,section.panel) { box-sizing:border-box; width:100%; max-width:none; }
+.historical-page .stock-table :is(th,td) { width:auto; }
+.historical-page .stock-table :is(th,td):first-child { width:31%; }
+.historical-page .stock-table :is(th,td):last-child { width:29%; }
+.historical-page tr[data-extreme] td { background:color-mix(in srgb,var(--green) 8%,var(--surface)); }
+.historical-extreme { display:inline-block; margin-inline-start:.55rem; border:1px solid var(--line); border-radius:12px; padding:0 .45rem; font-size:.8em; font-weight:700; }
+.historical-links { display:flex; gap:1rem; flex-wrap:wrap; }
+.historical-longer-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr)); gap:1rem; }
+.historical-longer-grid section { border:1px solid var(--line); border-radius:10px; padding:1rem; }
+.historical-longer-grid h3 { margin-bottom:.5rem; }
+@media(max-width:550px) { .historical-extreme { display:table; margin:.2rem 0 0; } }

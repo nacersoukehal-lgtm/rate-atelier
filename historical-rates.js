@@ -63,7 +63,7 @@
   }
 
   function renderPage() {
-    const {rows,target,quantity} = result;
+    const {rows,target,quantity,low,high} = result;
     const last = rows.length - page * pageSize;
     const first = Math.max(0,last - pageSize);
     body.replaceChildren();
@@ -73,7 +73,15 @@
       const time = document.createElement("time");
       time.setAttribute("datetime",point.date);
       time.textContent = point.date;
-      row.insertCell().append(time);
+      const dateCell = row.insertCell();
+      dateCell.append(time);
+      if (low < high && (point.value === low || point.value === high)) {
+        row.dataset.extreme = point.value === low ? "low" : "high";
+        const badge = document.createElement("span");
+        badge.className = "historical-extreme";
+        badge.textContent = point.value === low ? "Low" : "High";
+        dateCell.append(badge);
+      }
       row.insertCell().textContent = rate.format(point.value);
       const move = dailyMove(rows,index);
       row.insertCell().textContent = move === null ? "—" : percent.format(move);
@@ -92,6 +100,8 @@
     get("table").open = false;
     get("csv").hidden = true;
     get("share").hidden = true;
+    get("reverse").hidden = true;
+    get("rounding").hidden = true;
     get("summary").hidden = true;
     for (const id of ["summary","conversion"]) get(id).textContent = "";
     get("results").hidden = false;
@@ -103,6 +113,12 @@
     history.replaceState(null,"",url);
     get("share").href = url;
     get("share").hidden = false;
+    url.searchParams.set("from",values.to);
+    url.searchParams.set("to",values.from);
+    const reverse = get("reverse");
+    reverse.href = url;
+    reverse.textContent = values.to + " to " + values.from + " over the same " + (values.date ? "day" : "period");
+    reverse.hidden = false;
   }
 
   async function lookup() {
@@ -152,9 +168,9 @@
         (rows.length === 1 ? "rate" : "rates") + " · Latest published rate: " + last.date + "." + publicationNote
         : source + " · " + (last.date === end ? "Observation on " + end + "."
           : "No observation on " + end + ". Latest prior rate: " + last.date + ".") + publicationNote;
+      const low = rows.reduce((value,point) => Math.min(value,point.value),Infinity);
+      const high = rows.reduce((value,point) => Math.max(value,point.value),0);
       if (isRange) {
-        const low = rows.reduce((value,point) => Math.min(value,point.value),Infinity);
-        const high = rows.reduce((value,point) => Math.max(value,point.value),0);
         const stats = get("summary");
         stats.setAttribute("aria-label",target + " per " + base + " range statistics");
         for (const [label,value,observed] of [
@@ -177,6 +193,7 @@
           stats.append(tile);
         }
         stats.hidden = false;
+        get("rounding").hidden = false;
       }
       get("conversion").textContent = currency(quantity,base) + " was worth " +
         (isRange && rows.length > 1 ? currency(quantity*first.value,target,quantity <= 1) + " on " + first.date + " and " : "") +
@@ -186,7 +203,7 @@
         drawFinanceChart(chart,rows,rate.format,base + " to " + target + " reference rates",false,
           {tall:true,axisFormat:axis.format,showHistory:false});
       }
-      result = {rows,base,target,quantity};
+      result = {rows,base,target,quantity,low,high};
       page = 0;
       get("unit").textContent = target + " per " + base;
       get("converted").textContent = "Amount in " + target;
