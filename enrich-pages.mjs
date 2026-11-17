@@ -290,7 +290,7 @@ if (fx.length) {
   const start = days => new Date(Date.parse(today)-(days-1)*86400000).toISOString().slice(0,10);
   const range = days => fx.filter(row => row.time >= start(days) && row.time <= today);
   const fourDigits = new Intl.NumberFormat("en-US",{minimumFractionDigits:4,maximumFractionDigits:4,useGrouping:false});
-  const euros = new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR"});
+  const euros = new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR",currencyDisplay:"code"});
   const format = fourDigits.format;
   const movement = (first,last) => change((last.price/first.price-1)*100);
   const extremes = rows => {
@@ -328,7 +328,7 @@ if (fx.length) {
       " published observations · Latest published rate: " + last.time + ".");
     const stats = [
       ["First",format(first.price),first.time],["Last",format(last.price),last.time],
-      ["Change",recent.length > 1 ? movement(first,last) : "—"],["Low",format(low)],["High",format(high)]
+      ["Change",recent.length > 1 ? movement(first,last) : "—"],["Low",format(low),recent.find(row => row.price === low).time],["High",format(high),recent.find(row => row.price === high).time]
     ];
     html = put(html,"historical-snapshot-stats",stats.map(([label,value,observed]) =>
       "<div><dt>" + label + "</dt><dd>" + value + (observed

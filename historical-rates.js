@@ -11,7 +11,6 @@
   const date = ms => new Date(ms).toISOString().slice(0,10);
   const todayLocal = new Date();
   const today = date(Date.UTC(todayLocal.getFullYear(),todayLocal.getMonth(),todayLocal.getDate()));
-  const rate = new Intl.NumberFormat(undefined,{maximumSignificantDigits:8});
   const axis = new Intl.NumberFormat(undefined,{minimumFractionDigits:4,maximumFractionDigits:4});
   const percent = new Intl.NumberFormat(undefined,{style:"percent",signDisplay:"exceptZero",maximumFractionDigits:2});
   const currency = (value,code,precise = false) => {
@@ -62,6 +61,22 @@
     markPreset();
   }
 
+  function pairHeading(base,target,start,end,isRange) {
+    const pair = base + " to " + target;
+    if (!start || !end || start > end) return pair + " exchange rates";
+    if (!isRange) return pair + " on " + end;
+    const days = (Date.parse(end) - Date.parse(start)) / day + 1;
+    if (end === today && (days === 30 || days === 90)) return pair + " over the last " + days + " days";
+    return pair + " from " + start + " to " + end;
+  }
+
+  function updatePairContext() {
+    get("base").textContent = from.value;
+    const hasDefaultPair = from.value === "USD" && to.value === "EUR";
+    get("longer-snapshots").hidden = !hasDefaultPair;
+    if (!hasDefaultPair) get("snapshot").hidden = true;
+  }
+
   function renderPage() {
     const {rows,target,quantity,low,high} = result;
     const last = rows.length - page * pageSize;
@@ -82,7 +97,7 @@
         badge.textContent = point.value === low ? "Low" : "High";
         dateCell.append(badge);
       }
-      row.insertCell().textContent = rate.format(point.value);
+      row.insertCell().textContent = axis.format(point.value);
       const move = dailyMove(rows,index);
       row.insertCell().textContent = move === null ? "—" : percent.format(move);
       row.insertCell().textContent = currency(quantity * point.value,target,quantity <= 1);
@@ -128,6 +143,8 @@
     const isRange = mode.value === "range";
     const start = startInput.value, end = isRange ? endInput.value : start;
     clearResults();
+    updatePairContext();
+    get("result-title").textContent = pairHeading(base,target,start,end,isRange);
     if (base === target) {
       status.textContent = "Choose two different currencies.";
       return;
@@ -168,15 +185,15 @@
         (rows.length === 1 ? "rate" : "rates") + " · Latest published rate: " + last.date + "." + publicationNote
         : source + " · " + (last.date === end ? "Observation on " + end + "."
           : "No observation on " + end + ". Latest prior rate: " + last.date + ".") + publicationNote;
-      const low = rows.reduce((value,point) => Math.min(value,point.value),Infinity);
-      const high = rows.reduce((value,point) => Math.max(value,point.value),0);
+      const lowest = rows.reduce((current,point) => point.value < current.value ? point : current);
+      const highest = rows.reduce((current,point) => point.value > current.value ? point : current);
       if (isRange) {
         const stats = get("summary");
         stats.setAttribute("aria-label",target + " per " + base + " range statistics");
         for (const [label,value,observed] of [
-          ["First",rate.format(first.value),first.date],["Last",rate.format(last.value),last.date],
+          ["First",axis.format(first.value),first.date],["Last",axis.format(last.value),last.date],
           ["Change",rows.length > 1 ? percent.format(last.value/first.value-1) : "—"],
-          ["Low",rate.format(low)],["High",rate.format(high)]
+          ["Low",axis.format(lowest.value),lowest.date],["High",axis.format(highest.value),highest.date]
         ]) {
           const tile = document.createElement("div");
           const term = document.createElement("dt");
@@ -200,13 +217,13 @@
         currency(quantity*last.value,target,quantity <= 1) + " on " + last.date + " at the published reference rate.";
       if (isRange && rows.length > 1) {
         chart.hidden = false;
-        drawFinanceChart(chart,rows,rate.format,base + " to " + target + " reference rates",false,
-          {tall:true,axisFormat:axis.format,showHistory:false});
+        drawFinanceChart(chart,rows,axis.format,base + " to " + target + " reference rates",false,
+          {tall:true,showHistory:false});
       }
-      result = {rows,base,target,quantity,low,high};
+      result = {rows,base,target,quantity,low:lowest.value,high:highest.value};
       page = 0;
       get("unit").textContent = target + " per " + base;
-      get("converted").textContent = "Amount in " + target;
+      get("converted").textContent = "Amount in " + target + " (" + new Intl.NumberFormat(undefined,{maximumSignificantDigits:12}).format(quantity) + " " + base + ")";
       get("caption").textContent = isRange ? "Published rates within the selected dates" : "Published rates through " + end;
       get("table").querySelector("summary").textContent = "View rate history (" + rows.length + ")";
       get("table").hidden = get("csv").hidden = false;
@@ -218,7 +235,14 @@
 
   mode.addEventListener("change",updateMode);
   for (const input of [startInput,endInput]) input.addEventListener("input",markPreset);
-  from.addEventListener("change",() => { get("base").textContent = from.value; });
+  for (const select of [from,to]) select.addEventListener("change",() => {
+    ++sequence;
+    clearResults();
+    updatePairContext();
+    get("snapshot").hidden = true;
+    get("result-title").textContent = pairHeading(from.value,to.value);
+    status.textContent = "Choose the dates and run the lookup for this pair.";
+  });
   get("swap").addEventListener("click",() => {
     [from.value,to.value] = [to.value,from.value];
     get("base").textContent = from.value;
@@ -260,7 +284,7 @@
       const code = query.get(key)?.toUpperCase();
       if ([...select.options].some(option => option.value === code)) select.value = code;
     }
-    get("base").textContent = from.value;
+    updatePairContext();
   }
   if (query.has("date") || ((query.has("from") || query.has("to")) && !query.has("start") && !query.has("end"))) {
     mode.value = "single";
