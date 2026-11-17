@@ -10,12 +10,15 @@
 </script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>USD to AUD exchange rate | Rate Atelier</title><meta name="description" content="Check how many Australian dollars one U.S. dollar buys at the published reference rate.">
 <link rel="canonical" href="https://getrateatelier.com/usd-to-aud.html">
-<link rel="stylesheet" href="./style.css"><script src="./landing.js?v=html-snapshot" defer></script></head>
+<link rel="stylesheet" href="./style.css"><script src="./landing.js?v=html-snapshot" defer></script><script src="./finance-charts.js" defer></script><script src="./priority-tools.js" defer></script></head>
 <body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><nav aria-label="Site navigation" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.25rem 1rem"><a href="./">Home</a><a href="./#about">About &amp; data sources</a></nav></div></header>
 <main class="wrap"><article class="landing-page">
 <h1>USD to AUD exchange rate</h1><p>Check how many Australian dollars one U.S. dollar buys at the published reference rate.</p>
 <section class="panel"><div class="landing-quote" id="landing-quote" data-asset="AUD" role="status" data-snapshot-date="2026-11-16T00:00:00.000Z" data-snapshot-rate="1.4703">1 USD = 1.4703 AUD</div><small id="landing-source">Published snapshot · Frankfurter · 2026-11-16</small></section>
 <h2>How to use this figure</h2><p>Use the reference rate to compare card charges, travel cash, or transfer offers. Check whether a quoted rate includes fees and when the quote expires.</p><a class="guide-link" href="./?pair=AUD#markets">Open USD/AUD converter →</a>
 <a class="guide-link" href="./#calculators">All calculators →</a>
-</article></main><footer><div class="wrap">Rates may be delayed and should not be considered financial advice.</div></footer></body></html>
-
+<section class="panel" data-pair-converter><h2>Convert USD to AUD</h2><form action="./#compare" method="get">
+<label>Amount in USD <input id="pair-amount" type="number" name="budget" min="0" step="any" value="100" required></label>
+<input type="hidden" name="send" value="USD"><input type="hidden" name="receive" value="AUD">
+<p><output class="landing-quote" id="pair-result" for="pair-amount">Loading rate…</output></p>
+<p id="pair-source" role="status"></p><button class="primary-action">Compare your quotes</button></form></section><section class="panel finance-history" data-fx-pair="USD/AUD"><h2>Recent USD to AUD rates</h2><label>Chart range <select id="fx-range"><option value="7">1 week</option><option value="30" selected>1 month</option><option value="365">1 year</option></select></label><div class="finance-chart" id="pair-chart"></div><p id="pair-status" role="status">Loading reference rates…</p><div class="table-scroll"><table class="stock-table"><caption>Latest published rates · AUD per USD</caption><thead><tr><th scope="col">Rate date</th><th scope="col">Reference rate</th></tr></thead><tbody id="pair-rows"></tbody></table></div><p><a href="./historical-exchange-rates.html?from=USD&amp;to=AUD">Look up a USD to AUD rate by date</a></p></section></article></main><footer><div class="wrap">Rates may be delayed and should not be considered financial advice.</div></footer></body></html>

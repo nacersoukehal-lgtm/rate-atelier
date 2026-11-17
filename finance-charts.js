@@ -19,9 +19,10 @@ const financeHistory = (() => {
     return request;
   }
 
-  function fx(from,to,days = 30) {
-    if (from === to) return Promise.resolve([{date:date(Date.now()-days*day),value:1},{date:date(Date.now()),value:1}]);
-    const params = new URLSearchParams({base:from,quotes:to,from:date(Date.now()-days*day)});
+  function fx(from,to,days = 30,end = Date.now()) {
+    if (from === to) return Promise.resolve([{date:date(end-days*day),value:1},{date:date(end),value:1}]);
+    const params = new URLSearchParams({base:from,quotes:to,from:date(end-days*day),to:date(end)});
+    if ([from,to].includes("EUR") && [from,to].includes("USD")) params.set("providers","ecb");
     return load("https://api.frankfurter.dev/v2/rates?" + params,
       rows => rows.map(row => ({date:row.date,value:row.rate})));
   }
@@ -222,6 +223,3 @@ if (assetHistory) {
   range.addEventListener("change",update);
   update();
 }
-
-
-

@@ -10,7 +10,7 @@
 </script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>USD to EUR exchange rate | Rate Atelier</title><meta name="description" content="See the U.S. dollar to euro reference rate and convert an amount before comparing your provider’s fees.">
 <link rel="canonical" href="https://getrateatelier.com/usd-to-eur.html">
-<link rel="stylesheet" href="./style.css?v=finance-tools"><script src="./landing.js?v=html-snapshot" defer></script><script src="./finance-charts.js?v=history-data" defer></script></head>
+<link rel="stylesheet" href="./style.css?v=finance-tools"><script src="./landing.js?v=html-snapshot" defer></script><script src="./finance-charts.js?v=history-data" defer></script><script src="./priority-tools.js" defer></script></head>
 <body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><nav aria-label="Site navigation" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.25rem 1rem"><a href="./">Home</a><a href="./#about">About &amp; data sources</a></nav></div></header>
 <main class="wrap"><article class="landing-page">
 <h1>USD to EUR exchange rate</h1>
@@ -31,6 +31,5 @@
     <button class="primary-action" type="submit">Compare your quotes →</button>
   </section>
 </form>
-<section class="panel finance-history"><h2>Exchange rate history</h2><div class="finance-chart" data-asset-history="EUR" role="status"></div><small>Frankfurter</small></section>
+<section class="panel finance-history" data-fx-pair="USD/EUR"><h2>Recent USD to EUR rates</h2><label>Chart range <select id="fx-range"><option value="7">1 week</option><option value="30" selected>1 month</option><option value="365">1 year</option></select></label><div class="finance-chart" id="pair-chart"></div><p id="pair-status" role="status">Loading reference rates…</p><div class="table-scroll"><table class="stock-table"><caption>Latest published rates · EUR per USD</caption><thead><tr><th scope="col">Rate date</th><th scope="col">Reference rate</th></tr></thead><tbody id="pair-rows"></tbody></table></div><p><a href="./historical-exchange-rates.html?from=USD&amp;to=EUR">Look up a USD to EUR rate by date</a></p></section>
 </article></main><footer><div class="wrap">Rates may be delayed and should not be considered financial advice.</div></footer></body></html>
-

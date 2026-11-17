@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold and silver bullion break-even calculator | Rate Atelier</title><meta name="description" content="Use your purchase price, dealer buyback quote, and selling costs to estimate the spot price you need to break even.">
+<link rel="canonical" href="https://getrateatelier.com/bullion-break-even-calculator.html"><link rel="stylesheet" href="./style.css"><script src="./shared-calculations.js" defer></script><script src="./priority-tools.js" defer></script></head>
+<body><header class="top"><div class="wrap header"><a class="brand" href="./">Rate Atelier</a><nav aria-label="Site navigation"><a href="./">Home</a> · <a href="./market-tools.html">Market tools</a></nav></div></header>
+<main class="wrap"><article class="landing-page"><h1>Gold and silver bullion break-even calculator</h1><p>Use your purchase price, dealer buyback quote, and selling costs to estimate the spot price you need to break even.</p>
+<form id="bullion-break-even" class="panel tool-inputs"><label>Metal<select name="metal"><option>Gold</option><option>Silver</option></select></label>
+<label>Currency<select name="currency"><option value="USD">USD</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British pound</option><option value="CAD">CAD — Canadian dollar</option><option value="JPY">JPY — Japanese yen</option><option value="INR">INR — Indian rupee</option><option value="MXN">MXN — Mexican peso</option><option value="AUD">AUD — Australian dollar</option><option value="DZD">DZD — Algerian dinar</option><option value="CHF">CHF — Swiss franc</option><option value="CNY">CNY — Chinese yuan</option></select></label>
+<label>Fine metal weight (troy oz)<input name="weight" type="number" min="0.000001" step="any" value="1" required></label>
+<label>Reference spot price per troy oz<input name="spot" type="number" min="0.000001" step="any" value="2500" required></label>
+<label>Dealer sale price (total you pay for the item)<input name="purchase" type="number" min="0.000001" step="any" value="2630" required></label>
+<label>Dealer buyback quote (total paid for the item)<input name="buyback" type="number" min="0.000001" step="any" value="2450" required></label>
+<label>Additional purchase costs<input name="buyFees" type="number" min="0" step="any" value="0" required></label>
+<label>Expected selling costs<input name="sellFees" type="number" min="0" step="any" value="0" required></label>
+<button class="primary-action">Calculate break-even</button></form>
+<section class="panel finance-history"><h2>Break-even spot price</h2><output form="bullion-break-even" id="break-even-result" class="landing-quote"></output><p id="break-even-details" role="status"></p></section>
+<p>The estimate assumes the dealer’s buyback quote stays at the same percentage of spot. Use quotes for the same item, in the same currency, taken around the same time. Use the amount of pure metal in the product as its fine weight.</p><p><a href="./gold-bullion-break-even.html">See the worked example and formula</a></p></article></main>
+<footer><div class="wrap"><a href="./site-information.html">Site information</a></div></footer></body></html>

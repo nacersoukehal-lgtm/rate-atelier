@@ -438,3 +438,9 @@ footer { padding: 18px 0; margin-top: 32px; }
 @media (max-width: 600px) { .header .header-tools { display:flex; order:4; width:100%; } }
 
 .page-breadcrumbs { margin-block-end: 1rem; font-size: .875rem; }
+
+.tool-inputs { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 15rem),1fr)); gap:1rem; align-items:end; }
+.tool-inputs label, #gold-by-currency label, [data-fx-pair] label { display:grid; gap:.35rem; }
+.tool-inputs button { width:fit-content; }
+.landing-page table caption { text-align:left; padding:.6rem 0; font-weight:600; }
+.landing-page .stock-table { min-width:0; }
