@@ -22,7 +22,14 @@ const metalSource = code => code === "HG" ? "Yahoo Finance" : "Standard Bullion"
 const metalPrice = (code,price) => code === "HG" ? "USD " + num(price,4) : money(price,"USD");
 
 const ouncesInGrams = 31.1034768;
-const rates = new Map([["USD", { rate: 1 }]]);
+const publishedFx = currencyFeed.seed();
+const rates = new Map(publishedFx?.rates ?? [["USD", { rate: 1 }]]);
+if (publishedFx) {
+  currencyDirectory = publishedFx.names;
+  currentFxSource = publishedFx.source;
+  usingSavedRates = true;
+  currencyOptions = [...currencyDirectory].sort(([a],[b]) => a.localeCompare(b)).map(([code,name]) => [code+" — "+name,code]);
+}
 const unavailable = "Quote unavailable";
 const quoteKey = key => "rate-atelier-last-quote:" + key;
 function readQuotes(key,fallback) {
@@ -83,7 +90,7 @@ async function refreshRates() {
     const saved = readQuotes("fx",null);
     const prior = rates.size > 1 ? new Map(rates) : new Map(saved?.rates ?? []);
     currentFxSource = result.source;
-    usingSavedRates = false;
+    usingSavedRates = result.published === true;
     currencyDirectory = new Map([...(currencyDirectory ?? saved?.names ?? []),...result.names]);
     rates.clear();
     for (const [code,row] of prior) rates.set(code,{...row,stale:true});
@@ -114,7 +121,7 @@ function fxRateDetail(from,to) {
   const sources = [...new Set(quotes.map(row => row.source || currentFxSource))];
   const dates = [...new Set(quotes.map(row => row.date).filter(Boolean))];
   const stale = usingSavedRates || quotes.some(row => row.stale);
-  return [...sources,...dates.map(dateOnly),stale ? "Stale · last known rate" : ""].filter(Boolean).join(" · ");
+  return [...sources,...dates.map(dateOnly),stale ? "Last known reference rate" : ""].filter(Boolean).join(" · ");
 }
 
 const num = (value, digits = 2) => new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(value);
@@ -337,7 +344,10 @@ function marketChartValue(asset,price) {
 
 let publishedHistoryRequest;
 async function publishedMarketHistory(asset, selectedRange) {
-  publishedHistoryRequest ??= json("./chart-history-snapshot.json").catch(error => {
+  publishedHistoryRequest ??= Promise.resolve().then(() => {
+    const embedded = document.getElementById("published-market-history");
+    return embedded ? JSON.parse(embedded.textContent) : json("./chart-history-snapshot.json");
+  }).catch(error => {
     publishedHistoryRequest = undefined;
     throw error;
   });
@@ -2395,4 +2405,5 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 

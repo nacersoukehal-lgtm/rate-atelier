@@ -100,6 +100,10 @@ for (const file of files) {
 }
 
 let home = await read("index.html");
+const currencySnapshotRequests = Promise.allSettled([
+  json("https://api.frankfurter.dev/v2/rates?base=USD"),
+  json(origin + "currency-reference-snapshot.json?build=" + Date.now())
+]);
 const data = JSON.parse(await read("metal-references.json"));
 const quotes = JSON.parse(await read("market-quotes.json"));
 const news = await read("news-snapshot.json").then(JSON.parse).catch(() => ({}));
@@ -256,6 +260,7 @@ for (const [key,code] of [...histories,["usd","FX:USD/EUR"],["copper","HG"]]) {
   historySnapshot.series[code] = {source,points:rows.map(row => ({date:row.time,price:row.price}))};
 }
 await write("chart-history-snapshot.json",JSON.stringify(historySnapshot));
+home = home.replace("</head>", '<script id="published-market-history" type="application/json">' + JSON.stringify(historySnapshot).replaceAll("<","\\u003c") + "</script>\n</head>");
 
 const silver = new Map(series.get("silver").map(row => [row.time,row.price]));
 series.set("ratio",series.get("gold").filter(row => silver.has(row.time))
@@ -294,6 +299,36 @@ for (const [id,history] of series) {
 }
 const fx = series.get("usd");
 const published = await read("published-quote-snapshot.json").then(JSON.parse).catch(() => ({}));
+
+const currencyResults = await currencySnapshotRequests;
+const oldCurrency = currencyResults[1].status === "fulfilled" ? currencyResults[1].value : {};
+const currencyRows = new Map((oldCurrency.rates ?? []).filter(([code,row]) => /^[A-Z]{3}$/.test(code) && positive(row?.rate) && /^\d{4}-\d{2}-\d{2}$/.test(row.date)));
+currencyRows.set("USD",{rate:1});
+const acceptCurrency = (code,row) => {
+  if (!/^[A-Z]{3}$/.test(code) || !positive(row.rate) || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) return;
+  if (Date.parse(row.date) < Date.parse(currencyRows.get(code)?.date)) return;
+  currencyRows.set(code,row);
+};
+if (currencyResults[0].status === "fulfilled" && Array.isArray(currencyResults[0].value)) {
+  for (const row of currencyResults[0].value) acceptCurrency(row.quote,{rate:row.rate,date:row.date,source:"Frankfurter"});
+}
+for (const code of ["EUR","AUD","DZD"]) {
+  const quote = published[code];
+  if (quote) acceptCurrency(code,{rate:quote.value,date:quote.date,source:quote.source});
+}
+const displayNames = new Intl.DisplayNames("en",{type:"currency"});
+const currencySnapshot = {base:"USD",builtAt:new Date().toISOString(),rates:[...currencyRows],
+  names:[...currencyRows.keys()].map(code => [code,displayNames.of(code)])};
+await write("currency-reference-snapshot.json",JSON.stringify(currencySnapshot));
+home = home.replace("</head>",'<script id="published-fx-data" type="application/json">' + JSON.stringify(currencySnapshot).replaceAll("<","\\u003c") + "</script>\n</head>");
+const euroReference = currencyRows.get("EUR");
+if (euroReference) {
+  home = home.replace('<select id="home-from"></select>','<select id="home-from"><option value="USD" selected>USD — United States Dollar</option></select>');
+  home = home.replace('<select id="home-to"></select>','<select id="home-to"><option value="EUR" selected>EUR — Euro</option></select>');
+  home = put(home,"home-result",escape(new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR",currencyDisplay:"code"}).format(100*euroReference.rate)));
+  home = put(home,"home-rate","1 USD = " + euroReference.rate.toFixed(4) + " EUR · " + escape(euroReference.source) + " · Published reference rate: " + observation(euroReference.date));
+}
+
 if (fx.length > 1 && fx.at(-1).time === published.EUR?.date &&
     Math.abs(fx.at(-1).price-published.EUR.value) < 1e-9) {
   home = put(home,"usd-move",change((fx.at(-1).price/fx.at(-2).price-1)*100) + " · Daily");
@@ -376,4 +411,5 @@ if (fx.length) {
   if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }
+
 
