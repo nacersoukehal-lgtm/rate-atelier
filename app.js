@@ -344,7 +344,8 @@ async function publishedMarketHistory(asset, selectedRange) {
   const snapshot = await publishedHistoryRequest;
   const saved = snapshot.series?.[asset === "FX" ? "FX:USD/EUR" : asset];
   if (!saved?.points?.length) return null;
-  const rows = saved.points.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)))
+  const rows = saved.points.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)) &&
+    (!["XAU","XAG","XPT","XPD"].includes(asset) || ![0,6].includes(new Date(point.date).getUTCDay())))
     .sort((a,b) => Date.parse(a.date)-Date.parse(b.date));
   const end = Date.parse(rows.at(-1)?.date);
   const days = marketRangeDays[selectedRange] ?? (selectedRange === "24h" ? 1 : 0);
@@ -380,7 +381,8 @@ async function loadMarketHistory(force = false) {
   const retry = byId("chart-retry");
   retry.hidden = true;
   let cached = seriesCache.get(key);
-  if (!cached?.points?.length) cached = await publishedMarketHistory(asset,selectedRange).catch(() => null);
+  const publishedHistory = await publishedMarketHistory(asset,selectedRange).catch(() => null);
+  if (publishedHistory && (!cached?.points?.length || Date.parse(publishedHistory.points.at(-1).date) > Date.parse(cached.points.at(-1).date))) cached = publishedHistory;
   if (request !== chartRequest) return;
   const fallback = byId("published-gold-chart");
   if (fallback) fallback.hidden = asset !== "XAU" || selectedRange !== "1m" || (force && points.length > 1);
@@ -423,6 +425,7 @@ async function loadMarketHistory(force = false) {
         next = next.filter(point => Date.parse(point.date) >= cutoff);
       }
       if (next.length < 2) throw new Error("Insufficient historical data");
+      if (cached?.points?.length && Date.parse(next.at(-1).date) < Date.parse(cached.points.at(-1).date)) throw new Error("Provider returned older history");
       seriesCache.delete(key);
       seriesCache.set(key,{points:next,saved:Date.now()});
       if (seriesCache.size > 8) seriesCache.delete(seriesCache.keys().next().value);
