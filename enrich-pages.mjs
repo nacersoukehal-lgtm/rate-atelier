@@ -304,13 +304,18 @@ const currencyResults = await currencySnapshotRequests;
 const oldCurrency = currencyResults[1].status === "fulfilled" ? currencyResults[1].value : {};
 const currencyRows = new Map((oldCurrency.rates ?? []).filter(([code,row]) => /^[A-Z]{3}$/.test(code) && positive(row?.rate) && /^\d{4}-\d{2}-\d{2}$/.test(row.date)));
 currencyRows.set("USD",{rate:1});
+const ecbEuro = published.EUR?.source === "ECB via Frankfurter" ? published.EUR : null;
+if (ecbEuro && currencyRows.get("EUR")?.source !== "ECB via Frankfurter") currencyRows.delete("EUR");
 const acceptCurrency = (code,row) => {
   if (!/^[A-Z]{3}$/.test(code) || !positive(row.rate) || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) return;
   if (Date.parse(row.date) < Date.parse(currencyRows.get(code)?.date)) return;
   currencyRows.set(code,row);
 };
 if (currencyResults[0].status === "fulfilled" && Array.isArray(currencyResults[0].value)) {
-  for (const row of currencyResults[0].value) acceptCurrency(row.quote,{rate:row.rate,date:row.date,source:"Frankfurter"});
+  for (const row of currencyResults[0].value) {
+    if (row.quote === "EUR" && ecbEuro) continue;
+    acceptCurrency(row.quote,{rate:row.rate,date:row.date,source:"Frankfurter"});
+  }
 }
 for (const code of ["EUR","AUD","DZD"]) {
   const quote = published[code];
