@@ -335,6 +335,25 @@ function marketChartValue(asset,price) {
   return "$" + num(price,asset === "HG" ? 4 : 2);
 }
 
+let publishedHistoryRequest;
+async function publishedMarketHistory(asset, selectedRange) {
+  publishedHistoryRequest ??= json("./chart-history-snapshot.json").catch(error => {
+    publishedHistoryRequest = undefined;
+    throw error;
+  });
+  const snapshot = await publishedHistoryRequest;
+  const saved = snapshot.series?.[asset === "FX" ? "FX:USD/EUR" : asset];
+  if (!saved?.points?.length) return null;
+  const rows = saved.points.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)))
+    .sort((a,b) => Date.parse(a.date)-Date.parse(b.date));
+  const end = Date.parse(rows.at(-1)?.date);
+  const days = marketRangeDays[selectedRange] ?? (selectedRange === "24h" ? 1 : 0);
+  // Never expand a month of saved observations to imply a year of coverage.
+  if ((selectedRange === "1y" && end-Date.parse(rows[0]?.date) < 300*86400000) || selectedRange === "max") return null;
+  const filtered = days ? rows.filter(point => Date.parse(point.date) >= end-days*86400000) : rows;
+  return filtered.length > 1 ? {points:filtered,saved:0,source:saved.source,published:true} : null;
+}
+
 async function loadMarketHistory(force = false) {
   const request = ++chartRequest;
   const asset = byId("series").value;
@@ -360,7 +379,9 @@ async function loadMarketHistory(force = false) {
   const state = byId("chart-state");
   const retry = byId("chart-retry");
   retry.hidden = true;
-  const cached = seriesCache.get(key);
+  let cached = seriesCache.get(key);
+  if (!cached?.points?.length) cached = await publishedMarketHistory(asset,selectedRange).catch(() => null);
+  if (request !== chartRequest) return;
   const fallback = byId("published-gold-chart");
   if (fallback) fallback.hidden = asset !== "XAU" || selectedRange !== "1m" || (force && points.length > 1);
   if (!force || !points.length) {
@@ -395,7 +416,7 @@ async function loadMarketHistory(force = false) {
       }
       next = next.filter(point => isPositive(point.price) && Number.isFinite(Date.parse(point.date)));
       next.sort((a,b) => Date.parse(a.date) - Date.parse(b.date));
-      if (asset === "XAU") next = next.filter(point => ![0,6].includes(new Date(point.date).getUTCDay()));
+      if (["XAU","XAG","XPT","XPD"].includes(asset)) next = next.filter(point => ![0,6].includes(new Date(point.date).getUTCDay()));
       const days = marketRangeDays[selectedRange] ?? (selectedRange === "24h" ? 1 : 0);
       if (days && next.length) {
         const cutoff = Date.parse(next.at(-1).date) - days * 86400000;
@@ -417,7 +438,7 @@ async function loadMarketHistory(force = false) {
     const published = !!fallback?.querySelector("svg") && !fallback.hidden;
     state.hidden = !!points.length || published;
     state.textContent = "Historical prices are temporarily unavailable.";
-    if (points.length) byId("chart-source").append(" · Refresh failed. Saved history through " + dateOnly(points.at(-1).date) + ".");
+    if (points.length) byId("chart-source").append(" · Live refresh failed. Showing " + (cached?.published ? "published" : "saved") + " history from " + (cached?.source || metalSource(asset)) + " through " + dateOnly(points.at(-1).date) + " (UTC).");
     else if (published) byId("chart-source").append(" · Refresh failed. Showing the published chart below.");
     retry.hidden = false;
   }
@@ -489,7 +510,7 @@ function draw() {
       ? {year:"numeric",timeZone:"UTC"} : {month:"short",day:"numeric",timeZone:"UTC"});
     ctx.fillText(label,position,height-9);
   }
-  const goldChart = byId("series").value === "XAU";
+  const goldChart = ["XAU","XAG","XPT","XPD"].includes(byId("series").value);
   const day = 86400000;
   const segments = [[]];
   for (const point of points) {
@@ -2371,3 +2392,4 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+

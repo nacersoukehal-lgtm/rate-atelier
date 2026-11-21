@@ -175,6 +175,7 @@ if (stocks.length) {
   home = put(home,"stock-status","Yahoo Finance snapshot · Sample of " + stocks.length + " assets · Quote times shown in UTC.");
 }
 
+const previousHistoryRequest = json(origin + "chart-history-snapshot.json?build=" + Date.now()).catch(() => ({series:{}}));
 const histories = [["gold","XAU"],["silver","XAG"],["platinum","XPT"],["palladium","XPD"]];
 const results = await Promise.allSettled([
   json("https://api.coinpaprika.com/v1/tickers"),
@@ -232,13 +233,30 @@ function points(rows) {
   return rows.filter(row => positive(row.price) && date(row.time))
     .sort((a,b) => Date.parse(a.time)-Date.parse(b.time));
 }
-const series = new Map(histories.map(([key],index) => [key,points((value(index+3)?.points ?? [])
-  .map(row => ({time:row.t,price:row.price})))]));
+const previousHistory = await previousHistoryRequest;
+const series = new Map(histories.map(([key,code],index) => {
+  const fresh = points((value(index+3)?.points ?? []).map(row => ({time:row.t,price:row.price})));
+  const saved = points((previousHistory.series?.[code]?.points ?? []).map(row => ({time:row.date,price:row.price})));
+  // Preserve last known history and its observation dates through provider outages.
+  return [key,fresh.length > 1 && (!saved.length || Date.parse(fresh.at(-1).time) >= Date.parse(saved.at(-1).time)) ? fresh : saved];
+}));
 series.set("usd",points((value(2) ?? []).map(row => ({time:row.date,price:row.rate}))));
 const copper = quotes["HG=F"]?.series;
 series.set("copper",points((copper?.timestamp ?? []).map((time,index) => ({
   time:time*1000,price:copper.indicators?.quote?.[0]?.close?.[index]
 })).filter(row => row.time > 0).map(row => ({...row,time:new Date(row.time).toISOString()}))));
+
+const historySnapshot = {builtAt:new Date().toISOString(),series:{}};
+for (const [key,code] of [...histories,["usd","FX:USD/EUR"],["copper","HG"]]) {
+  const fresh = series.get(key) ?? [];
+  const saved = points((previousHistory.series?.[code]?.points ?? []).map(row => ({time:row.date,price:row.price})));
+  const rows = fresh.length > 1 && (!saved.length || Date.parse(fresh.at(-1).time) >= Date.parse(saved.at(-1).time)) ? fresh : saved;
+  if (rows.length < 2) continue;
+  const source = code.startsWith("FX:") ? "ECB via Frankfurter" : code === "HG" ? "Yahoo Finance" : "Standard Bullion";
+  historySnapshot.series[code] = {source,points:rows.map(row => ({date:row.time,price:row.price}))};
+}
+await write("chart-history-snapshot.json",JSON.stringify(historySnapshot));
+
 const silver = new Map(series.get("silver").map(row => [row.time,row.price]));
 series.set("ratio",series.get("gold").filter(row => silver.has(row.time))
   .map(row => ({time:row.time,price:row.price/silver.get(row.time)})));
@@ -358,3 +376,4 @@ if (fx.length) {
   if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }
+

@@ -21,7 +21,7 @@
 <header class="top"><div class="wrap header"><a class="brand" href="#"><span class="mark" aria-hidden="true">↗</span>Rate Atelier</a><nav aria-label="Site sections" id="section-nav"><a href="#markets">Home</a><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#calculators">Calculators</a><a href="#compare">Compare your quotes</a></nav><nav aria-label="Standalone tools" class="header-tools"><a href="./market-tools.html">Market tools</a><a href="./melt-value-calculator.html">Melt value</a><a href="./compare-transfer-quotes.html">Compare transfer quotes</a></nav><div class="header-actions"><button id="theme-toggle" class="refresh" type="button" aria-pressed="false">Dark mode</button><button id="refresh" class="refresh" type="button">↻ <span>Refresh</span></button></div></div></header>
 <main class="wrap"><section id="markets" class="tab-panel" aria-labelledby="market-home-title">
 <nav class="market-shortcuts" aria-label="Explore markets"><a href="#stocks">Stocks, ETFs &amp; Indices</a><a href="#crypto">Crypto</a><a href="#news">News</a></nav>
-<div class="market-hero"><div class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1 id="market-home-title">Exchange rates, gold &amp; silver prices.</h1><p>Convert currencies, compare your money transfer quotes, and explore gold and silver price history.</p><p class="hero-newsletter"><a href="https://preview.mailerlite.io/forms/2799760/204290917471881058/share">Email updates</a> when we publish new guides or tools.</p></div></div><aside class="panel home-converter" aria-labelledby="home-converter-title">
+<div class="market-hero"><div class="intro"><div><div class="eyebrow">FX &amp; PRECIOUS METALS</div><h1 id="market-home-title">Know what your money and metals are worth.</h1><p>Check exchange rates, estimate gold and silver values, and compare your transfer quotes.</p><p class="hero-trust">Reference prices with source names and observation dates. Your calculations stay in your browser.</p><nav class="trust-links" aria-label="How Rate Atelier works"><a href="#about">About &amp; data methodology</a><a href="./site-information.html#contact">Contact</a></nav><p class="hero-newsletter"><a href="https://preview.mailerlite.io/forms/2799760/204290917471881058/share">Practical guides by email</a> — currency and precious metals explainers, plus new tools.</p></div></div><aside class="panel home-converter" aria-labelledby="home-converter-title">
 <h2 id="home-converter-title">Quick currency conversion</h2>
 <label>Amount<input id="home-amount" type="number" min="0" step="any" value="100"></label>
 <div class="fields pair"><label>From<select id="home-from"></select></label><button id="home-swap" class="swap" type="button" aria-label="Swap homepage currencies">⇄</button><label>To<select id="home-to"></select></label></div>
@@ -35,6 +35,16 @@
 <article><div class="quote-head"><span class="icon silver">Ag</span><div><h3><a href="./silver-price-today.html">Silver</a></h3><small>XAG · USD / troy oz</small></div></div><strong id="silver">$48.26</strong><div class="quote-trend"><span id="silver-move" class="quote-move"></span><span id="silver-spark" class="quote-spark"></span></div><small id="silver-time">Published snapshot · Standard Bullion · 2026-11-16 01:03 UTC</small></article>
 <article><div class="quote-head"><span class="icon fx">$</span><div><h3><a href="./usd-to-eur.html">USD/EUR</a></h3><small>Euro per US dollar</small></div></div><strong id="usd">€0.9048</strong><div class="quote-trend"><span id="usd-move" class="quote-move"></span><span id="usd-spark" class="quote-spark"></span></div><small id="usd-time">Published snapshot · ECB via Frankfurter · 2026-11-13</small></article>
 </div></section></div>
+<section class="home-useful panel" aria-labelledby="useful-title">
+<div class="useful-heading"><div><h2 id="useful-title">Start with what you need</h2><p>Turn reference prices into a useful calculation.</p></div><a href="./market-tools.html">All market tools</a></div>
+<div class="useful-grid">
+<a href="./compare-transfer-quotes.html"><h3>Compare transfer quotes</h3><p>See how much arrives after the rate and fees in your own quotes.</p></a>
+<a href="./melt-value-calculator.html"><h3>Estimate your metal’s value</h3><p>Calculate gold or silver content from weight and purity.</p></a>
+<a href="./historical-exchange-rates.html"><h3>Look up a past exchange rate</h3><p>Compare dates, inspect a range, and download published rates.</p></a>
+<a href="#calendar"><h3>Plan around economic events</h3><p>Check upcoming inflation releases and central bank announcements.</p></a>
+</div>
+<article class="featured-guide"><p class="eyebrow">PRACTICAL GUIDE</p><h3><a href="./gold-bullion-break-even.html">How much must gold rise to cover your buying costs?</a></h3><p>Learn how dealer premiums and resale quotes affect your break-even price.</p><a href="./bullion-break-even-calculator.html">Use the break-even calculator</a> · <a href="#blog">Browse more guides</a></article>
+</section>
 <div class="quotes more-metals additional-quotes" role="group" aria-label="More metal quotes">
 <article><div class="quote-head"><span class="icon ratio">÷</span><div><h3><a href="./gold-silver-ratio.html">Gold / Silver</a></h3><small>Troy ounce ratio</small></div></div><strong id="ratio">Loading quote…</strong><div class="quote-trend"><span id="ratio-move" class="quote-move"></span><span id="ratio-spark" class="quote-spark"></span></div><small id="ratio-time">Silver ounces per ounce of gold</small></article>
 <article><div class="quote-head"><span class="icon silver">Pt</span><div><h3><a href="./platinum-price-today.html">Platinum</a></h3><small>XPT · USD / troy oz</small></div></div><strong id="platinum">Loading quote…</strong><div class="quote-trend"><span id="platinum-move" class="quote-move"></span><span id="platinum-spark" class="quote-spark"></span></div><small id="platinum-time">Standard Bullion</small></article>
@@ -150,8 +160,8 @@
 <h2>Rate Atelier Blog</h2>
 <p class="blog-intro">Practical guides to exchange rates, precious metals, and global markets.</p>
 <section id="newsletter" class="panel newsletter-signup" aria-labelledby="newsletter-heading">
-<h3 id="newsletter-heading">Rate Atelier Newsletter</h3>
-<p>Get occasional emails when we publish new currency and metals guides, market explanations, or tools. Unsubscribe anytime.</p>
+<h3 id="newsletter-heading">Make more informed money decisions</h3>
+<p>Get practical currency and precious metals guides, plus updates on new calculators and tools. Occasional emails. Unsubscribe anytime.</p>
 <iframe title="Rate Atelier newsletter signup" src="https://preview.mailerlite.io/forms/2799760/204290917471881058/share" loading="lazy" width="520" height="285" style="width:100%;max-width:520px;border:0"></iframe>
 <p><a class="guide-link" href="https://preview.mailerlite.io/forms/2799760/204290917471881058/share">Open the Rate Atelier newsletter signup →</a></p>
 </section>
@@ -190,7 +200,7 @@
 <dt>Yahoo Finance</dt><dd>Stocks, indices, the U.S. Dollar Index, and copper futures. Quotes for the visible results are checked every five minutes while the page is active. Copper and the Dollar Index are checked with the dashboard. Quotes may be delayed or reflect the last close.</dd>
 <dt>CoinPaprika and CoinGecko</dt><dd>Cryptocurrency quotes are checked every five minutes while active. CoinGecko provides supplemental price records and profile data.</dd>
 <dt>ShowMyTrades, FXStreet, CNBC, European Central Bank, and Federal Reserve</dt><dd>The economic calendar and news feeds are checked every 15 minutes while their tabs are active.</dd></dl>
-<h3>Using the numbers</h3><p>Rates may be delayed and should not be considered financial advice. Actual transfer, dealer, and trading prices can differ from the figures shown.</p>
+<h3>Our methodology</h3><p>We display the provider’s observation time separately from the website build time. A successful page refresh does not mean a market published a new quote. Currency reference rates are not executable transfer offers; bullion midpoints exclude retail premiums. Ratios use matching units. When a feed fails, we retain available history with its source and last observation date, rather than inventing new values.</p><h3>Using the numbers</h3><p>Rates may be delayed and should not be considered financial advice. Actual transfer, dealer, and trading prices can differ from the figures shown.</p>
 <p>Price alerts are checked in your browser while the dashboard is open and active.</p></div></section>
 </main>
 <dialog id="coin-profile" class="coin-profile" aria-labelledby="coin-title">
@@ -208,3 +218,4 @@
 <nav aria-label="About and policies"><strong>About Rate Atelier</strong><a href="#about">Data sources</a><a href="./site-information.html#contact">Contact</a><a href="./site-information.html#privacy">Privacy</a><a href="./site-information.html#disclaimer">Disclaimer</a><a href="./site-information.html#terms">Terms</a></nav>
 </div></footer>
 </body></html>
+
