@@ -101,5 +101,86 @@ jobs:
             }
           }
           JS
-      - uses: actions/deploy-pages@v4
+      - name: Prepare official Pages deployment action
+        uses: actions/checkout@v4
+        with:
+          repository: actions/deploy-pages
+          ref: d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+          path: .pages-deploy-action
+          persist-credentials: false
+      - name: Add bounded artifact lookup retry
+        run: |
+          cat > .pages-deploy-action/retry.cjs <<'JS'
+          "use strict";
+          const {spawn} = require("node:child_process");
+          const path = require("node:path");
+          
+          function isArtifactLookupFailure(result) {
+            return result.code !== 0 && !result.error && !result.signal &&
+              result.output.includes('No artifacts named "github-pages" were found for this workflow run.') &&
+              !/Creating Pages deployment with payload:|Created deployment for/.test(result.output);
+          }
+          
+          async function deployWithRetry({run,wait,write,delays=[10000,20000]}) {
+            for (let attempt=0; attempt<=delays.length; attempt++) {
+              const result = await run();
+              const retry = attempt < delays.length && isArtifactLookupFailure(result);
+              // A recovered lookup failure is a warning; exhausted or unrelated failures remain errors.
+              write(retry ? result.output.replace(/^::error(?= |::)/gm,"::warning") : result.output);
+              if (result.code === 0) return 0;
+              if (!retry) return 1;
+              write("::warning::Pages artifact lookup failed before deployment started. Retrying in " +
+                delays[attempt]/1000 + " seconds (attempt " + (attempt+2) + " of " + (delays.length+1) + ").\n");
+              await wait(delays[attempt]);
+            }
+            return 1;
+          }
+          
+          if (require.main === module) {
+            let child;
+            let cancelled = false;
+            for (const signal of ["SIGINT","SIGTERM"]) process.on(signal,() => {
+              cancelled = true;
+              child?.kill(signal);
+            });
+            const run = () => new Promise(resolve => {
+              if (cancelled) return resolve({code:1,output:"Deployment cancelled.\n",signal:"SIGTERM"});
+              let output = "";
+              let spawnError;
+              child = spawn(process.execPath,[path.join(__dirname,"dist/index.js")],{
+                env:process.env,stdio:["ignore","pipe","pipe"]
+              });
+              child.stdout.on("data",chunk => { output += chunk; });
+              child.stderr.on("data",chunk => { output += chunk; });
+              child.on("error",error => { spawnError = error; });
+              child.on("close",(code,signal) => {
+                if (spawnError) output += "::error::Unable to start the official Pages deployment action.\n";
+                resolve({code,signal,error:spawnError,output});
+              });
+            });
+            deployWithRetry({
+              run,
+              wait:ms=>new Promise(resolve=>setTimeout(resolve,ms)),
+              write:text=>process.stdout.write(text)
+            }).then(code=>{process.exitCode=code;}).catch(error=>{
+              console.error("::error::Pages retry wrapper failed: " + error.message);
+              process.exitCode=1;
+            });
+          }
+          module.exports={deployWithRetry,isArtifactLookupFailure};
+          JS
+          node --input-type=module <<'JS'
+          import {readFile,writeFile} from 'node:fs/promises';
+          const file = '.pages-deploy-action/action.yml';
+          const original = await readFile(file,'utf8');
+          const entry = "main: 'dist/index.js'";
+          if (original.split(entry).length !== 2) throw Error('Unexpected official action entry point');
+          await writeFile(file,original.replace(entry,"main: 'retry.cjs'"));
+          JS
+      - name: Deploy Pages with targeted retry
+        uses: ./.pages-deploy-action
+        with:
+          token: ${{ github.token }}
+          timeout: '180000'
+
 
