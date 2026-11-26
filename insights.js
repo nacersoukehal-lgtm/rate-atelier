@@ -21,6 +21,8 @@ document.querySelectorAll("[data-pair]").forEach(button => button.addEventListen
     write("home-rate","This pair is temporarily unavailable. Try Refresh.");
     return;
   }
+  byId("home-currency-search").value = "";
+  populateCurrencySelects();
   byId("home-from").value = "USD";
   byId("home-to").value = pair;
   updateHomeConverter();
@@ -321,3 +323,4 @@ for (const [id,render] of [["crypto",renderCryptoMovers],["stocks",renderStockMo
   new MutationObserver(render).observe(byId(id),{attributes:true,attributeFilter:["hidden"]});
   render();
 }
+

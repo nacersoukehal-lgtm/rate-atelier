@@ -60,10 +60,11 @@ const cryptoCurrencyCodes = new Set(["BTC","ETH","USDT","USDC","BNB","XRP","SOL"
 function currencyGroup(label,code) {
   if (/^(XAU|XAG|XPT|XPD|XCU)$/.test(code) || /gold|silver|platinum|palladium/i.test(label)) return "Metals";
   if (cryptoCurrencyCodes.has(code) || /bitcoin|ethereum|crypto|tether|dogecoin|solana/i.test(label)) return "Cryptocurrencies";
+  if (label.endsWith(" — " + code)) return "Other assets";
   return popularCurrencies.has(code) ? "Popular currencies" : "Other currencies";
 }
 function fillCurrencySelect(id,entries,selected) {
-  const groups = new Map(["Popular currencies","Other currencies","Cryptocurrencies","Metals"].map(label => [label,[]]));
+  const groups = new Map(["Popular currencies","Other currencies","Cryptocurrencies","Metals","Other assets"].map(label => [label,[]]));
   for (const [label,code] of entries) groups.get(currencyGroup(label,code)).push(new Option(label,code));
   byId(id).replaceChildren(...[...groups].filter(([,options]) => options.length).map(([label,options]) => {
     const group = document.createElement("optgroup"); group.label=label; group.append(...options); return group;
