@@ -35,7 +35,8 @@
         try {
           const result=output();
           await navigator.clipboard.writeText(result.url);
-          status.textContent="Result link copied. It contains your calculator inputs and dated reference rates.";
+          status.replaceChildren(document.createTextNode("Result link copied. Inputs and reference dates are included. "));
+          const saved=document.createElement("a"); saved.href=result.url; saved.textContent="Open shareable result"; status.append(saved);
         } catch(error) {
           status.replaceChildren(document.createTextNode(error.message+" "));
           try {

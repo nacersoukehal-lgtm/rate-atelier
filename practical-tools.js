@@ -69,6 +69,7 @@
         "Shortfall includes explicit fees and any difference between entered and reference rates."
       ]}:null;
     }
+    root.addEventListener("submit",event=>event.preventDefault());
     root.addEventListener("input",render);root.addEventListener("change",render);
     get("travel-refresh").addEventListener("click",()=>{get("travel-reference").value="";params.delete("reference-note");refresh(()=>{for(const [id,fallback] of [["travel-from","USD"],["travel-to","EUR"]])populate(id,fallback);render();});});
     shared.bind(root,fields,()=>report);render();
@@ -115,6 +116,7 @@
       const available=rows.filter(r=>positive(r.rate));
       report=valid&&available.length?{title:"Multiple-currency conversion",params:{targets:[...selected].join(","),reference:JSON.stringify(available.map(({code,rate,note})=>({code,rate,note})))},lines:["Amount: "+cash(amount,from),...available.map(r=>cash(amount*r.rate,r.code)+" · Rate "+r.rate+" "+r.code+" per "+from+" · "+r.note),"Provider fees and spreads are not included."]}:null;
     }
+    root.addEventListener("submit",event=>event.preventDefault());
     root.addEventListener("input",event=>{if(event.target.id!=="multi-search")render();});
     get("multi-search").addEventListener("input",choices);
     get("multi-from").addEventListener("change",()=>{fixed=null;render();});
