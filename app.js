@@ -2112,24 +2112,137 @@ function renderStockProfile(asset) {
   }));
 }
 
-function drawStockHistory(host,asset,points,stale = false) {
-  const values = points.map(point => point.price);
-  const min = Math.min(...values);
-  const spread = Math.max(...values)-min;
+function drawStockHistory(host,asset,history,stale = false) {
+  const points = [...new Map(history.filter(point => Number.isFinite(point.price) && point.price > 0 &&
+    Number.isFinite(Date.parse(point.date))).map(point => [Date.parse(point.date),point])).values()]
+    .sort((a,b) => Date.parse(a.date)-Date.parse(b.date));
+  if (points.length < 2) {
+    host.textContent = "At least two dated observations are needed to draw this chart.";
+    return;
+  }
+  const data = stockQuotes.get(asset.code) ?? {asset};
+  const format = price => stockValue(data,price);
+  const first = points[0], last = points.at(-1);
+  const low = points.reduce((a,b) => a.price < b.price ? a : b);
+  const high = points.reduce((a,b) => a.price > b.price ? a : b);
+  const change = (last.price/first.price-1)*100;
+  const fixed = new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const movement = value => (value > 0 ? "+" : "") + fixed.format(Math.abs(value)<.005 ? 0 : value) + "%";
+  const stats = document.createElement("dl");
+  stats.className = "stock-history-stats";
+  for (const [label,value,date] of [
+    ["First",format(first.price),first.date],["Last",format(last.price),last.date],
+    ["Change",movement(change),"Over displayed range"],["Low",format(low.price),low.date],["High",format(high.price),high.date]
+  ]) {
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    const detail = document.createElement("dd");
+    const stamp = document.createElement("small");
+    term.textContent = label;
+    detail.textContent = value;
+    stamp.textContent = Number.isFinite(Date.parse(date)) ? dateOnly(date) : date;
+    item.append(term,detail,stamp);
+    stats.append(item);
+  }
+
   const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 500 136");
+  const chartWidth = Math.max(320,Math.min(720,(host.clientWidth || 740)-20));
+  svg.setAttribute("viewBox","0 0 " + chartWidth + " 300");
   svg.setAttribute("role","img");
-  svg.setAttribute("aria-label",asset.name + " daily close history");
-  const line = document.createElementNS(svg.namespaceURI,"polyline");
-  line.setAttribute("points",values.map((value,index) =>
-    (5+490*index/(values.length-1)) + "," + (spread ? 130-124*(value-min)/spread : 68)).join(" "));
-  line.setAttribute("fill","none");
-  line.setAttribute("stroke","#185741");
-  line.setAttribute("stroke-width","2");
-  svg.append(line);
+  svg.setAttribute("tabindex","0");
+  svg.setAttribute("aria-label",asset.name + " daily price history. " + dateOnly(first.date) + " to " +
+    dateOnly(last.date) + ". Low " + format(low.price) + ", high " + format(high.price) +
+    ". Use left and right arrow keys to inspect observations.");
+  const add = (tag,attrs,text) => {
+    const element = document.createElementNS(svg.namespaceURI,tag);
+    for (const [key,value] of Object.entries(attrs)) element.setAttribute(key,value);
+    if (text !== undefined) element.textContent = text;
+    svg.append(element);
+    return element;
+  };
+  add("title",{},asset.name + " · " + dateOnly(first.date) + " to " + dateOnly(last.date) +
+    " · " + movement(change) + " over displayed range");
+  const left = 88, right = chartWidth-16, top = 30, bottom = 254;
+  const spread = high.price-low.price;
+  const padding = (spread || high.price*.02)*.12;
+  const min = low.price-padding, max = high.price+padding;
+  const x = index => left+(right-left)*(Date.parse(points[index].date)-Date.parse(first.date))/
+    (Date.parse(last.date)-Date.parse(first.date));
+  const y = price => bottom-(bottom-top)*(price-min)/(max-min);
+  add("text",{x:left,y:17,fill:"currentColor","font-size":14},
+    asset.region === "Indices" ? "Index level" : "Price" + (data.currency ? " (" + data.currency + ")" : ""));
+  for (let tick=0; tick<5; tick++) {
+    const value = min+(max-min)*tick/4;
+    const level = y(value);
+    add("line",{x1:left,x2:right,y1:level,y2:level,stroke:"currentColor",opacity:".15"});
+    add("text",{x:left-9,y:level+5,"text-anchor":"end",fill:"currentColor","font-size":14},fixed.format(value));
+  }
+  const tickIndexes = [...new Set([0,Math.floor((points.length-1)/2),points.length-1])];
+  for (const index of tickIndexes) {
+    add("text",{x:x(index),y:282,fill:"currentColor","font-size":14,
+      "text-anchor":index === 0 ? "start" : index === points.length-1 ? "end" : "middle"},new Date(points[index].date).toLocaleDateString(undefined,{month:"short",day:"numeric",timeZone:"UTC"}));
+  }
+  add("polyline",{points:points.map((point,index)=>x(index)+","+y(point.price)).join(" "),
+    fill:"none",stroke:"currentColor","stroke-width":2,"vector-effect":"non-scaling-stroke"});
+  const cursor = add("line",{x1:0,x2:0,y1:top,y2:bottom,stroke:"currentColor","stroke-dasharray":"4 4",visibility:"hidden"});
+  const dot = add("circle",{r:4,fill:"currentColor",visibility:"hidden"});
+  const inspection = document.createElement("p");
+  inspection.className = "stock-history-inspection";
+  inspection.setAttribute("aria-live","polite");
+  let selected = points.length-1;
+  function inspect(index) {
+    selected = Math.max(0,Math.min(points.length-1,index));
+    const point = points[selected];
+    dot.setAttribute("cx",x(selected)); dot.setAttribute("cy",y(point.price)); dot.setAttribute("visibility","visible");
+    cursor.setAttribute("x1",x(selected)); cursor.setAttribute("x2",x(selected)); cursor.setAttribute("visibility","visible");
+    inspection.textContent = dateOnly(point.date) + " · " + format(point.price) + " · Daily observation";
+  }
+  function inspectPointer(event) {
+    const box = svg.getBoundingClientRect();
+    const scale = Math.min(box.width/chartWidth,box.height/300);
+    const position = (event.clientX-box.left-(box.width-chartWidth*scale)/2)/scale;
+    let nearest = 0;
+    for (let index=1; index<points.length; index++) if (Math.abs(x(index)-position)<Math.abs(x(nearest)-position)) nearest=index;
+    inspect(nearest);
+  }
+  svg.addEventListener("pointermove",inspectPointer);
+  svg.addEventListener("pointerdown",inspectPointer);
+  svg.addEventListener("focus",()=>inspect(selected));
+  svg.addEventListener("keydown",event=>{
+    if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+    event.preventDefault();
+    inspect(event.key === "Home" ? 0 : event.key === "End" ? points.length-1 : selected+(event.key === "ArrowLeft" ? -1 : 1));
+  });
+  inspect(selected);
   const caption = document.createElement("small");
-  caption.textContent = dateOnly(points[0].date) + " – " + dateOnly(points.at(-1).date) + " · Daily prices" + (stale ? " · Stale · saved history" : "");
-  host.replaceChildren(svg,caption);
+  caption.textContent = dateOnly(first.date) + " – " + dateOnly(last.date) + " · " + points.length +
+    " daily observations · Yahoo Finance" + (stale ? " · Saved history; check observation dates" : "") +
+    ". Range change uses unrounded values and can differ from the session change above.";
+  const details = document.createElement("details");
+  details.className = "stock-history-data";
+  const summary = document.createElement("summary");
+  summary.textContent = "View price data (" + points.length + " observations)";
+  details.append(summary);
+  details.addEventListener("toggle",()=>{
+    if (!details.open || details.querySelector("table")) return;
+    const scroll = document.createElement("div");
+    scroll.className = "stock-history-table";
+    const table = document.createElement("table");
+    table.createCaption().textContent = asset.name + " · Daily observations · Dates in UTC";
+    const header = table.createTHead().insertRow();
+    for (const label of ["Date (UTC)","Price / level","Change from prior observation"]) {
+      const th = document.createElement("th"); th.scope="col"; th.textContent=label; header.append(th);
+    }
+    const body = table.createTBody();
+    for (let index=points.length-1; index>=0; index--) {
+      const row = body.insertRow();
+      row.insertCell().textContent = dateOnly(points[index].date);
+      row.insertCell().textContent = format(points[index].price);
+      row.insertCell().textContent = index ? movement((points[index].price/points[index-1].price-1)*100) : "—";
+    }
+    scroll.append(table); details.append(scroll);
+  });
+  host.replaceChildren(stats,svg,inspection,caption,details);
 }
 
 async function renderStockHistory(requestedRange, notice = "") {
@@ -2405,5 +2518,6 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 

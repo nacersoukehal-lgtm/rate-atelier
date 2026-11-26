@@ -509,3 +509,21 @@ footer { padding: 18px 0; margin-top: 32px; }
 @media(max-width:1000px) { .useful-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:550px) { .useful-grid { grid-template-columns:1fr; } .market-hero h1 { max-width:none; } }
 
+
+/* Readable stock history values and inspection controls. */
+.native-stock-chart svg { width:100%; height:auto; color:var(--green); }
+.stock-history-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.5rem; margin:0 0 .8rem; }
+.stock-history-stats > div { min-width:0; padding:.55rem; background:var(--surface); border:1px solid var(--line); border-radius:8px; }
+.stock-history-stats dt { color:var(--muted); font-size:14px; }
+.stock-history-stats dd { margin:.2rem 0; font-size:16px; font-weight:700; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.stock-history-stats small { font-size:12px; }
+.stock-history-inspection { min-height:1.5em; margin:.25rem 0; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.stock-history-data { margin-top:.8rem; font-size:14px; }
+.stock-history-data summary { cursor:pointer; font-weight:700; padding-block:.4rem; }
+.stock-history-table { overflow:auto; max-height:20rem; }
+.stock-history-table table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.stock-history-table :is(th,td) { padding:.5rem .6rem; text-align:right; border-bottom:1px solid var(--line); font-size:14px; white-space:nowrap; }
+.stock-history-table :is(th,td):first-child { text-align:left; }
+.stock-history-table caption { text-align:left; padding:.5rem; }
+@media(max-width:650px) { .stock-history-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .stock-chart-head { flex-wrap:wrap; } }
+
