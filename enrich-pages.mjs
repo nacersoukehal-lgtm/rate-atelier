@@ -40,6 +40,14 @@ function put(html,id,contents) {
   return html.replace(pattern,(_,start,tag,end) => start + contents + end);
 }
 
+const googleTagMarkup = "<!-- Rate Atelier Google Tag Manager -->\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('consent', 'default', {analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});\n</script>\n<script async src=\"https://www.googletagmanager.com/gtm.js?id=GTM-KXBKTZ52\"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n</script>\n<!-- End Rate Atelier Google Tag Manager -->";
+function installGoogleTag(html) {
+  html = html.replace(/<!-- Rate Atelier Google Tag Manager -->[\s\S]*?<!-- End Rate Atelier Google Tag Manager -->\s*/g,"");
+  html = html.replace(/<script\b[^>]*src=["']https:\/\/www\.googletagmanager\.com\/gtm\.js\?id=GTM-KXBKTZ52["'][^>]*>\s*<\/script>\s*/gi,"");
+  if (!/<head\b[^>]*>/i.test(html)) throw Error("Google tag installation requires a head element");
+  return html.replace(/<head\b[^>]*>\s*/i,head=>head.trimEnd()+"\n"+googleTagMarkup+"\n");
+}
+
 const css = await read("style.css");
 async function hashed(name,extension,source) {
   const hash = createHash("sha256").update(source).digest("hex").slice(0,16);
@@ -96,7 +104,7 @@ for (const file of files) {
         sameAs:["https://www.facebook.com/profile.php?id=61596546572192"]}
     }) + '</script>');
   }
-  await write(file,html.replace("</head>",tags.join("\n")+"\n</head>"));
+  await write(file,installGoogleTag(html.replace("</head>",tags.join("\n")+"\n</head>")));
 }
 
 let home = await read("index.html");
@@ -416,5 +424,6 @@ if (fx.length) {
   if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }
+
 
 

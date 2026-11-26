@@ -25,7 +25,7 @@
     window["ga-disable-" + id] = false;
     window.dataLayer = window.dataLayer || [];
     function gtag() { window.dataLayer.push(arguments); }
-    gtag("consent","default",{analytics_storage:"granted",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
+    gtag("consent","update",{analytics_storage:"granted",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
     gtag("js",new Date());
     gtag("config",id,{allow_google_signals:false,allow_ad_personalization_signals:false});
     const tag = document.createElement("script");
@@ -46,6 +46,7 @@
       if (next === "yes") startAnalytics();
       else {
         window["ga-disable-" + id] = true;
+        window.gtag?.("consent","update",{analytics_storage:"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
         for (const name of ["_ga","_ga_" + id.slice(2)]) {
           for (const domain of ["","; Domain=" + location.hostname]) {
             document.cookie = name + "=; Max-Age=0; Path=/" + domain;
@@ -57,3 +58,4 @@
   }
   if (choice === "yes") startAnalytics();
 })();
+
