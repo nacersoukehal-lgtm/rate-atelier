@@ -17,12 +17,12 @@
 <form id="landing-converter" action="./#compare" method="get">
   <section class="panel" aria-labelledby="converter-heading">
     <h2 id="converter-heading">Convert USD to EUR</h2>
-    <label>Amount in USD<input id="landing-amount" name="budget" type="number" min="0" step="any" value="500" required></label>
+    <label>Amount in USD<input id="landing-amount" name="budget" type="number" min="0" step="any" value="100" required></label>
     <input type="hidden" name="send" value="USD">
     <input type="hidden" name="receive" value="EUR">
-    <output class="landing-quote" id="landing-result" for="landing-amount">€451.53</output>
+    <output class="landing-quote" id="landing-result" for="landing-amount">€90.31</output>
     <p><span id="landing-quote" data-asset="EUR" data-snapshot-date="2026-11-16T00:00:00.000Z" data-snapshot-rate="0.90306">1 USD = 0.90306 EUR</span><br><small id="landing-source">Published snapshot · Frankfurter · 2026-11-16</small></p>
-    <a class="guide-link" href="./eur-to-usd.html">Swap to EUR → USD</a>
+    <a class="guide-link" id="landing-swap" href="./eur-to-usd.html?amount=100">Swap to EUR → USD</a>
   </section>
   <section class="panel finance-history">
     <h2>How much will the recipient get?</h2>
@@ -33,3 +33,4 @@
 </form>
 <section class="panel finance-history" data-fx-pair="USD/EUR"><h2>Recent USD to EUR rates</h2><label>Chart range <select id="fx-range"><option value="7">1 week</option><option value="30" selected>1 month</option><option value="365">1 year</option></select></label><div class="finance-chart" id="pair-chart"></div><p id="pair-status" role="status">Loading reference rates…</p><div class="table-scroll"><table class="stock-table"><caption>Latest published rates · EUR per USD</caption><thead><tr><th scope="col">Rate date</th><th scope="col">Reference rate</th></tr></thead><tbody id="pair-rows"></tbody></table></div><p><a href="./historical-exchange-rates.html?from=USD&amp;to=EUR">Look up a USD to EUR rate by date</a></p></section>
 </article></main><footer><div class="wrap">Rates may be delayed and should not be considered financial advice.</div></footer></body></html>
+

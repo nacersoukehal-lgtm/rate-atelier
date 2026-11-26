@@ -22,7 +22,21 @@ function updateLandingAmount() {
       new Intl.NumberFormat(undefined,{style:"currency",currency:asset === "EURUSD" ? "USD" : "EUR"}).format(converted) :
       "Reference rate unavailable";
 }
-landingAmount?.addEventListener("input",updateLandingAmount);
+function updateSwapLink() {
+  const link = document.getElementById("landing-swap");
+  if (!link || !landingAmount) return;
+  const url = new URL(link.getAttribute("href"),location.href);
+  if (landingAmount.validity.valid && landingAmount.value.trim()) url.searchParams.set("amount",landingAmount.value);
+  else url.searchParams.delete("amount");
+  link.href = url.href;
+}
+if (landingAmount) {
+  const carried = new URLSearchParams(location.search).get("amount");
+  if (carried?.trim() && Number.isFinite(Number(carried)) && Number(carried) >= 0) landingAmount.value = carried;
+  updateSwapLink();
+  updateLandingAmount();
+}
+landingAmount?.addEventListener("input",() => { updateLandingAmount(); updateSwapLink(); });
 try {
   const stored = JSON.parse(localStorage.getItem(cacheKey));
   if (stored?.text && (!lastQuote || Date.parse(stored.date) >= Date.parse(lastQuote.date))) lastQuote = stored;
@@ -100,6 +114,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem("rate-atelie
 if (lastQuote) showQuote(lastQuote.text,lastQuote.detail,lastQuote.date !== publishedDate);
 updateLandingQuote();
 setInterval(() => { if (!document.hidden) updateLandingQuote(); },60000);
+
 
 
 

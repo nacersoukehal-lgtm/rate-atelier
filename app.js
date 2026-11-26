@@ -55,21 +55,42 @@ function fillSelect(id, entries, selected) {
   byId(id).replaceChildren(...entries.map(([label, value]) => new Option(label, value)));
   if (selected) byId(id).value = selected;
 }
+const popularCurrencies = new Set(["USD","EUR","GBP","CAD","AUD","JPY","DZD"]);
+const cryptoCurrencyCodes = new Set(["BTC","ETH","USDT","USDC","BNB","XRP","SOL","DOGE","ADA","TRX","DOT","LTC","BCH","XLM","EOS","XBT"]);
+function currencyGroup(label,code) {
+  if (/^(XAU|XAG|XPT|XPD|XCU)$/.test(code) || /gold|silver|platinum|palladium/i.test(label)) return "Metals";
+  if (cryptoCurrencyCodes.has(code) || /bitcoin|ethereum|crypto|tether|dogecoin|solana/i.test(label)) return "Cryptocurrencies";
+  return popularCurrencies.has(code) ? "Popular currencies" : "Other currencies";
+}
+function fillCurrencySelect(id,entries,selected) {
+  const groups = new Map(["Popular currencies","Other currencies","Cryptocurrencies","Metals"].map(label => [label,[]]));
+  for (const [label,code] of entries) groups.get(currencyGroup(label,code)).push(new Option(label,code));
+  byId(id).replaceChildren(...[...groups].filter(([,options]) => options.length).map(([label,options]) => {
+    const group = document.createElement("optgroup"); group.label=label; group.append(...options); return group;
+  }));
+  if (selected) byId(id).value=selected;
+}
 function populateCurrencySelects(converterOnly = false) {
   const query = byId("currency-search").value.trim().toLowerCase();
+  const homeQuery = byId("home-currency-search").value.trim().toLowerCase();
   const matches = currencyOptions.filter(([label]) => label.toLowerCase().includes(query));
+  const homeMatches = currencyOptions.filter(([label]) => label.toLowerCase().includes(homeQuery));
   for (const [id, initial] of Object.entries(currencyDefaults)) {
     const converter = id === "from" || id === "to";
+    const home = id === "home-from" || id === "home-to";
     if (converterOnly && !converter) continue;
     const selected = byId(id).value || initial;
-    const entries = converter && query
-      ? currencyOptions.filter(entry => entry[1] === selected || matches.includes(entry))
-      : currencyOptions;
-    fillSelect(id,entries,entries.some(([,code]) => code === selected) ? selected : undefined);
+    const activeQuery = converter ? query : home ? homeQuery : "";
+    const matching = converter ? matches : homeMatches;
+    const entries = activeQuery ? currencyOptions.filter(entry => entry[1] === selected || matching.includes(entry)) : currencyOptions;
+    fillCurrencySelect(id,entries,entries.some(([,code]) => code === selected) ? selected : undefined);
   }
   write("currency-count",query ? matches.length + " matching currencies" :
     currencyDirectory ? currencyOptions.length + " currencies available" : "Loading currency list…");
+  write("home-currency-count",homeQuery ? homeMatches.length + " matches · Current selections stay available" :
+    "Popular currencies first · Other currencies, crypto and metals grouped separately");
 }
+
 populateCurrencySelects();
 const comparisonParams = new URLSearchParams(location.search);
 const sendingCurrency = comparisonParams.get("send");
@@ -83,6 +104,7 @@ if (location.hash === "#compare" &&
   byId("budget").value = String(Number(comparisonBudget));
 }
 byId("currency-search").addEventListener("input",() => populateCurrencySelects(true));
+byId("home-currency-search").addEventListener("input",() => populateCurrencySelects());
 
 async function refreshRates() {
   try {
@@ -813,76 +835,53 @@ setInterval(() => { if (!document.hidden) refreshCrypto(); },300000);
 refreshCrypto();
 
 const sectionNav = byId("section-nav");
-const sectionTabs = Array.from(sectionNav.querySelectorAll("a[href^='#']"));
+const sectionTabs = Array.from(sectionNav.querySelectorAll("a[href^='#']:not([href='#news'])"));
 const secondarySections = Array.from(byId("secondary-sections").querySelectorAll("a:not([href='#news'])"));
 const sectionLinks = [...sectionTabs,...secondarySections];
-sectionNav.setAttribute("role","tablist");
-
 function activateTab(tab, updateUrl = false) {
   for (const candidate of sectionLinks) {
-    const active = candidate === tab;
-    if (sectionTabs.includes(candidate)) {
-      candidate.setAttribute("aria-selected",String(active));
-      candidate.tabIndex = active || (!sectionTabs.includes(tab) && candidate === sectionTabs[0]) ? 0 : -1;
-    } else if (active) candidate.setAttribute("aria-current","location");
+    const active = candidate.hash === tab.hash;
+    if (active) candidate.setAttribute("aria-current","page");
     else candidate.removeAttribute("aria-current");
     byId(candidate.hash.slice(1)).hidden = !active;
   }
-  if (tab.hash === "#stocks") refreshStocks();
+  if (tab.hash === "#stocks" || tab.hash === "#markets") refreshStocks();
   if (tab.hash === "#calendar") loadCalendar();
-  if (tab.hash === "#markets") refreshStocks();
   if (updateUrl && window.location.hash !== tab.hash) {
     window.history.pushState(null,"",tab.hash);
     window.scrollTo(0,0);
   }
+  for (const menu of sectionNav.querySelectorAll("details")) menu.open = false;
 }
-
 function syncTabs() {
-  activateTab(sectionLinks.find(tab => tab.hash === window.location.hash) ?? sectionTabs[0]);
+  const hash = window.location.hash === "#news" ? "#markets" : window.location.hash;
+  activateTab(sectionLinks.find(tab => tab.hash === hash) ?? sectionTabs[0]);
   if (window.location.hash === "#news") byId("news").scrollIntoView();
 }
-
-for (const [index, tab] of sectionTabs.entries()) {
-  const panel = byId(tab.hash.slice(1));
-  tab.id = "tab-" + panel.id;
-  tab.setAttribute("role","tab");
-  tab.setAttribute("aria-controls",panel.id);
-  panel.setAttribute("role","tabpanel");
-  panel.setAttribute("aria-labelledby",tab.id);
-  panel.tabIndex = 0;
-  tab.addEventListener("click",event => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    activateTab(tab,true);
-  });
-  tab.addEventListener("keydown",event => {
-    const count = sectionTabs.length;
-    const nextIndex = {
-      ArrowLeft:(index+count-1)%count,
-      ArrowRight:(index+1)%count,
-      Home:0,
-      End:count-1
-    }[event.key];
-    if (event.key === " ") {
-      event.preventDefault();
-      activateTab(tab,true);
-    } else if (nextIndex !== undefined) {
-      event.preventDefault();
-      sectionTabs[nextIndex].focus();
-      activateTab(sectionTabs[nextIndex],true);
-    }
-  });
-}
-for (const link of secondarySections) {
+for (const link of sectionLinks) {
   link.addEventListener("click",event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    activateTab(link,true);
-    const panel = byId(link.hash.slice(1));
-    panel.tabIndex = -1;
-    panel.focus({preventScroll:true});
+    if (link.hash === "#news") {
+      activateTab(sectionTabs[0],true);
+      window.history.pushState(null,"","#news");
+      byId("news").scrollIntoView();
+    } else activateTab(link,true);
   });
 }
+for (const menu of sectionNav.querySelectorAll("details")) {
+  menu.addEventListener("toggle",() => {
+    if (menu.open) for (const other of sectionNav.querySelectorAll("details")) if (other !== menu) other.open = false;
+  });
+}
+document.addEventListener("click",event => {
+  if (!sectionNav.contains(event.target)) for (const menu of sectionNav.querySelectorAll("details")) menu.open = false;
+});
+sectionNav.addEventListener("keydown",event => {
+  if (event.key !== "Escape") return;
+  const menu = event.target.closest("details");
+  if (menu) { menu.open = false; menu.querySelector("summary").focus(); }
+});
 window.addEventListener("popstate",syncTabs);
 window.addEventListener("hashchange",syncTabs);
 
@@ -1001,7 +1000,11 @@ for (const id of ["home-amount","home-from","home-to"]) byId(id).addEventListene
 byId("home-swap").addEventListener("click",() => {
   const from = byId("home-from");
   const to = byId("home-to");
-  [from.value,to.value] = [to.value,from.value];
+  const previousFrom = from.value, previousTo = to.value;
+  byId("home-currency-search").value = "";
+  populateCurrencySelects();
+  from.value = previousTo;
+  to.value = previousFrom;
   updateHomeConverter();
 });
 byId("home-compare").addEventListener("click",() => {
@@ -2518,6 +2521,7 @@ byId("refresh").addEventListener("click",() => refreshMemes(true));
 setInterval(() => { if (!document.hidden) refreshMemes(); },300000);
 renderCrypto();
 refreshMemes();
+
 
 
 

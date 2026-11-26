@@ -16,12 +16,12 @@
 <form id="landing-converter" action="./#compare" method="get">
   <section class="panel" aria-labelledby="converter-heading">
     <h2 id="converter-heading">Convert EUR to USD</h2>
-    <label>Amount in EUR<input id="landing-amount" name="budget" type="number" min="0" step="any" value="500" required></label>
+    <label>Amount in EUR<input id="landing-amount" name="budget" type="number" min="0" step="any" value="100" required></label>
     <input type="hidden" name="send" value="EUR">
     <input type="hidden" name="receive" value="USD">
-    <output class="landing-quote" id="landing-result" for="landing-amount">$553.70</output>
+    <output class="landing-quote" id="landing-result" for="landing-amount">$110.74</output>
     <p><span id="landing-quote" data-asset="EURUSD" data-snapshot-date="2026-11-16T00:00:00.000Z" data-snapshot-rate="1.1074">1 EUR = 1.1074 USD</span><br><small id="landing-source">Published snapshot · Frankfurter · 2026-11-16</small></p>
-    <a class="guide-link" href="./usd-to-eur.html">Swap to USD → EUR</a>
+    <a class="guide-link" id="landing-swap" href="./usd-to-eur.html?amount=100">Swap to USD → EUR</a>
   </section>
   <section class="panel finance-history">
     <h2>How much will the recipient get?</h2>
@@ -33,4 +33,5 @@
 
 </article></main>
 <footer><div class="wrap">Rates may be delayed. <a href="./site-information.html#disclaimer">Disclaimer</a></div></footer></body></html>
+
 
