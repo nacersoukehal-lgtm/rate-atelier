@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const key = "rate-atelier-analytics";
-  const id = "G-35RE2G11SJ";
+  const id = "G-BWZT8JB0ZE";
   let choice;
   try { choice = localStorage.getItem(key); } catch {}
   const banner = document.createElement("aside");
@@ -58,4 +58,5 @@
   }
   if (choice === "yes") startAnalytics();
 })();
+
 
