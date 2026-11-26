@@ -547,3 +547,47 @@ footer { padding: 18px 0; margin-top: 32px; }
   .grouped-nav details:last-child .nav-menu {left:auto;right:0}
 }
 
+
+.practical-page {max-width:1120px;margin:32px auto}
+.practical-page h1 {font-size:clamp(38px,6vw,64px);line-height:1.05}
+.practical-intro {font-size:18px;max-width:78ch;margin:14px 0 24px;color:var(--muted)}
+.practical-page .panel {margin-block:18px}
+.practical-page h2 {font:36px/1.15 var(--serif);margin:20px 0 12px}
+.practical-page h3 {font:27px/1.2 var(--serif);margin:18px 0 8px}
+.practical-page p {margin-block:12px}
+.practical-page label,.practical-page input,.practical-page select {font-size:16px}
+.practical-form .fields {grid-template-columns:repeat(3,minmax(0,1fr))}
+.practical-methods {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.practical-methods fieldset {min-width:0;margin:0}
+.practical-methods legend {font-weight:700;padding-inline:6px}
+.practical-methods label {margin-bottom:12px}
+.practical-page .stock-table :is(th,td) {font-size:15px;padding:14px;text-align:left}
+.practical-page .stock-table th {white-space:normal}
+.practical-page .stock-table td {font-variant-numeric:tabular-nums}
+.practical-page tr[data-best="true"] {background:color-mix(in srgb,var(--green) 10%,var(--surface))}
+.practical-verdict {font-weight:700;color:var(--green)}
+.result-actions {display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.result-status {font-size:14px;overflow-wrap:anywhere}
+.reference-note {font-size:14px;color:var(--muted)}
+.multi-choices {border:1px solid var(--line);border-radius:10px;padding:12px;margin-block:16px}
+#multi-choices {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-height:270px;overflow:auto;gap:8px}
+#multi-choices label {display:flex;align-items:center;gap:8px;padding:6px;font-weight:500}
+#multi-choices input {width:auto;margin:0}
+.practical-guide {max-width:900px;font-size:17px;line-height:1.7}
+.practical-guide .primary-action {display:inline-block}
+.guide-byline {font-size:14px;color:var(--muted)}
+.dealer-offers {border-top:1px solid var(--line);margin-top:22px;padding-top:12px}
+.dealer-offers p {margin-block:12px}
+.dealer-offers fieldset {min-width:0;border:1px solid var(--line);border-radius:10px;padding:12px}
+.dealer-offers label {margin-block:10px}
+.header .practical-nav {display:flex;flex-wrap:wrap;gap:16px}
+.header .grouped-nav .nav-menu {max-height:70vh;overflow-y:auto}
+@media(max-width:760px){
+ .practical-form .fields,.practical-methods {grid-template-columns:1fr}
+ #multi-choices {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .practical-page {margin-top:24px}
+ .practical-page h2 {font-size:30px}
+ .practical-page .stock-table :is(th,td) {padding:10px;font-size:14px}
+}
+@media(max-width:420px){#multi-choices {grid-template-columns:1fr}}
+

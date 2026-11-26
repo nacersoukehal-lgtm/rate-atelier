@@ -61,6 +61,8 @@
       XPD:[["Palladium 950",.95],["Palladium 500",.5],["Pure",1]]
     };
     let quotes = {};
+    let dealerReport = null;
+    const resultFields=["melt-metal","melt-purity","melt-weight","melt-unit","melt-price","dealer-a-offer","dealer-a-fee","dealer-b-offer","dealer-b-fee"];
     const form = get("standalone-melt");
     const asset = get("melt-metal");
     const purity = get("melt-purity");
@@ -81,6 +83,33 @@
         : positive(quote?.value) ? money(quote.value,"USD") + " per troy ounce · Standard Bullion · " + note +
           (Date.now()-quoteTime > 3600000 ? " · Last known quote" : "")
         : "Reference price unavailable. Enter a price above to calculate.";
+      const manualNote = new URLSearchParams(location.search).get("metal-reference");
+      if (manual && manualNote) get("melt-source").textContent += " · Shared reference: "+manualNote.slice(0,600);
+      if (!get("dealer-rows")) return;
+      const offers=["a","b"].map(id=>{
+        const offer=number("dealer-"+id+"-offer"),fee=number("dealer-"+id+"-fee");
+        return {id,offer,fee,result:rateAtelierPracticalMath.dealer(value,offer,fee)};
+      });
+      get("dealer-rows").replaceChildren(...offers.map(row=>{
+        const tr=document.createElement("tr");
+        const r=row.result;
+        for (const text of ["Dealer "+row.id.toUpperCase(),r?money(r.net,"USD"):"Enter a valid offer",r?r.percent.toFixed(2)+"%":"—",r?money(r.difference,"USD"):"—"]){
+          const td=document.createElement("td");td.textContent=text;tr.append(td);
+        }return tr;
+      }));
+      const validOffers=offers.filter(r=>r.result);
+      get("dealer-verdict").textContent=validOffers.length===2
+        ? Math.abs(validOffers[0].result.net-validOffers[1].result.net)<.005 ? "Both dealers pay the same at display precision."
+          : "Dealer "+(validOffers[0].result.net>validOffers[1].result.net?"A":"B")+" pays "+money(Math.abs(validOffers[0].result.net-validOffers[1].result.net),"USD")+" more after deductions."
+        : "Enter offers to compare. Deductions must not exceed the offer.";
+      const price=manual?override:quote?.value;
+      const source=get("melt-source").textContent;
+      dealerReport=positive(value)?{title:"Metal value and dealer offers",params:{"melt-price":String(price),"metal-reference":manual?(manualNote||"User-entered reference price"):source},lines:[
+        "Metal: "+asset.selectedOptions[0].text,"Weight: "+number("melt-weight")+" × "+get("melt-unit").selectedOptions[0].text,
+        "Purity: "+purity.selectedOptions[0].text+" ("+purity.value+")","Reference price: "+money(price,"USD")+" per troy ounce","Source/date: "+source,
+        "Estimated melt value: "+money(value,"USD"),...validOffers.map(r=>"Dealer "+r.id.toUpperCase()+": offer "+money(r.offer,"USD")+" minus deductions "+money(r.fee,"USD")+" = "+money(r.result.net,"USD")+" net; "+r.result.percent.toFixed(2)+"% of melt value"),
+        "Metal content estimate excludes stones and non-metal parts. Offer percentages do not guarantee a fair sale price."
+      ]}:null;
     }
     async function getJson(url) {
       const response = await fetch(url,{signal:AbortSignal.timeout(6500)});
@@ -114,9 +143,15 @@
     form.addEventListener("input",updateValue);
     form.addEventListener("change",updateValue);
     details.addEventListener("toggle",() => {if (details.open) updateHistory();});
+    if (get("dealer-rows")) window.rateAtelierResults.restore(["melt-metal"]);
     updatePurity();
+    if (get("dealer-rows")) {
+      window.rateAtelierResults.restore(resultFields.filter(id=>id!=="melt-metal"));
+      window.rateAtelierResults.bind(form,resultFields,()=>dealerReport);
+    }
     updateValue();
     updateQuotes();
     setInterval(() => {if (!document.hidden) updateQuotes();},60000);
   }
 })();
+

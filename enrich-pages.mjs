@@ -333,6 +333,28 @@ const displayNames = new Intl.DisplayNames("en",{type:"currency"});
 const currencySnapshot = {base:"USD",builtAt:new Date().toISOString(),rates:[...currencyRows],
   names:[...currencyRows.keys()].map(code => [code,displayNames.of(code)])};
 await write("currency-reference-snapshot.json",JSON.stringify(currencySnapshot));
+for (const file of ["travel-exchange-cost-calculator.html","multiple-currency-converter.html"]) {
+  let html = await read(file);
+  html = html.replace("</head>",'<script id="published-fx-data" type="application/json">'+JSON.stringify(currencySnapshot).replaceAll("<","\\u003c")+"</script>\n</head>");
+  const reference = currencyRows.get("EUR");
+  if (file === "travel-exchange-cost-calculator.html" && reference) {
+    html = put(html,"travel-reference-note","1 USD = "+escape(reference.rate.toFixed(6))+" EUR · "+escape(reference.source)+" · Reference date: "+observation(reference.date));
+    html = put(html,"travel-status","Published reference estimate · Zero fees assumed until you enter your own charges.");
+    html = put(html,"travel-rows",["Pay by card","Withdraw cash","Exchange cash"].map(label=>td([label,new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR",currencyDisplay:"code"}).format(100*reference.rate),"USD 0.00","EUR 0.00"])).join(""));
+  }
+  if (file === "multiple-currency-converter.html") {
+    const rows=["EUR","GBP","CAD","DZD","JPY"].flatMap(code=>{
+      const row=currencyRows.get(code);
+      if(!row) return [];
+      const amount=new Intl.NumberFormat("en-US",{style:"currency",currency:code,currencyDisplay:"code"}).format(100*row.rate);
+      return td([code,amount,row.rate.toFixed(6),row.date+" · "+row.source]);
+    });
+    html=put(html,"multi-rows",rows.join(""));
+    html=put(html,"multi-status","Published reference conversions · Dates belong to each rate; provider fees are not included.");
+  }
+  await write(file,html);
+}
+
 home = home.replace("</head>",'<script id="published-fx-data" type="application/json">' + JSON.stringify(currencySnapshot).replaceAll("<","\\u003c") + "</script>\n</head>");
 const euroReference = currencyRows.get("EUR");
 if (euroReference) {
@@ -424,6 +446,7 @@ if (fx.length) {
   if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }
+
 
 
 
