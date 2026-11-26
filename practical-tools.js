@@ -48,16 +48,16 @@
       const rows=methods.map(([key,label])=>{
         const quoted=get(key+"-rate").value!==""?n(key+"-rate"):rate;
         const value=rateAtelierPracticalMath.travel(budget,n(key+"-percent"),n(key+"-fixed"),n(key+"-count"),quoted);
-        return {key,label,value,quoted};
+        return {key,label,value,quoted,missingFees:[key+"-percent",key+"-fixed"].some(id=>get(id).value==="")};
       });
       const valid=rows.every(row=>row.value)&&positive(rate)&&root.checkValidity();
-      get("travel-status").textContent=valid?"Fees stay inside your total budget. Highest spendable amount is highlighted.":"Enter nonnegative amounts and fees, whole transaction counts, and valid rates. Fixed charges cannot exceed the budget.";
+      get("travel-status").textContent=valid?"Fees stay inside your total budget. Highest spendable amount is highlighted.":rows.some(row=>row.missingFees)?"Enter your actual fees for each method. Enter 0 only if confirmed, or select Confirm no fees. Untouched methods are incomplete.":"Enter nonnegative amounts and fees, whole transaction counts, and valid rates. Fixed charges cannot exceed the budget.";
       get("travel-caption").textContent=Number.isFinite(budget)?cash(budget,from)+" total budget · Spendable amounts in "+to:"Comparison";
       const best=valid?Math.max(...rows.map(r=>r.value.received)):NaN;
       get("travel-rows").replaceChildren(...rows.map(row=>{
         const tr=document.createElement("tr");
         if (valid && Math.abs(row.value.received-best)<1e-8) tr.dataset.best="true";
-        for(const text of [row.label,row.value?cash(row.value.received,to):"Unavailable",row.value?cash(row.value.fees,from):"Unavailable",row.value&&positive(rate)?cash(budget*rate-row.value.received,to):"Unavailable"]){
+        for(const text of [row.label,row.value?cash(row.value.received,to):row.missingFees?"Incomplete · Enter actual fees":"Unavailable",row.value?cash(row.value.fees,from):"Unavailable",row.value&&positive(rate)?cash(budget*rate-row.value.received,to):"Unavailable"]){
           const td=document.createElement("td");td.textContent=text;tr.append(td);
         }return tr;
       }));
@@ -72,6 +72,10 @@
     root.addEventListener("submit",event=>event.preventDefault());
     root.addEventListener("input",render);root.addEventListener("change",render);
     get("travel-refresh").addEventListener("click",()=>{get("travel-reference").value="";params.delete("reference-note");refresh(()=>{for(const [id,fallback] of [["travel-from","USD"],["travel-to","EUR"]])populate(id,fallback);render();});});
+    for (const button of root.querySelectorAll("[data-no-fees]")) button.addEventListener("click",()=>{
+      const key=button.dataset.noFees;
+      get(key+"-percent").value="0";get(key+"-fixed").value="0";render();
+    });
     shared.bind(root,fields,()=>report);render();
     refresh(()=>{populate("travel-from","USD");populate("travel-to","EUR");shared.restore(["travel-from","travel-to"]);render();});
   }
@@ -91,6 +95,7 @@
     function choices() {
       const query=get("multi-search").value.trim().toLowerCase();
       const codes=[...new Set([...selected,"USD","EUR","GBP","CAD","AUD","DZD","JPY",...[...(feed?.names?.keys()??[])].filter(conventional)])];
+      get("multi-selection-count").textContent=selected.size+" selected";
       get("multi-choices").replaceChildren(...codes.filter(c=>selected.has(c)||(c+" "+names.of(c)).toLowerCase().includes(query)).sort((a,b)=>Number(selected.has(b))-Number(selected.has(a))||a.localeCompare(b)).map(code=>{
         const label=document.createElement("label"),check=document.createElement("input");
         check.type="checkbox";check.value=code;check.checked=selected.has(code);
@@ -125,4 +130,5 @@
     refresh(()=>{populate("multi-from","USD");shared.restore(["multi-from"]);choices();render();});
   }
 })();
+
 

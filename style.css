@@ -596,3 +596,18 @@ footer { padding: 18px 0; margin-top: 32px; }
  .header .grouped-nav .nav-menu,.header .grouped-nav details:last-child .nav-menu {left:0;right:0;width:100%;min-width:0;max-width:none}
 }
 
+
+.fee-instructions {padding:12px 16px;border-left:3px solid var(--gold);background:var(--surface);margin-block:16px}
+.practical-methods [data-no-fees] {margin-block:4px 12px;white-space:normal}
+#multi-tool {display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.5fr);gap:20px;align-items:start}
+#multi-tool > .panel {margin:0;min-width:0}
+#multi-tool .fields {grid-template-columns:repeat(2,minmax(0,1fr))}
+.multi-destinations {margin-top:16px}
+.multi-destinations summary {cursor:pointer;font-weight:700;padding-block:10px}
+#multi-selection-count {display:inline-block;font-size:14px;font-weight:400;margin-left:6px;color:var(--muted)}
+#multi-tool #multi-choices {grid-template-columns:1fr;max-height:155px}
+#multi-results {scroll-margin-top:20px}
+#multi-results .table-scroll {max-width:100%}
+#multi-tool .result-actions a {display:inline-flex;align-items:center;text-decoration:none}
+@media(max-width:800px){#multi-tool {grid-template-columns:1fr;gap:16px}}
+

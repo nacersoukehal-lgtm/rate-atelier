@@ -339,8 +339,8 @@ for (const file of ["travel-exchange-cost-calculator.html","multiple-currency-co
   const reference = currencyRows.get("EUR");
   if (file === "travel-exchange-cost-calculator.html" && reference) {
     html = put(html,"travel-reference-note","1 USD = "+escape(reference.rate.toFixed(6))+" EUR · "+escape(reference.source)+" · Reference date: "+observation(reference.date));
-    html = put(html,"travel-status","Published reference estimate · Zero fees assumed until you enter your own charges.");
-    html = put(html,"travel-rows",["Pay by card","Withdraw cash","Exchange cash"].map(label=>td([label,new Intl.NumberFormat("en-US",{style:"currency",currency:"EUR",currencyDisplay:"code"}).format(100*reference.rate),"USD 0.00","EUR 0.00"])).join(""));
+    html = put(html,"travel-status","Enter your actual fees for each method. Enter 0 only if confirmed. Untouched methods are incomplete.");
+    html = put(html,"travel-rows",["Pay by card","Withdraw cash","Exchange cash"].map(label=>td([label,"Incomplete · Enter actual fees","Not entered","Unavailable"])).join(""));
   }
   if (file === "multiple-currency-converter.html") {
     const rows=["EUR","GBP","CAD","DZD","JPY"].flatMap(code=>{
@@ -446,6 +446,7 @@ if (fx.length) {
   if (longer.length) html = put(html,"historical-longer-content",'<div class="historical-longer-grid">' + longer.join("") + "</div>");
   await write(file,html);
 }
+
 
 
 

@@ -61,6 +61,7 @@
       XPD:[["Palladium 950",.95],["Palladium 500",.5],["Pure",1]]
     };
     let quotes = {};
+    let quoteLoading = true;
     let dealerReport = null;
     const resultFields=["melt-metal","melt-purity","melt-weight","melt-unit","melt-price","dealer-a-offer","dealer-a-fee","dealer-b-offer","dealer-b-fee"];
     const form = get("standalone-melt");
@@ -82,7 +83,7 @@
       get("melt-source").textContent = manual ? (positive(override) ? "Using your reference price." : "Enter a reference price above zero.")
         : positive(quote?.value) ? money(quote.value,"USD") + " per troy ounce · Standard Bullion · " + note +
           (Date.now()-quoteTime > 3600000 ? " · Last known quote" : "")
-        : "Reference price unavailable. Enter a price above to calculate.";
+        : quoteLoading ? "Fetching reference price…" : "Reference price unavailable. Enter a price above to calculate.";
       const manualNote = new URLSearchParams(location.search).get("metal-reference");
       if (manual && manualNote) get("melt-source").textContent += " · Shared reference: "+manualNote.slice(0,600);
       if (!get("dealer-rows")) return;
@@ -117,6 +118,7 @@
       return response.json();
     }
     async function updateQuotes() {
+      if (!quoteLoading) { quoteLoading = true; updateValue(); }
       const fallback = getJson("./published-quote-snapshot.json");
       const live = getJson("https://standardbullion.com/spot-prices.json").then(payload =>
         Object.fromEntries(payload.metals.filter(row => positive(row.bid) && positive(row.ask)).map(row =>
@@ -129,6 +131,8 @@
         updateValue();
       }
       await Promise.allSettled([fallback.then(remember),live.then(remember)]);
+      quoteLoading = false;
+      updateValue();
     }
     const updateHistory = mountFinanceHistory(history,async () => {
       const code = asset.value;
@@ -154,4 +158,5 @@
     setInterval(() => {if (!document.hidden) updateQuotes();},60000);
   }
 })();
+
 
