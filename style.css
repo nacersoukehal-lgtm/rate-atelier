@@ -590,4 +590,9 @@ footer { padding: 18px 0; margin-top: 32px; }
  .practical-page .stock-table :is(th,td) {padding:10px;font-size:14px}
 }
 @media(max-width:420px){#multi-choices {grid-template-columns:1fr}}
+@media(max-width:700px){
+ .header #section-nav.grouped-nav {position:relative}
+ .header .grouped-nav details {position:static}
+ .header .grouped-nav .nav-menu,.header .grouped-nav details:last-child .nav-menu {left:0;right:0;width:100%;min-width:0;max-width:none}
+}
 
