@@ -15,11 +15,13 @@
   function choices(){
    asset.replaceChildren();
    const codes=config.assets.filter(c=>!metals[c]);
-   const items=type.value==='metal'?Object.entries(metals).map(([c,name])=>[c,name]):codes.flatMap(a=>codes.filter(b=>b!==a).map(b=>[a+'/'+b,a+' → '+b]));
+   const stocks=typeof stockCatalog!=='undefined'?stockCatalog.filter(s=>s.region==='U.S.'&&['Stock','ETF'].includes(s.type)&&/^[A-Z][A-Z0-9-]{0,11}$/.test(s.symbol)):[];
+   const items=type.value==='metal'?Object.entries(metals).map(([c,name])=>[c,name]):type.value==='crypto'?Object.entries(config.crypto||{}).map(([c,name])=>['crypto:'+c,name]):type.value==='stock'?stocks.map(s=>['stock:'+s.symbol,s.symbol+' — '+s.name]).sort((a,b)=>a[1].localeCompare(b[1])):codes.flatMap(a=>codes.filter(b=>b!==a).map(b=>[a+'/'+b,a+' → '+b]));
    for(const [value,label]of items)asset.add(new Option(label,value));
-   unit.textContent=type.value==='metal'?'Target in USD per troy ounce':'Target rate (To currency per 1 From currency)';
+   unit.textContent=type.value==='metal'?'Target in USD per troy ounce':type.value==='crypto'?'Target in USD per coin':type.value==='stock'?'Target in USD per share':'Target rate (To currency per 1 From currency)';
   }
   type.addEventListener('change',choices);choices();
+  for(const value of ['crypto','stock'])if(!(value==='crypto'?Object.keys(config.crypto||{}).length:config.stocks))form.querySelector('option[value="'+value+'"]').remove();
   // Load verification only when the visitor opens the email form.
   const details=mount.querySelector('details');let widget,challenge='';
   details.addEventListener('toggle',async()=>{
