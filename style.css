@@ -611,3 +611,13 @@ footer { padding: 18px 0; margin-top: 32px; }
 #multi-tool .result-actions a {display:inline-flex;align-items:center;text-decoration:none}
 @media(max-width:800px){#multi-tool {grid-template-columns:1fr;gap:16px}}
 
+
+#email-alerts{margin-top:1.5rem;border-top:1px solid var(--line,#d6e1d9);padding-top:1rem}
+#email-alerts summary{cursor:pointer;font-weight:700;padding:.5rem 0}
+#email-alerts .alert-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;align-items:start}
+#email-alerts input,#email-alerts select{font-size:16px;min-width:0}
+#email-alerts label:has(input[type="checkbox"]){grid-column:1/-1;display:block;font-weight:400;line-height:1.6}
+#email-alerts input[type="checkbox"]{display:inline-block;width:auto;min-height:0;margin-right:.4rem;vertical-align:middle}
+#email-alerts [data-verification],#email-alerts button[type="submit"]{grid-column:1/-1}
+#email-alerts button[type="submit"]{width:100%;white-space:normal}
+@media(max-width:720px){#email-alerts .alert-form{grid-template-columns:minmax(0,1fr)}}
